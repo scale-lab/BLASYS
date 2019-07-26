@@ -6,16 +6,92 @@ import numpy as np
 import subprocess
 import shutil
 import yaml
-from utils import assess_HD, gen_truth, create_wh, synth_design
+from utils import assess_HD, gen_truth, create_wh, synth_design, approximate
 
 
-def evaluate_iter():
-    subcir_count = len(k_list)
-    areas = []
-    errs = []
+def evaluate_design(k_stream, list_num_input, list_num_output, config, approx_area):
 
-    for i in range(subcir_count):
-        tmp_k_list = k_list
+    print('Evaluating Design ', k_stream)
+
+    num_part = len(k_stream)
+    area = 0
+
+    tmp_verilog = os.path.join(config['output_dir'], 'temp.v')
+    toplevel_file = os.path.join(config['output_dir'], 'partition', config['toplevel'] + '.v')
+    os.system('cat ' + toplevel_file + ' > ' + tmp_verilog)
+
+    for i in range(num_part):
+
+        approx_degree = k_stream[i]
+
+        if approx_degree == list_num_output[i]:
+            part_verilog = os.path.join(config['output_dir'], 'partition', config['toplevel'] + '_' + str(i) + '.v')
+            os.system('cat ' + part_verilog + ' >> ' + tmp_verilog)
+            area += approx_area[i][approx_degree]
+            continue
+        
+        part_verilog = os.path.join(config['output_dir'], config['toplevel'] + '_' + str(i), config['toplevel'] + '_' + str(i) + '_approx_k=' + str(approx_degree) + '.v')
+        if approx_area[i][approx_degree] != 0:
+            os.system('cat ' + part_verilog + ' >> ' + tmp_verilog)
+            area += approx_area[i][approx_degree]
+        else:
+            print('Approximating part ' + str(i) + ' to degree ' + str(approx_degree))
+
+            directory = os.path.join(config['output_dir'], config['toplevel'] + '_' + str(i), config['toplevel'] + '_' + str(i))
+            approximate(directory, approx_degree, list_num_input[i], list_num_output[i], config['liberty_file'], config['toplevel'] + '_' + str(i))
+            os.system('cat ' + part_verilog + ' >> ' + tmp_verilog)
+            part_area = synth_design(part_verilog, part_verilog[:-2]+'_syn', config['liberty_file'], True)
+            approx_area[i][approx_degree] = part_area
+            area += part_area
+
+    os.system('iverilog -o tmp.iv ' + tmp_verilog + ' ' + config['testbench'])
+    truth_dir = os.path.join(config['output_dir'], 'tmp.truth')
+    os.system('vvp tmp.iv > ' + truth_dir)
+    os.system('rm tmp.iv')
+
+    ground_truth = os.path.join(config['output_dir'], config['toplevel'] + '.truth')
+
+    t, h, f = assess_HD(ground_truth, truth_dir)
+    print('Simulation error: ' + str(f) + '\tCircuit area: ' + str(area))
+    return f, area
+
+
+
+def evaluate_iter(curr_k_stream, list_num_input, list_num_output, config, approx_area):
+    
+    k_lists = []
+
+    for i in range(len(curr_k_stream)):
+        new_k_stream = list(curr_k_stream)
+        new_k_stream[i] = new_k_stream[i] - 1
+        if new_k_stream[i] != 0:
+            k_lists.append(new_k_stream)
+    
+    if len(k_lists) == 0:
+        return False
+
+    num_list = len(k_lists)
+    err_list = []
+    area_list = []
+
+    for i in range(num_list):
+        # Evaluate each list
+        k_stream = k_lists[i]
+        err, area = evaluate_design(k_stream, list_num_input, list_num_output, config, approx_area)
+        err_list.append(err)
+        area_list.append(area)
+
+    if np.min(err_list) > config['threshold']:
+        return False
+
+    np_area = np.array(area_list)
+    order = np.argsort(np_area)
+
+    for i in order:
+        if err_list[i] > config['threshold']:
+            continue
+        return k_lists[i]
+
 
 
 def print_usage():
@@ -93,6 +169,7 @@ vvp = config['vvp_path']
 library = config['liberty_file']
 num_parts = config['partition_count']
 
+# Evaluate input circuit
 print('Simulating truth table on input design...')
 os.system(iverilog + ' -o '+ toplevel + '.iv ' + input_file + ' ' + testbench )
 output_truth = os.path.join(output_dir_path, toplevel+'.truth')
@@ -100,14 +177,13 @@ os.system(vvp + ' ' + toplevel + '.iv > ' + output_truth)
 os.system('rm ' + toplevel + '.iv')
 print('Synthesizing input design...')
 output_synth = os.path.join(output_dir_path, toplevel+'_syn')
-area = synth_design(input_file, output_synth, library)
-print('Original design area', str(area))
+input_area = synth_design(input_file, output_synth, library, False)
+print('Original design area', str(input_area))
 
 # Partitioning circuit
-part_dir = os.path.join(output_dir_path, toplevel+'_parts')
-#part_dir = '/home/jingxiao/EPFL_benchmarks/adder'
+part_dir = os.path.join(output_dir_path, 'partition')
 os.system('cp ' + input_file + ' ./')
-lsoracle_command = 'read_verilog ' + input_file + '; ' \
+lsoracle_command = 'read_verilog ' + os.path.basename(input_file) + '; ' \
         'partitioning ' + str(num_parts) + '; ' \
         'get_all_partitions ' + part_dir
 log_partition = os.path.join(output_dir_path, 'lsoracle.log')
@@ -115,9 +191,11 @@ with open(log_partition, 'w') as file_handler:
     file_handler.write(lsoracle_command)
     subprocess.call([lsoracle, '-c', lsoracle_command], stderr=file_handler, stdout=file_handler)
 
-approx_created = []
-k_stream = []
-
+# Generate truth table for each partitions
+approx_area = []
+list_part_output_dir = []
+list_num_input = []
+list_num_output = []
 for i in range(num_parts):
     modulename = toplevel + '_' + str(i)
 
@@ -125,18 +203,54 @@ for i in range(num_parts):
     print('Create testbench for partition '+str(i))
     file_path = os.path.join(part_dir, modulename)
     n, m = gen_truth(file_path, modulename)
-    approx_created.append([0] * m)
-    k_stream.append( m )
+    list_num_input.append( n )
+    list_num_output.append( m )
 
     # Generate truthtable
     print('Generate truth table for partition '+str(i))
     part_output_dir = os.path.join(output_dir_path, modulename)
+    list_part_output_dir.append(part_output_dir)
     os.mkdir(part_output_dir)
     os.system(iverilog + ' -o ' + file_path + '.iv ' + file_path + '.v ' + file_path + '_tb.v')
     truth_dir = os.path.join(part_output_dir, modulename + '.truth')
     os.system(vvp + ' ' + file_path + '.iv > ' + truth_dir)
 
-#while True:
+    # Evaluate partition area
+    print('Evaluate partition area ' + str(i))
+    part_synth = os.path.join(part_output_dir, modulename + '_syn')
+    part_area = synth_design(file_path + '.v', part_synth, library, True)
+    print('Partition area ' + str(part_area))
+    approx_area.append([0] * m + [part_area])
+
+print('==================== Starting Approximation by Greedy Search  ====================')
+
+
+# test with 2
+# directory = os.path.join(list_part_output_dir[1], 'adder_1')
+# approximate(directory, list_num_output[1] - 1, list_num_input[1], list_num_output[1], library, toplevel + '_1')
+
+# f = evaluate_design([4]*len(list_num_output), list_num_input,list_num_output,config,approx_area)
+# print('error ' + str(f))
+count_iter = 1
+curr_stream = []
+
+while True:
+    if count_iter == 1:
+        curr_stream = list_num_output
+
+    print('############### Current k_stream: ', curr_stream)
+    print('--------------- Iteration ' + str(count_iter) + ' ---------------')
+
+    tmp = evaluate_iter(curr_stream, list_num_input, list_num_output, config, approx_area )
+     
+    if tmp == False:
+        break
+
+    curr_stream = tmp
+
+
+
+    count_iter += 1
 
 
 

@@ -29,17 +29,14 @@ def assess_HD(original_path, approximate_path):
                 HD+=1
     return [total, HD, HD/total]
 
-def synth_design(input_file, output_file, lib_file):
+def synth_gen(input_file, output_file, lib_file):
     f=open('abc.script', 'w')
-    f.write('bdd;collapse;order;map')
-  #  f.write('strash;refactor;rewrite;refactor;rewrite;refactor;rewrite;map')
- #   f.write('espresso;map')
+    f.write('bdd;collapse;order')
     f.close
     f=open('yosys.script', 'w')
     yosys_command = 'read_verilog ' + input_file + '; ' \
-            + 'synth -flatten; opt; opt_clean -purge; techmap; abc -liberty '+lib_file + '; ' \
-            + 'stat -liberty '+lib_file + '; ' \
-            + 'write_verilog -noattr -noexpr ' + output_file + '.v;\n'
+            + 'synth -flatten; opt; opt_clean -purge; techmap; abc -script abc.script; ' \
+            + 'write_verilog -noattr ' + output_file + '.v;\n'
     f.write(yosys_command)
     f.close
     area = 0
@@ -50,8 +47,30 @@ def synth_design(input_file, output_file, lib_file):
                 area = line.split()[-1]
     return float(area)
 
-
-def gen_truth(fname, modulename):
+def synth_design(input_file, output_file, lib_file, abc_command):
+    f=open('abc.script', 'w')
+    f.write('bdd;collapse;order;map')
+  #  f.write('strash;refactor;rewrite;refactor;rewrite;refactor;rewrite;map')
+ #   f.write('espresso;map')
+    f.close
+    f=open('yosys.script', 'w')
+    yosys_command = 'read_verilog ' + input_file + '; ' \
+            + 'synth -flatten; opt; opt_clean -purge; techmap; abc -liberty '+lib_file 
+    if abc_command:
+            yosys_command += ' -script abc.script'
+    yosys_command += '; stat -liberty '+lib_file + ' ; ' \
+            + 'write_verilog -noattr -noexpr ' + output_file + '.v;\n'
+    f.write(yosys_command)
+    f.close
+    area = 0
+    line=subprocess.call("yosys -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True, stdout=f)
+    with open(output_file+".log", 'r') as file_handle:
+        for line in file_handle:
+            if 'Chip area' in line:
+                area = line.split()[-1]
+    return float(area)
+    
+def  gen_truth(fname, modulename):
     with open(fname+'.v') as file:
         f=open(fname+'_tb.v', "w+")
         line = file.readline()
@@ -78,6 +97,9 @@ def gen_truth(fname, modulename):
                         out=0
             line=file.readline()
         file.close()
+    if n_inputs > 16:   
+        print('BLASYS cannot handle more than 16 inputs per partition; reduce parition sizes')
+        exit(-1)
     f.write("module "+modulename+"_tb;\n")
     f.write('reg ['+str(n_inputs-1)+':0] pi;\n')
     f.write('wire ['+str(n_outputs-1)+':0] po;\n')
@@ -141,21 +163,51 @@ def gen_truth(fname, modulename):
 
 
 def v2w(signal,  n):
+    #s=''
+    #for i in range(n-1, 0, -1):
+    #    s = s+signal+str(i)+', '
+    #s=s+signal+'0'
+    #return s
+
+    digit_len = len(str(n))
     s=''
-    for i in range(n-1, 0, -1):
-        s = s+signal+str(i)+', '
-    s=s+signal+'0'
+    s=s+signal+'{0:0{1}}'.format(0, digit_len)
+    for i in range(1,n):
+        s = s+', '+signal+'{0:0{1}}'.format(i, digit_len)
     return s
 
-def create_w(n, k, W, f1):    
-    f1.write('module w'+str(k)+'('+v2w('in', n)+', '+ v2w('k', k)+');\n')
+def create_w(n, k, W, f1, modulename):    
+    f1.write('module '+modulename+'_w'+str(k)+'('+v2w('in', n)+', '+ v2w('k', k)+');\n')
     f1.write('input '+v2w('in', n)+';\n')
     f1.write('output '+v2w('k', k)+';\n')
 
     for i in range(k-1, -1, -1):
         f1.write('assign k'+str(k-i-1)+' = ')
-        not_first=0
+        
+        truth=""
+        for j in range(2 ** n-1,-1,-1):
+            truth= truth+str(W[j,i])
+#        print(truth)
+        if truth.find('1') != -1:
+            script='read_truth -x '+truth+';bdd;order;write_verilog formula.v'
+            os.system('abc -q '+'\''+script+'\'')
+            with open('formula.v', 'r') as file_handle:
+                for line in file_handle:
+                    if 'assign' in line:
+                        formula=line
+            formula=formula.replace('assign F = ', '')
+#            print(formula)
+            for c in range(n):
+                formula=formula.replace(chr(97+c)+ ';', 'in'+str(n-c-1)+';')
+                formula=formula.replace(chr(97+c)+ ' ', 'in'+str(n-c-1)+' ')
+                formula=formula.replace(chr(97+c)+ ')', 'in'+str(n-c-1)+')')
+        else:
+            formula='0;\n'
+ #       print(formula)
+        f1.write(formula)
+        '''
         constant=1
+        not_first=0
         for j in range(2 ** n):
             if W[j,i] == 1:
                 constant = 0
@@ -177,11 +229,12 @@ def create_w(n, k, W, f1):
                 f1.write(')')
         if constant == 1:
             f1.write('0')
-        f1.write(';\n')    
+        f1.write(';\n')  
+'''
     f1.write('endmodule\n\n')
 
-def create_h(m, k, H, f1):
-    f1.write('module h'+str(k)+'('+v2w('k', k)+', '+ v2w('out', m)+');\n')
+def create_h(m, k, H, f1, modulename):
+    f1.write('module '+modulename+'_h'+str(k)+'('+v2w('k', k)+', '+ v2w('out', m)+');\n')
     f1.write('input '+v2w('k', k)+';\n')
     f1.write('output '+v2w('out', m)+';\n')
     # Print The gates...
@@ -205,17 +258,27 @@ def create_h(m, k, H, f1):
 
 
 
-def create_wh(n, m, k, W, H, fname):
+def create_wh(n, m, k, W, H, fname, modulename):
     f1=open(fname+'_approx_k='+str(k)+'.v','w')
-    f1.write('module ' +fname+'(' + v2w('in', n)+', '+ v2w('out', m)+');\n')
-    f1.write('input '+v2w('in', n)+';\n')
-    f1.write('output '+v2w('out', m)+';\n')
+    f1.write('module ' +modulename+'(' + v2w('pi', n)+', '+ v2w('po', m)+');\n')
+    f1.write('input '+v2w('pi', n)+';\n')
+    f1.write('output '+v2w('po', m)+';\n')
     f1.write('wire '+v2w('k', k)+';\n')
-    f1.write('w'+str(k)+' DUT1 ('+v2w('in', n)+', '+ v2w('k', k)+');\n')
-    f1.write('h'+str(k)+' DUT2 ('+v2w('k', k)+', '+ v2w('out', m)+');\n')
+    f1.write(modulename+'_w'+str(k)+' DUT1 ('+v2w('pi', n)+', '+ v2w('k', k)+');\n')
+    f1.write(modulename+'_h'+str(k)+' DUT2 ('+v2w('k', k)+', '+ v2w('po', m)+');\n')
     f1.write('endmodule\n\n')
-    create_w(n, k, W, f1)
-    create_h(m, k, H, f1)
+    create_w(n, k, W, f1, modulename)
+    create_h(m, k, H, f1, modulename)
     f1.close
 
-	
+def approximate(inputfile, k, num_in, num_out, liberty, modulename):
+    #print('./asso ' + inputfile + '.truth ' +  str(k))
+    os.system('./asso ' + inputfile + '.truth ' +  str(k))
+    W = np.loadtxt(inputfile + '.truth_w_' + str(k), dtype=int)
+    H = np.loadtxt(inputfile + '.truth_h_' + str(k), dtype=int)
+    print('Writing approximate design...')
+    create_wh(num_in, num_out, k, W, H, inputfile, modulename)
+    print('Simulating truth table on approximation design...')
+    # os.system('iverilog -o ' + inputfile + '_approx_k=' + str(k) + '.iv ' + inputfile + '_approx_k=' + str(k) + '.v ' + testbench)
+    # os.system('vvp ' + inputfile + '_approx_k=' + str(k) + '.iv > ' + inputfile + '_approx_k=' + str(k) + '.truth' )
+    area_np = synth_design(inputfile + '_approx_k=' + str(k) + '.v', inputfile + '_approx_k=' + str(k) + '_syn', liberty, True)
