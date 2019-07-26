@@ -161,7 +161,6 @@ os.mkdir(output_dir_path)
 input_file = config['input_file']
 testbench = config['testbench']
 toplevel = config['toplevel']
-err_thresh = config['err_thresh']
 lsoracle = config['lsoracle_path']
 yosys = config['yosys_path']
 iverilog = config['iverilog_path']

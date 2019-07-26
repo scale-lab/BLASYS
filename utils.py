@@ -162,7 +162,7 @@ def  gen_truth(fname, modulename):
     return n_inputs, n_outputs
 
 
-def v2w(signal,  n):
+def v2w_top(signal,  n):
     #s=''
     #for i in range(n-1, 0, -1):
     #    s = s+signal+str(i)+', '
@@ -175,6 +175,15 @@ def v2w(signal,  n):
     for i in range(1,n):
         s = s+', '+signal+'{0:0{1}}'.format(i, digit_len)
     return s
+
+
+def v2w(signal,  n):
+    s=''
+    for i in range(n-1, 0, -1):
+        s = s+signal+str(i)+', '
+    s=s+signal+'0'
+    return s
+
 
 def create_w(n, k, W, f1, modulename):    
     f1.write('module '+modulename+'_w'+str(k)+'('+v2w('in', n)+', '+ v2w('k', k)+');\n')
@@ -260,12 +269,12 @@ def create_h(m, k, H, f1, modulename):
 
 def create_wh(n, m, k, W, H, fname, modulename):
     f1=open(fname+'_approx_k='+str(k)+'.v','w')
-    f1.write('module ' +modulename+'(' + v2w('pi', n)+', '+ v2w('po', m)+');\n')
-    f1.write('input '+v2w('pi', n)+';\n')
-    f1.write('output '+v2w('po', m)+';\n')
-    f1.write('wire '+v2w('k', k)+';\n')
-    f1.write(modulename+'_w'+str(k)+' DUT1 ('+v2w('pi', n)+', '+ v2w('k', k)+');\n')
-    f1.write(modulename+'_h'+str(k)+' DUT2 ('+v2w('k', k)+', '+ v2w('po', m)+');\n')
+    f1.write('module ' +modulename+'(' + v2w_top('pi', n)+', '+ v2w_top('po', m)+');\n')
+    f1.write('input '+v2w_top('pi', n)+';\n')
+    f1.write('output '+v2w_top('po', m)+';\n')
+    f1.write('wire '+v2w_top('k', k)+';\n')
+    f1.write(modulename+'_w'+str(k)+' DUT1 ('+v2w_top('pi', n)+', '+ v2w_top('k', k)+');\n')
+    f1.write(modulename+'_h'+str(k)+' DUT2 ('+v2w_top('k', k)+', '+ v2w_top('po', m)+');\n')
     f1.write('endmodule\n\n')
     create_w(n, k, W, f1, modulename)
     create_h(m, k, H, f1, modulename)
