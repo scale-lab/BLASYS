@@ -81,19 +81,19 @@ def  gen_truth(fname, modulename):
         while line:
             line.strip()
             tokens=re.split('[ ,;\n]', line)
-            for t in tokens:			
+            for t in tokens:
                 t.strip()
                 if t != "":
                     if inp == 1 and t != 'output':
                         n_inputs+=1
-                    if out == 1 and t != 'wire':
+                    if out == 1 and t != 'wire' and t != 'assign':
                         n_outputs+=1
                     if t == 'input':
                         inp=1
                     elif t == 'output':
                         out=1
                         inp=0
-                    elif t == 'wire':
+                    elif t == 'wire' or t == 'assign':
                         out=0
             line=file.readline()
         file.close()
@@ -109,6 +109,7 @@ def  gen_truth(fname, modulename):
         inp=0
         out=0
         first=1
+        end=0
         i=0
         while line:
             line.strip()
@@ -124,7 +125,7 @@ def  gen_truth(fname, modulename):
                             first=0
                             f.write('pi['+str(n_inputs-i-1)+']')
                         i=i+1
-                    if out == 1 and t != 'wire':
+                    if out == 1 and t != 'wire' and t != 'assign':
                         if first == 0:
                             #f.write(', '+t, end='')
                             f.write(', po['+str(n_outputs-i-1)+']')
@@ -139,8 +140,10 @@ def  gen_truth(fname, modulename):
                         first=1
                         out=1
                         inp=0
-                    elif t == 'wire':
-                        f.write(');\n')
+                    elif t == 'wire' or t == 'assign':
+                        if not end:
+                            f.write(');\n')
+                            end=1
                         out=0
             line=file.readline()
         file.close()
