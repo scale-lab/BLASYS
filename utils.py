@@ -47,28 +47,30 @@ def synth_gen(input_file, output_file, lib_file):
                 area = line.split()[-1]
     return float(area)
 
-def synth_design(input_file, output_file, lib_file, abc_command):
+def synth_design(input_file, output_file, lib_file):
     f=open('abc.script', 'w')
-    f.write('bdd;collapse;order;map')
+    #f.write('bdd;collapse;order;map')
+    f.write('strash;fraig;refactor;rewrite -z;scorr;map')
   #  f.write('strash;refactor;rewrite;refactor;rewrite;refactor;rewrite;map')
  #   f.write('espresso;map')
     f.close
     f=open('yosys.script', 'w')
     yosys_command = 'read_verilog ' + input_file + '; ' \
-            + 'synth -flatten; opt; opt_clean -purge; techmap; abc -liberty '+lib_file 
-    if abc_command:
-            yosys_command += ' -script abc.script'
-    yosys_command += '; stat -liberty '+lib_file + ' ; ' \
+            + 'synth -flatten; opt; opt_clean -purge; techmap; abc -liberty '+lib_file \
+            + ' -script abc.script; stat -liberty '+lib_file + ' ; ' \
             + 'write_verilog -noattr -noexpr ' + output_file + '.v;\n'
     f.write(yosys_command)
     f.close
     area = 0
+    num_cells = 0
     line=subprocess.call("yosys -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True, stdout=f)
     with open(output_file+".log", 'r') as file_handle:
         for line in file_handle:
             if 'Chip area' in line:
                 area = line.split()[-1]
-    return float(area)
+            if 'Number of cells' in line:
+                num_cells = line.split()[-1]
+    return float(area), int(num_cells)
     
 def  gen_truth(fname, modulename):
     with open(fname+'.v') as file:
@@ -288,9 +290,9 @@ def approximate(inputfile, k, num_in, num_out, liberty, modulename):
     os.system('./asso ' + inputfile + '.truth ' +  str(k))
     W = np.loadtxt(inputfile + '.truth_w_' + str(k), dtype=int)
     H = np.loadtxt(inputfile + '.truth_h_' + str(k), dtype=int)
-    print('Writing approximate design...')
+    print('----- Writing approximate design...')
     create_wh(num_in, num_out, k, W, H, inputfile, modulename)
     print('Simulating truth table on approximation design...')
     # os.system('iverilog -o ' + inputfile + '_approx_k=' + str(k) + '.iv ' + inputfile + '_approx_k=' + str(k) + '.v ' + testbench)
     # os.system('vvp ' + inputfile + '_approx_k=' + str(k) + '.iv > ' + inputfile + '_approx_k=' + str(k) + '.truth' )
-    area_np = synth_design(inputfile + '_approx_k=' + str(k) + '.v', inputfile + '_approx_k=' + str(k) + '_syn', liberty, True)
+    area_np, cells_np = synth_design(inputfile + '_approx_k=' + str(k) + '.v', inputfile + '_approx_k=' + str(k) + '_syn', liberty)

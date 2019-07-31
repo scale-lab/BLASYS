@@ -5,19 +5,19 @@ import os
 import numpy as np
 import subprocess
 import shutil
-import yaml
+import argparse
 from utils import assess_HD, gen_truth, create_wh, synth_design, approximate
 
 
-def evaluate_design(k_stream, list_num_input, list_num_output, config, approx_created):
+def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, approx_created):
 
     print('Evaluating Design ', k_stream)
 
     num_part = len(k_stream)
     # area = 0
 
-    tmp_verilog = os.path.join(config['output_dir'], 'temp.v')
-    toplevel_file = os.path.join(config['output_dir'], 'partition', config['toplevel'] + '.v')
+    tmp_verilog = os.path.join(args.output, 'temp.v')
+    toplevel_file = os.path.join(args.output, 'partition', toplevel + '.v')
     os.system('cat ' + toplevel_file + ' > ' + tmp_verilog)
 
     for i in range(num_part):
@@ -28,41 +28,41 @@ def evaluate_design(k_stream, list_num_input, list_num_output, config, approx_cr
             continue
 
         if approx_degree == list_num_output[i]:
-            part_verilog = os.path.join(config['output_dir'], 'partition', config['toplevel'] + '_' + str(i) + '.v')
+            part_verilog = os.path.join(args.output, 'partition', toplevel + '_' + str(i) + '.v')
             os.system('cat ' + part_verilog + ' >> ' + tmp_verilog)
             # area += approx_area[i][approx_degree]
             continue
         
-        part_verilog = os.path.join(config['output_dir'], config['toplevel'] + '_' + str(i), config['toplevel'] + '_' + str(i) + '_approx_k=' + str(approx_degree) + '.v')
+        part_verilog = os.path.join(args.output, toplevel + '_' + str(i), toplevel + '_' + str(i) + '_approx_k=' + str(approx_degree) + '.v')
         if approx_created[i][approx_degree] == 1:
             os.system('cat ' + part_verilog + ' >> ' + tmp_verilog)
             # area += approx_area[i][approx_degree]
         else:
-            print('Approximating part ' + str(i) + ' to degree ' + str(approx_degree))
+            print('----- Approximating part ' + str(i) + ' to degree ' + str(approx_degree))
 
-            directory = os.path.join(config['output_dir'], config['toplevel'] + '_' + str(i), config['toplevel'] + '_' + str(i))
-            approximate(directory, approx_degree, list_num_input[i], list_num_output[i], config['liberty_file'], config['toplevel'] + '_' + str(i))
+            directory = os.path.join(args.output, toplevel + '_' + str(i), toplevel + '_' + str(i))
+            approximate(directory, approx_degree, list_num_input[i], list_num_output[i], args.liberty, toplevel + '_' + str(i))
             os.system('cat ' + part_verilog + ' >> ' + tmp_verilog)
             # part_area = synth_design(part_verilog, part_verilog[:-2]+'_syn', config['liberty_file'], True)
             approx_created[i][approx_degree] = 1
             # area += part_area
 
-    os.system('iverilog -o tmp.iv ' + tmp_verilog + ' ' + config['testbench'])
-    truth_dir = os.path.join(config['output_dir'], 'tmp.truth')
+    os.system('iverilog -o tmp.iv ' + tmp_verilog + ' ' + args.testbench)
+    truth_dir = os.path.join(args.output, 'tmp.truth')
     os.system('vvp tmp.iv > ' + truth_dir)
     os.system('rm tmp.iv')
 
-    ground_truth = os.path.join(config['output_dir'], config['toplevel'] + '.truth')
+    ground_truth = os.path.join(args.output, toplevel + '.truth')
     
-    area = synth_design(tmp_verilog, tmp_verilog[:-2] + '_syn', library, False)
+    area, num_cells = synth_design(tmp_verilog, tmp_verilog[:-2] + '_syn', library)
 
     t, h, f = assess_HD(ground_truth, truth_dir)
-    print('Simulation error: ' + str(f) + '\tCircuit area: ' + str(area))
-    return f, area
+    print('Simulation error: ' + str(f) + '\tCircuit area: ' + str(area) + '\tNumber of cells: ' + str(num_cells))
+    return f, area, num_cells
 
 
 
-def evaluate_iter(curr_k_stream, list_num_input, list_num_output, config, approx_created):
+def evaluate_iter(curr_k_stream, list_num_input, list_num_output, toplevel, args, approx_created):
     
     k_lists = []
 
@@ -73,43 +73,52 @@ def evaluate_iter(curr_k_stream, list_num_input, list_num_output, config, approx
             k_lists.append(new_k_stream)
     
     if len(k_lists) == 0:
-        return False
+        return False, 0, 0
 
     num_list = len(k_lists)
     err_list = []
     area_list = []
+    cells_list = []
 
     for i in range(num_list):
         # Evaluate each list
+        print('======== Design number ' + str(i))
         k_stream = k_lists[i]
-        err, area = evaluate_design(k_stream, list_num_input, list_num_output, config, approx_created)
+        err, area, num_cells = evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, approx_created)
         err_list.append(err)
         area_list.append(area)
+        cells_list.append(num_cells)
 
-    if np.min(err_list) > config['threshold']:
-        return False
+    if np.min(err_list) > args.threshold:
+        return False, 0, 0
 
+    #np_area = np.array(area_list)
+    #order = np.argsort(np_area)
+#
+#    for i in order:
+#        if err_list[i] > config['threshold']:
+#            continue
+#        return k_lists[i], err_list[i], area_list[i], cells_list[i]
+
+    idx = optimization(err_list, area_list, cells_list, args.threshold)
+    return k_lists[idx], err_list[idx], area_list[idx], cells_list[idx]
+
+
+def optimization(err_list, area_list, cells_list, threshold):
     np_area = np.array(area_list)
     order = np.argsort(np_area)
 
     for i in order:
-        if err_list[i] > config['threshold']:
+        if err_list[i] > threshold:
             continue
-        return k_lists[i]
-
-
-
-def print_usage():
-    print('BLASYS -- Approximate Logic Synthesis Using Boolean Matrix Factorization')
-    print('The usage is:')
-    print('    python3 run_blasys_flow.py [PATH_TO_PARAMS.YML]')
+        return i
 
 
 def print_banner():
     print('/----------------------------------------------------------------------------\\')
     print('|                                                                            |')
     print('|  BLASYS -- Approximate Logic Synthesis Using Boolean Matrix Factorization  |')
-    print('|  Version: 0.1.0                                                            |')
+    print('|  Version: 0.2.0                                                            |')
     print('|                                                                            |')
     print('|  Copyright (C) 2019  SCALE Lab, Brown University                           |')
     print('|                                                                            |')
@@ -133,45 +142,72 @@ def print_banner():
 #        MAIN        #
 ######################
 
-if len(sys.argv) == 2:
-    arg = sys.argv[1]
-    if arg == '--version' or arg == '-v':
-        print('BLASYS Approximate Logic Synthesis Framework')
-        print('Version 0.2.0')
-        sys.exit()
-    elif arg == '--help' or arg == '-h':
-        print_usage()
-        sys.exit()
-    elif arg[-4:] == '.yml':
-        yaml_file = arg
-    else:
-        print_usage()
-        sys.exit()
-else:
-    print_usage()
-    sys.exit()
+#if len(sys.argv) == 2:
+#    arg = sys.argv[1]
+#    if arg == '--version' or arg == '-v':
+#        print('BLASYS Approximate Logic Synthesis Framework')
+#        print('Version 0.2.0')
+#        sys.exit()
+#    elif arg == '--help' or arg == '-h':
+#        print_usage()
+#        sys.exit()
+#    elif arg[-4:] == '.yml':
+#        yaml_file = arg
+#    else:
+#        print_usage()
+#        sys.exit()
+#else:
+#    print_usage()
+#    sys.exit()
+
+parser = argparse.ArgumentParser(description='BLASYS -- Approximate Logic Synthesis Using Boolean Matrix Factorization')
+parser.add_argument('-i', help='Input verilog file', required=True, dest='input')
+parser.add_argument('-tb', help='Testbench verilog file', required=True, dest='testbench')
+parser.add_argument('-n', help='Number of partitions', required=True, type=int, dest='npart')
+parser.add_argument('-o', help='Output directory', default='output', dest='output')
+parser.add_argument('-ts', help='Threshold on error', default=0.5, type=int, dest='threshold')
+parser.add_argument('-lib', help='Liberty file name', default='asap7.lib', dest='liberty')
+parser.add_argument('--lsoracle', help='Path to LSOracle tool', default='lstools', dest='lsoracle')
+parser.add_argument('--yosys', help='Path to YOSYS', default='yosys', dest='yosys')
+parser.add_argument('--vvp', help='Path to vvp', default='vvp', dest='vvp')
+parser.add_argument('--iverilog', help='Path to iVerilog', default='iverilog', dest='iverilog')
+
+args = parser.parse_args()
 
 print_banner()
 
-with open(yaml_file, 'r') as config_file:
-    config = yaml.safe_load(config_file)
+
+
+#with open('params.yml', 'r') as config_file:
+#    config = yaml.safe_load(config_file)
 
 # Create temporary output directory
-output_dir_path = config['output_dir']
+output_dir_path = args.output
 if os.path.isdir(output_dir_path):
     shutil.rmtree(output_dir_path)
 os.mkdir(output_dir_path)
 
 # Parse information from yaml file
-input_file = config['input_file']
-testbench = config['testbench']
-toplevel = config['toplevel']
-lsoracle = config['lsoracle_path']
-yosys = config['yosys_path']
-iverilog = config['iverilog_path']
-vvp = config['vvp_path']
-library = config['liberty_file']
-num_parts = config['partition_count']
+input_file = args.input
+testbench = args.testbench
+lsoracle = args.lsoracle
+yosys = args.yosys
+iverilog = args.iverilog
+vvp = args.vvp
+library = args.liberty
+num_parts = args.npart
+toplevel = ''
+with open(input_file) as file:
+    line = file.readline()
+    while line:
+        tokens = re.split('[ (]', line)
+        for i in range(len(tokens)):
+            if tokens[i] == 'module':
+                toplevel = tokens[i+1]
+                break
+        if toplevel != '':
+            break
+        line = file.readline()
 
 # Evaluate input circuit
 print('Simulating truth table on input design...')
@@ -181,8 +217,9 @@ os.system(vvp + ' ' + toplevel + '.iv > ' + output_truth)
 os.system('rm ' + toplevel + '.iv')
 print('Synthesizing input design...')
 output_synth = os.path.join(output_dir_path, toplevel+'_syn')
-input_area = synth_design(input_file, output_synth, library, False)
-print('Original design area', str(input_area))
+input_area, input_cells = synth_design(input_file, output_synth, library)
+print('Original design area ', str(input_area))
+print('Original cells number ', str(input_cells))
 
 # Partitioning circuit
 part_dir = os.path.join(output_dir_path, 'partition')
@@ -230,6 +267,7 @@ for i in range(num_parts):
     #print('Partition area ' + str(part_area))
     approx_created.append([0] * m + [1])
 
+os.system('rm ' + os.path.basename(input_file))
 print('==================== Starting Approximation by Greedy Search  ====================')
 
 
@@ -246,17 +284,28 @@ while True:
     if count_iter == 1:
         curr_stream = list_num_output
 
-    print('############### Current k_stream: ', curr_stream)
     print('--------------- Iteration ' + str(count_iter) + ' ---------------')
 
-    tmp = evaluate_iter(curr_stream, list_num_input, list_num_output, config, approx_created )
+    tmp, err, area, n_cells = evaluate_iter(curr_stream, list_num_input, list_num_output, toplevel, args, approx_created )
      
     if tmp == False:
         break
 
+    print('--------------- Finishing Iteration' + str(count_iter) + '---------------')
+    print('Previous k_stream: ' + str(curr_stream))
+    print('Chosen k_stream:   ' + str(tmp))
+    for i in range(len(curr_stream)):
+        pre = curr_stream[i]
+        aft = tmp[i]
+        if pre != aft:
+            print('Design number ' + str(i) + ' is chosen.')
+            print('Approximated partition ' + str(i) + ' from ' + str(pre) + ' to ' + str(aft))
+            break
+    print('Approximated HD error:  ' + str(100*err) + '%')
+    print('Area percentage:        ' + str(100 * (area / input_area)) + '%')
+    print('Cell number percentage: ' + str(100 * (n_cells / input_cells)) + '%')
+
     curr_stream = tmp
-
-
 
     count_iter += 1
 
