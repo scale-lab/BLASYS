@@ -5,8 +5,8 @@
 /* The Main function */
 int main(int arg, char *argv[])
 {
-char *	filename=argv[1];	
-int	k=atoi(argv[2]);
+    char *filename;	
+    int	k;
     mwSize n, m, t_length, b_length;
     int i, ti, bi, bestBonusCovered, bestPenaltyOvercovered;
     unsigned long int error, bestError;
@@ -24,10 +24,12 @@ int	k=atoi(argv[2]);
 		0,     /* majority */
 		1,     /* bonus_covered */
 		1,     /* penalty_overcovered */
-		NULL}; /* decomp matrix */
+		NULL}; /* decomp matrix */  
 
     /* allocate memory and fill the matrix*/
     FILE *f;
+    filename=argv[1];
+    k=atoi(argv[2]);
     f = fopen(filename, "r");
     if(f==NULL){
         printf("Could not fine the input file...\n");
@@ -179,7 +181,7 @@ int	k=atoi(argv[2]);
         }
     }
 
-    char w_name[30];
+    char w_name[300];
     sprintf(w_name, "%s_w_%d",filename,k);
     f=fopen(w_name,"w");
     for(int i=0;i<n;i++){
@@ -190,7 +192,7 @@ int	k=atoi(argv[2]);
     }
     fclose(f);
 
-    char h_name[30];
+    char h_name[300];
     sprintf(h_name, "%s_h_%d",filename,k);
     f=fopen(h_name,"w");
     for(int i=0;i<k;i++){
@@ -201,7 +203,7 @@ int	k=atoi(argv[2]);
     }
     fclose(f);
 
-    char wh_name[30];
+    char wh_name[300];
     int element;
     sprintf(wh_name, "%s_wh_%d",filename,k);
     f=fopen(wh_name,"w");

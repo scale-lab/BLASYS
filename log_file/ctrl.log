@@ -1,0 +1,88 @@
+[16, 5, 9, 14, 9]
+Approximated HD error: 0.000000%	Area percentage: 91.830065%	Cell number percentage: 89.473684%
+[16, 5, 9, 13, 9]
+Approximated HD error: 0.843704%	Area percentage: 86.601307%	Cell number percentage: 100.000000%
+[16, 5, 9, 12, 9]
+Approximated HD error: 2.077037%	Area percentage: 77.777778%	Cell number percentage: 90.789474%
+[16, 5, 9, 12, 8]
+Approximated HD error: 2.584444%	Area percentage: 74.509804%	Cell number percentage: 88.157895%
+[16, 5, 8, 12, 8]
+Approximated HD error: 2.611111%	Area percentage: 74.836601%	Cell number percentage: 85.526316%
+[16, 5, 7, 12, 8]
+Approximated HD error: 2.637778%	Area percentage: 69.934641%	Cell number percentage: 78.947368%
+[16, 5, 7, 12, 7]
+Approximated HD error: 4.617778%	Area percentage: 63.725490%	Cell number percentage: 75.000000%
+[16, 5, 7, 11, 7]
+Approximated HD error: 4.854815%	Area percentage: 66.666667%	Cell number percentage: 76.315789%
+[16, 5, 7, 10, 7]
+Approximated HD error: 6.383333%	Area percentage: 64.379085%	Cell number percentage: 71.052632%
+[16, 5, 7, 9, 7]
+Approximated HD error: 6.747407%	Area percentage: 62.418301%	Cell number percentage: 68.421053%
+[16, 5, 6, 9, 7]
+Approximated HD error: 6.747407%	Area percentage: 63.071895%	Cell number percentage: 68.421053%
+[16, 5, 5, 9, 7]
+Approximated HD error: 7.095926%	Area percentage: 62.418301%	Cell number percentage: 68.421053%
+[16, 5, 5, 8, 7]
+Approximated HD error: 8.375926%	Area percentage: 61.764706%	Cell number percentage: 68.421053%
+[16, 4, 5, 8, 7]
+Approximated HD error: 8.704815%	Area percentage: 57.189542%	Cell number percentage: 64.473684%
+[16, 3, 5, 8, 7]
+Approximated HD error: 8.924444%	Area percentage: 52.614379%	Cell number percentage: 60.526316%
+[16, 3, 4, 8, 7]
+Approximated HD error: 8.924444%	Area percentage: 52.614379%	Cell number percentage: 60.526316%
+[16, 3, 3, 8, 7]
+Approximated HD error: 9.342593%	Area percentage: 53.921569%	Cell number percentage: 51.315789%
+[16, 2, 3, 8, 7]
+Approximated HD error: 9.707407%	Area percentage: 51.633987%	Cell number percentage: 47.368421%
+[15, 2, 3, 8, 7]
+Approximated HD error: 9.707407%	Area percentage: 50.980392%	Cell number percentage: 48.684211%
+[14, 2, 3, 8, 7]
+Approximated HD error: 9.707407%	Area percentage: 50.980392%	Cell number percentage: 48.684211%
+[13, 2, 3, 8, 7]
+Approximated HD error: 9.707407%	Area percentage: 50.980392%	Cell number percentage: 48.684211%
+[12, 2, 3, 8, 7]
+Approximated HD error: 9.712222%	Area percentage: 49.673203%	Cell number percentage: 46.052632%
+[11, 2, 3, 8, 7]
+Approximated HD error: 9.701111%	Area percentage: 47.712418%	Cell number percentage: 44.736842%
+[10, 2, 3, 8, 7]
+Approximated HD error: 9.692222%	Area percentage: 45.751634%	Cell number percentage: 43.421053%
+[9, 2, 3, 8, 7]
+Approximated HD error: 9.683704%	Area percentage: 43.790850%	Cell number percentage: 42.105263%
+[8, 2, 3, 8, 7]
+Approximated HD error: 9.687037%	Area percentage: 42.156863%	Cell number percentage: 40.789474%
+[7, 2, 3, 8, 7]
+Approximated HD error: 10.110000%	Area percentage: 39.215686%	Cell number percentage: 38.157895%
+[7, 2, 2, 8, 7]
+Approximated HD error: 11.731481%	Area percentage: 36.274510%	Cell number percentage: 28.947368%
+[6, 2, 2, 8, 7]
+Approximated HD error: 11.845926%	Area percentage: 34.313725%	Cell number percentage: 28.947368%
+[5, 2, 2, 8, 7]
+Approximated HD error: 12.325185%	Area percentage: 30.718954%	Cell number percentage: 28.947368%
+[4, 2, 2, 8, 7]
+Approximated HD error: 12.669259%	Area percentage: 34.967320%	Cell number percentage: 32.894737%
+[3, 2, 2, 8, 7]
+Approximated HD error: 12.449630%	Area percentage: 33.006536%	Cell number percentage: 31.578947%
+[2, 2, 2, 8, 7]
+Approximated HD error: 12.447037%	Area percentage: 31.372549%	Cell number percentage: 30.263158%
+[2, 2, 2, 8, 6]
+Approximated HD error: 12.590370%	Area percentage: 32.679739%	Cell number percentage: 32.894737%
+[2, 2, 2, 7, 6]
+Approximated HD error: 12.248519%	Area percentage: 28.104575%	Cell number percentage: 34.210526%
+[2, 2, 2, 7, 5]
+Approximated HD error: 12.248519%	Area percentage: 28.104575%	Cell number percentage: 34.210526%
+[2, 2, 2, 7, 4]
+Approximated HD error: 11.859630%	Area percentage: 27.124183%	Cell number percentage: 28.947368%
+[2, 2, 2, 6, 4]
+Approximated HD error: 11.859630%	Area percentage: 24.836601%	Cell number percentage: 23.684211%
+[2, 2, 2, 5, 4]
+Approximated HD error: 12.082222%	Area percentage: 23.856209%	Cell number percentage: 25.000000%
+[2, 2, 2, 4, 4]
+Approximated HD error: 14.130741%	Area percentage: 19.934641%	Cell number percentage: 19.736842%
+[2, 2, 2, 3, 4]
+Approximated HD error: 15.773704%	Area percentage: 18.627451%	Cell number percentage: 19.736842%
+[2, 2, 2, 2, 4]
+Approximated HD error: 15.950741%	Area percentage: 18.300654%	Cell number percentage: 15.789474%
+[2, 2, 2, 2, 3]
+Approximated HD error: 17.572222%	Area percentage: 19.934641%	Cell number percentage: 18.421053%
+[2, 2, 2, 2, 2]
+Approximated HD error: 16.695185%	Area percentage: 15.359477%	Cell number percentage: 15.789474%

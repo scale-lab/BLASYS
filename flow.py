@@ -9,7 +9,7 @@ import argparse
 from utils import assess_HD, gen_truth, create_wh, synth_design, approximate
 
 
-def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, approx_created):
+def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path):
 
     print('Evaluating Design ', k_stream)
 
@@ -41,7 +41,7 @@ def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, a
             print('----- Approximating part ' + str(i) + ' to degree ' + str(approx_degree))
 
             directory = os.path.join(args.output, toplevel + '_' + str(i), toplevel + '_' + str(i))
-            approximate(directory, approx_degree, list_num_input[i], list_num_output[i], args.liberty, toplevel + '_' + str(i))
+            approximate(directory, approx_degree, list_num_input[i], list_num_output[i], args.liberty, toplevel + '_' + str(i), app_path)
             os.system('cat ' + part_verilog + ' >> ' + tmp_verilog)
             # part_area = synth_design(part_verilog, part_verilog[:-2]+'_syn', config['liberty_file'], True)
             approx_created[i][approx_degree] = 1
@@ -62,7 +62,7 @@ def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, a
 
 
 
-def evaluate_iter(curr_k_stream, list_num_input, list_num_output, toplevel, args, approx_created):
+def evaluate_iter(curr_k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path):
     
     k_lists = []
 
@@ -84,7 +84,7 @@ def evaluate_iter(curr_k_stream, list_num_input, list_num_output, toplevel, args
         # Evaluate each list
         print('======== Design number ' + str(i))
         k_stream = k_lists[i]
-        err, area, num_cells = evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, approx_created)
+        err, area, num_cells = evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path)
         err_list.append(err)
         area_list.append(area)
         cells_list.append(num_cells)
@@ -166,7 +166,7 @@ parser.add_argument('-tb', help='Testbench verilog file', required=True, dest='t
 parser.add_argument('-n', help='Number of partitions', required=True, type=int, dest='npart')
 parser.add_argument('-o', help='Output directory', default='output', dest='output')
 parser.add_argument('-ts', help='Threshold on error', default=0.5, type=int, dest='threshold')
-parser.add_argument('-lib', help='Liberty file name', default='asap7.lib', dest='liberty')
+parser.add_argument('-lib', help='Liberty file name', default='', dest='liberty')
 parser.add_argument('--lsoracle', help='Path to LSOracle tool', default='lstools', dest='lsoracle')
 parser.add_argument('--yosys', help='Path to YOSYS', default='yosys', dest='yosys')
 parser.add_argument('--vvp', help='Path to vvp', default='vvp', dest='vvp')
@@ -174,9 +174,12 @@ parser.add_argument('--iverilog', help='Path to iVerilog', default='iverilog', d
 
 args = parser.parse_args()
 
+app_path = os.path.dirname(sys.argv[0])
+
+if args.liberty == '':
+    args.liberty = os.path.join(app_path, 'asap7.lib')
+
 print_banner()
-
-
 
 #with open('params.yml', 'r') as config_file:
 #    config = yaml.safe_load(config_file)
@@ -215,22 +218,33 @@ os.system(iverilog + ' -o '+ toplevel + '.iv ' + input_file + ' ' + testbench )
 output_truth = os.path.join(output_dir_path, toplevel+'.truth')
 os.system(vvp + ' ' + toplevel + '.iv > ' + output_truth)
 os.system('rm ' + toplevel + '.iv')
-print('Synthesizing input design...')
-output_synth = os.path.join(output_dir_path, toplevel+'_syn')
-input_area, input_cells = synth_design(input_file, output_synth, library)
-print('Original design area ', str(input_area))
-print('Original cells number ', str(input_cells))
+
+#print('Synthesizing input design...')
+#output_synth = os.path.join(output_dir_path, toplevel+'_syn')
+#input_area, input_cells = synth_design(input_file, output_synth, library)
+#print('Original design area ', str(input_area))
+#print('Original cells number ', str(input_cells))
 
 # Partitioning circuit
+print('Partitioning input circuit...')
 part_dir = os.path.join(output_dir_path, 'partition')
-os.system('cp ' + input_file + ' ./')
-lsoracle_command = 'read_verilog ' + os.path.basename(input_file) + '; ' \
+lsoracle_command = 'read_verilog ' + input_file + '; ' \
         'partitioning ' + str(num_parts) + '; ' \
         'get_all_partitions ' + part_dir
 log_partition = os.path.join(output_dir_path, 'lsoracle.log')
 with open(log_partition, 'w') as file_handler:
     file_handler.write(lsoracle_command)
     subprocess.call([lsoracle, '-c', lsoracle_command], stderr=file_handler, stdout=file_handler)
+
+print('Synthesizing input design with original partitions...')
+input_synth = os.path.join(output_dir_path, toplevel + '_parts.v')
+parts = os.path.join(part_dir, '*.v')
+os.system('cat ' + parts + ' >> ' + input_synth)
+output_synth = os.path.join(output_dir_path, toplevel+'_syn')
+input_area, input_cells = synth_design(input_synth, output_synth, library)
+print('Original design area ', str(input_area))
+print('Original cells number ', str(input_cells))
+
 
 # Generate truth table for each partitions
 approx_created = []
@@ -267,7 +281,6 @@ for i in range(num_parts):
     #print('Partition area ' + str(part_area))
     approx_created.append([0] * m + [1])
 
-os.system('rm ' + os.path.basename(input_file))
 print('==================== Starting Approximation by Greedy Search  ====================')
 
 
@@ -286,7 +299,7 @@ while True:
 
     print('--------------- Iteration ' + str(count_iter) + ' ---------------')
 
-    tmp, err, area, n_cells = evaluate_iter(curr_stream, list_num_input, list_num_output, toplevel, args, approx_created )
+    tmp, err, area, n_cells = evaluate_iter(curr_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path )
      
     if tmp == False:
         break
@@ -301,9 +314,16 @@ while True:
             print('Design number ' + str(i) + ' is chosen.')
             print('Approximated partition ' + str(i) + ' from ' + str(pre) + ' to ' + str(aft))
             break
-    print('Approximated HD error:  ' + str(100*err) + '%')
-    print('Area percentage:        ' + str(100 * (area / input_area)) + '%')
-    print('Cell number percentage: ' + str(100 * (n_cells / input_cells)) + '%')
+   # print('Approximated HD error:  ' + str(100*err) + '%')
+   # print('Area percentage:        ' + str(100 * (area / input_area)) + '%')
+   # print('Cell number percentage: ' + str(100 * (n_cells / input_cells)) + '%')
+
+    msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.6f}%\tCell number percentage: {:.6f}%\n'.format(100*err, 100*(area/input_area), 100*(n_cells/input_cells))
+    print(msg)
+    with open(os.path.join(output_dir_path, 'log'), 'a') as log_file:
+        log_file.write(str(tmp))
+        log_file.write('\n')
+        log_file.write(msg)
 
     curr_stream = tmp
 

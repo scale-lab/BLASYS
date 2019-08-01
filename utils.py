@@ -285,9 +285,10 @@ def create_wh(n, m, k, W, H, fname, modulename):
     create_h(m, k, H, f1, modulename)
     f1.close
 
-def approximate(inputfile, k, num_in, num_out, liberty, modulename):
+def approximate(inputfile, k, num_in, num_out, liberty, modulename, app_path):
     #print('./asso ' + inputfile + '.truth ' +  str(k))
-    os.system('./asso ' + inputfile + '.truth ' +  str(k))
+    asso_path = os.path.join(app_path, 'asso/asso')
+    os.system(asso_path + ' ' + inputfile + '.truth ' +  str(k))
     W = np.loadtxt(inputfile + '.truth_w_' + str(k), dtype=int)
     H = np.loadtxt(inputfile + '.truth_h_' + str(k), dtype=int)
     print('----- Writing approximate design...')

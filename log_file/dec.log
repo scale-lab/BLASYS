@@ -1,0 +1,80 @@
+[3, 16, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 4, 6, 8, 16, 10, 4, 16, 8, 10, 3]
+Approximated HD error: 0.097315%	Area percentage: 77.491961%	Cell number percentage: 77.027027%
+[3, 16, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 4, 6, 8, 16, 10, 4, 16, 8, 10, 2]
+Approximated HD error: 0.193969%	Area percentage: 54.983923%	Cell number percentage: 54.054054%
+[3, 16, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 3, 6, 8, 16, 10, 4, 16, 8, 10, 2]
+Approximated HD error: 0.243696%	Area percentage: 42.765273%	Cell number percentage: 41.891892%
+[3, 16, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 4, 16, 8, 10, 2]
+Approximated HD error: 0.293385%	Area percentage: 30.144695%	Cell number percentage: 29.391892%
+[3, 16, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 3, 16, 8, 10, 2]
+Approximated HD error: 0.317393%	Area percentage: 24.035370%	Cell number percentage: 23.310811%
+[3, 16, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 16, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 15, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 14, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 13, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 12, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 11, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 10, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 9, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 8, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 7, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 6, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 5, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 4, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 3, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 8, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 7, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 6, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 5, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 4, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 3, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 2, 16, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 2, 15, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 2, 14, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 2, 13, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 2, 12, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 2, 11, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 2, 10, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 2, 9, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 2, 8, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 2, 7, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 2, 6, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 2, 5, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 2, 4, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
+[2, 2, 2, 3, 6, 6, 16, 16, 12, 12, 12, 3, 16, 16, 10, 4, 16, 8, 8, 16, 2, 6, 8, 16, 10, 2, 16, 8, 10, 2]
+Approximated HD error: 0.342685%	Area percentage: 17.926045%	Cell number percentage: 17.229730%
