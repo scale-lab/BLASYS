@@ -1,216 +1,216 @@
-[7, 8, 7, 7, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 0.378231%	Area percentage: 92.745048%	Cell number percentage: 83.732877%
-[7, 8, 6, 7, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 0.769000%	Area percentage: 92.719321%	Cell number percentage: 83.561644%
-[7, 8, 5, 7, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 1.348231%	Area percentage: 93.259583%	Cell number percentage: 81.934932%
-[6, 8, 5, 7, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 1.541231%	Area percentage: 93.413944%	Cell number percentage: 81.849315%
-[5, 8, 5, 7, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 2.021385%	Area percentage: 92.153332%	Cell number percentage: 80.821918%
-[4, 8, 5, 7, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 2.497308%	Area percentage: 92.256239%	Cell number percentage: 80.907534%
-[3, 8, 5, 7, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 2.874692%	Area percentage: 91.432982%	Cell number percentage: 80.136986%
-[2, 8, 5, 7, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 3.266769%	Area percentage: 89.863648%	Cell number percentage: 77.996575%
-[2, 8, 5, 6, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 3.639308%	Area percentage: 90.738359%	Cell number percentage: 77.739726%
-[2, 8, 5, 5, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 4.201462%	Area percentage: 89.889375%	Cell number percentage: 76.969178%
-[2, 8, 5, 4, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 4.766769%	Area percentage: 89.735014%	Cell number percentage: 77.825342%
-[2, 8, 5, 3, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 5.150615%	Area percentage: 88.937484%	Cell number percentage: 77.482877%
-[2, 8, 5, 2, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 5.537308%	Area percentage: 87.856959%	Cell number percentage: 76.969178%
-[2, 8, 4, 2, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 6.057538%	Area percentage: 88.577309%	Cell number percentage: 77.568493%
-[2, 8, 3, 2, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 6.403000%	Area percentage: 87.599691%	Cell number percentage: 76.541096%
-[2, 8, 2, 2, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 6.688000%	Area percentage: 86.519166%	Cell number percentage: 75.684932%
-[2, 7, 2, 2, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 6.972462%	Area percentage: 87.265243%	Cell number percentage: 76.284247%
-[2, 6, 2, 2, 8, 7, 7, 7, 8, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 7.507769%	Area percentage: 87.290970%	Cell number percentage: 75.856164%
-[2, 6, 2, 2, 8, 7, 7, 7, 8, 7, 7, 8, 7, 6, 8, 7, 8, 7, 8, 7]
-Approximated HD error: 7.875615%	Area percentage: 87.985593%	Cell number percentage: 73.972603%
-[2, 6, 2, 2, 8, 7, 7, 7, 8, 7, 7, 8, 7, 6, 8, 7, 7, 7, 8, 7]
-Approximated HD error: 8.264923%	Area percentage: 86.184718%	Cell number percentage: 74.400685%
-[2, 6, 2, 2, 8, 7, 7, 7, 8, 7, 7, 8, 7, 6, 8, 7, 6, 7, 8, 7]
-Approximated HD error: 8.822077%	Area percentage: 85.721636%	Cell number percentage: 73.544521%
-[2, 6, 2, 2, 8, 7, 7, 7, 8, 7, 7, 8, 7, 6, 8, 7, 5, 7, 8, 7]
-Approximated HD error: 9.374231%	Area percentage: 85.593002%	Cell number percentage: 72.688356%
-[2, 6, 2, 2, 8, 7, 7, 7, 8, 7, 7, 8, 7, 6, 8, 7, 4, 7, 8, 7]
-Approximated HD error: 9.758077%	Area percentage: 84.872652%	Cell number percentage: 71.489726%
-[2, 6, 2, 2, 8, 7, 7, 7, 8, 7, 7, 8, 7, 6, 8, 7, 3, 7, 8, 7]
-Approximated HD error: 10.153385%	Area percentage: 84.280936%	Cell number percentage: 71.489726%
-[2, 6, 2, 2, 8, 7, 7, 7, 8, 7, 7, 8, 7, 6, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 10.558000%	Area percentage: 84.152303%	Cell number percentage: 75.770548%
-[2, 6, 2, 2, 8, 7, 7, 7, 8, 7, 7, 8, 7, 5, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 11.139923%	Area percentage: 85.361461%	Cell number percentage: 76.883562%
-[2, 6, 2, 2, 8, 7, 6, 7, 8, 7, 7, 8, 7, 5, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 11.735538%	Area percentage: 83.843581%	Cell number percentage: 74.400685%
-[2, 6, 2, 2, 8, 7, 6, 7, 8, 7, 7, 8, 7, 4, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 12.296308%	Area percentage: 84.332390%	Cell number percentage: 75.000000%
-[2, 6, 2, 2, 8, 7, 6, 7, 8, 7, 7, 8, 7, 3, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 12.683385%	Area percentage: 82.557242%	Cell number percentage: 73.972603%
-[2, 5, 2, 2, 8, 7, 6, 7, 8, 7, 7, 8, 7, 3, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 13.181923%	Area percentage: 83.612040%	Cell number percentage: 74.657534%
-[2, 4, 2, 2, 8, 7, 6, 7, 8, 7, 7, 8, 7, 3, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 13.551154%	Area percentage: 81.373810%	Cell number percentage: 72.773973%
-[2, 3, 2, 2, 8, 7, 6, 7, 8, 7, 7, 8, 7, 3, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 13.895308%	Area percentage: 81.373810%	Cell number percentage: 72.345890%
-[2, 2, 2, 2, 8, 7, 6, 7, 8, 7, 7, 8, 7, 3, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 14.185615%	Area percentage: 79.650116%	Cell number percentage: 70.976027%
-[2, 2, 2, 2, 8, 7, 6, 6, 8, 7, 7, 8, 7, 3, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 14.585231%	Area percentage: 81.167996%	Cell number percentage: 71.318493%
-[2, 2, 2, 2, 8, 7, 6, 6, 8, 7, 7, 8, 7, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 14.975308%	Area percentage: 79.881657%	Cell number percentage: 70.205479%
-[2, 2, 2, 2, 8, 7, 6, 5, 8, 7, 7, 8, 7, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 15.530077%	Area percentage: 79.187034%	Cell number percentage: 71.489726%
-[2, 2, 2, 2, 8, 7, 6, 4, 8, 7, 7, 8, 7, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 16.096462%	Area percentage: 80.010291%	Cell number percentage: 72.688356%
-[2, 2, 2, 2, 8, 7, 6, 3, 8, 7, 7, 8, 7, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 16.480846%	Area percentage: 79.650116%	Cell number percentage: 74.486301%
-[2, 2, 2, 2, 8, 7, 6, 2, 8, 7, 7, 8, 7, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 16.869000%	Area percentage: 77.849241%	Cell number percentage: 70.205479%
-[2, 2, 2, 2, 8, 6, 6, 2, 8, 7, 7, 8, 7, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 17.235154%	Area percentage: 79.006946%	Cell number percentage: 70.462329%
-[2, 2, 2, 2, 8, 5, 6, 2, 8, 7, 7, 8, 7, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 17.826615%	Area percentage: 79.855930%	Cell number percentage: 73.030822%
-[2, 2, 2, 2, 8, 4, 6, 2, 8, 7, 7, 8, 7, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 18.366154%	Area percentage: 78.389503%	Cell number percentage: 70.376712%
-[2, 2, 2, 2, 8, 3, 6, 2, 8, 7, 7, 8, 7, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 18.753308%	Area percentage: 78.029329%	Cell number percentage: 70.291096%
-[2, 2, 2, 2, 8, 2, 6, 2, 8, 7, 7, 8, 7, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 19.132462%	Area percentage: 76.485722%	Cell number percentage: 68.578767%
-[2, 2, 2, 2, 8, 2, 6, 2, 8, 7, 7, 8, 6, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 19.505462%	Area percentage: 77.411886%	Cell number percentage: 68.321918%
-[2, 2, 2, 2, 8, 2, 6, 2, 8, 7, 7, 8, 5, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 20.094538%	Area percentage: 77.180345%	Cell number percentage: 67.893836%
-[2, 2, 2, 2, 8, 2, 6, 2, 8, 7, 7, 8, 4, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 20.615000%	Area percentage: 76.974530%	Cell number percentage: 69.006849%
-[2, 2, 2, 2, 8, 2, 6, 2, 8, 7, 7, 8, 3, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 20.963538%	Area percentage: 76.742989%	Cell number percentage: 68.321918%
-[2, 2, 2, 2, 8, 2, 6, 2, 8, 7, 7, 8, 2, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 21.260077%	Area percentage: 74.427579%	Cell number percentage: 67.123288%
-[2, 2, 2, 2, 8, 2, 5, 2, 8, 7, 7, 8, 2, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 21.789692%	Area percentage: 75.379470%	Cell number percentage: 69.606164%
-[2, 2, 2, 2, 8, 2, 4, 2, 8, 7, 7, 8, 2, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 22.160538%	Area percentage: 74.221765%	Cell number percentage: 68.407534%
-[2, 2, 2, 2, 8, 2, 3, 2, 8, 7, 7, 8, 2, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 22.503077%	Area percentage: 72.781065%	Cell number percentage: 66.952055%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 7, 7, 8, 2, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 22.798462%	Area percentage: 70.928737%	Cell number percentage: 65.239726%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 7, 6, 8, 2, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 23.193538%	Area percentage: 71.340365%	Cell number percentage: 63.441781%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 7, 5, 8, 2, 2, 8, 7, 2, 7, 8, 7]
-Approximated HD error: 23.734154%	Area percentage: 71.031644%	Cell number percentage: 63.270548%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 7, 5, 8, 2, 2, 8, 7, 2, 6, 8, 7]
-Approximated HD error: 24.140000%	Area percentage: 71.186005%	Cell number percentage: 60.787671%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 7, 5, 8, 2, 2, 8, 7, 2, 5, 8, 7]
-Approximated HD error: 24.691385%	Area percentage: 69.745305%	Cell number percentage: 59.246575%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 7, 4, 8, 2, 2, 8, 7, 2, 5, 8, 7]
-Approximated HD error: 25.229385%	Area percentage: 70.388474%	Cell number percentage: 61.301370%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 7, 3, 8, 2, 2, 8, 7, 2, 5, 8, 7]
-Approximated HD error: 25.575538%	Area percentage: 70.182660%	Cell number percentage: 60.530822%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 7, 2, 8, 2, 2, 8, 7, 2, 5, 8, 7]
-Approximated HD error: 25.858692%	Area percentage: 68.175971%	Cell number percentage: 58.904110%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 7, 2, 8, 2, 2, 8, 7, 2, 4, 8, 7]
-Approximated HD error: 26.413846%	Area percentage: 68.793414%	Cell number percentage: 61.386986%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 7, 2, 8, 2, 2, 8, 7, 2, 3, 8, 7]
-Approximated HD error: 26.795077%	Area percentage: 68.381785%	Cell number percentage: 60.530822%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 7, 2, 8, 2, 2, 8, 7, 2, 2, 8, 7]
-Approximated HD error: 27.173385%	Area percentage: 66.246463%	Cell number percentage: 58.647260%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 7, 2, 8, 2, 2, 8, 7, 2, 2, 8, 6]
-Approximated HD error: 27.568462%	Area percentage: 67.429895%	Cell number percentage: 57.106164%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 7, 2, 8, 2, 2, 8, 7, 2, 2, 8, 5]
-Approximated HD error: 28.113462%	Area percentage: 65.603293%	Cell number percentage: 54.965753%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 7, 2, 8, 2, 2, 7, 7, 2, 2, 8, 5]
-Approximated HD error: 28.415077%	Area percentage: 66.503730%	Cell number percentage: 54.965753%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 7, 2, 8, 2, 2, 6, 7, 2, 2, 8, 5]
-Approximated HD error: 28.936615%	Area percentage: 66.220736%	Cell number percentage: 54.023973%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 6, 2, 8, 2, 2, 6, 7, 2, 2, 8, 5]
-Approximated HD error: 29.236692%	Area percentage: 66.812452%	Cell number percentage: 52.568493%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 5, 2, 8, 2, 2, 6, 7, 2, 2, 8, 5]
-Approximated HD error: 29.762692%	Area percentage: 67.275534%	Cell number percentage: 53.424658%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 4, 2, 8, 2, 2, 6, 7, 2, 2, 8, 5]
-Approximated HD error: 30.282308%	Area percentage: 66.658091%	Cell number percentage: 53.424658%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 3, 2, 8, 2, 2, 6, 7, 2, 2, 8, 5]
-Approximated HD error: 30.667692%	Area percentage: 65.268845%	Cell number percentage: 51.369863%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 2, 2, 8, 2, 2, 6, 7, 2, 2, 8, 5]
-Approximated HD error: 31.053000%	Area percentage: 64.368408%	Cell number percentage: 51.626712%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 2, 2, 8, 2, 2, 5, 7, 2, 2, 8, 5]
-Approximated HD error: 31.522385%	Area percentage: 65.011577%	Cell number percentage: 53.082192%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 2, 2, 8, 2, 2, 4, 7, 2, 2, 8, 5]
-Approximated HD error: 31.883615%	Area percentage: 63.802418%	Cell number percentage: 51.969178%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 2, 2, 8, 2, 2, 3, 7, 2, 2, 8, 5]
-Approximated HD error: 32.220462%	Area percentage: 63.416517%	Cell number percentage: 51.198630%
-[2, 2, 2, 2, 8, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 7, 2, 2, 8, 5]
-Approximated HD error: 32.519000%	Area percentage: 61.564188%	Cell number percentage: 49.486301%
-[2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 8, 2, 2, 2, 7, 2, 2, 8, 5]
-Approximated HD error: 32.813538%	Area percentage: 62.027270%	Cell number percentage: 48.801370%
-[2, 2, 2, 2, 8, 2, 2, 2, 6, 2, 2, 8, 2, 2, 2, 7, 2, 2, 8, 5]
-Approximated HD error: 33.319231%	Area percentage: 62.104451%	Cell number percentage: 48.116438%
-[2, 2, 2, 2, 8, 2, 2, 2, 5, 2, 2, 8, 2, 2, 2, 7, 2, 2, 8, 5]
-Approximated HD error: 33.828923%	Area percentage: 63.313609%	Cell number percentage: 49.828767%
-[2, 2, 2, 2, 8, 2, 2, 2, 4, 2, 2, 8, 2, 2, 2, 7, 2, 2, 8, 5]
-Approximated HD error: 34.186154%	Area percentage: 60.895292%	Cell number percentage: 47.945205%
-[2, 2, 2, 2, 8, 2, 2, 2, 3, 2, 2, 8, 2, 2, 2, 7, 2, 2, 8, 5]
-Approximated HD error: 34.518846%	Area percentage: 61.152560%	Cell number percentage: 47.431507%
-[2, 2, 2, 2, 8, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 8, 5]
-Approximated HD error: 34.815538%	Area percentage: 59.969128%	Cell number percentage: 46.489726%
-[2, 2, 2, 2, 8, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 8, 4]
-Approximated HD error: 35.393308%	Area percentage: 60.946746%	Cell number percentage: 48.886986%
-[2, 2, 2, 2, 8, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 8, 3]
-Approximated HD error: 35.768462%	Area percentage: 59.557499%	Cell number percentage: 47.431507%
-[2, 2, 2, 2, 8, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 8, 2]
-Approximated HD error: 36.149462%	Area percentage: 58.374067%	Cell number percentage: 46.489726%
-[2, 2, 2, 2, 8, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 7, 2]
-Approximated HD error: 36.438692%	Area percentage: 59.506046%	Cell number percentage: 46.746575%
-[2, 2, 2, 2, 8, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 6, 2]
-Approximated HD error: 36.987846%	Area percentage: 59.325958%	Cell number percentage: 46.147260%
-[2, 2, 2, 2, 8, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 5, 2]
-Approximated HD error: 37.461308%	Area percentage: 60.020581%	Cell number percentage: 46.489726%
-[2, 2, 2, 2, 8, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 4, 2]
-Approximated HD error: 37.836615%	Area percentage: 58.374067%	Cell number percentage: 45.119863%
-[2, 2, 2, 2, 8, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 3, 2]
-Approximated HD error: 38.175077%	Area percentage: 57.859532%	Cell number percentage: 44.349315%
-[2, 2, 2, 2, 8, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 2, 2]
-Approximated HD error: 38.474231%	Area percentage: 55.878570%	Cell number percentage: 42.551370%
-[2, 2, 2, 2, 7, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 2, 2]
-Approximated HD error: 38.774846%	Area percentage: 57.525084%	Cell number percentage: 42.465753%
-[2, 2, 2, 2, 6, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 2, 2]
-Approximated HD error: 39.275769%	Area percentage: 57.756625%	Cell number percentage: 42.636986%
-[2, 2, 2, 2, 5, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 2, 2]
-Approximated HD error: 39.803538%	Area percentage: 59.042964%	Cell number percentage: 43.493151%
-[2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 2, 2]
-Approximated HD error: 40.168231%	Area percentage: 56.933368%	Cell number percentage: 42.123288%
-[2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 2, 2]
-Approximated HD error: 40.501615%	Area percentage: 56.856187%	Cell number percentage: 41.352740%
-[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 7, 2, 2, 2, 2]
-Approximated HD error: 40.792462%	Area percentage: 55.518395%	Cell number percentage: 40.068493%
-[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 6, 2, 2, 2, 2]
-Approximated HD error: 41.089077%	Area percentage: 57.447903%	Cell number percentage: 40.839041%
-[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 5, 2, 2, 2, 2]
-Approximated HD error: 41.600462%	Area percentage: 55.106766%	Cell number percentage: 39.212329%
-[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 4, 2, 2, 2, 2]
-Approximated HD error: 42.094308%	Area percentage: 55.261127%	Cell number percentage: 38.613014%
-[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 3, 2, 2, 2, 2]
-Approximated HD error: 42.428692%	Area percentage: 55.003859%	Cell number percentage: 38.356164%
-[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 2, 2, 2, 2, 2]
-Approximated HD error: 42.716231%	Area percentage: 53.305891%	Cell number percentage: 37.071918%
-[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 7, 2, 2, 2, 2, 2, 2, 2, 2]
-Approximated HD error: 43.006231%	Area percentage: 55.389761%	Cell number percentage: 38.099315%
-[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 6, 2, 2, 2, 2, 2, 2, 2, 2]
-Approximated HD error: 43.539231%	Area percentage: 56.779007%	Cell number percentage: 38.184932%
-[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 2, 2, 2, 2, 2, 2, 2, 2]
-Approximated HD error: 44.044462%	Area percentage: 54.695138%	Cell number percentage: 37.500000%
-[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 2]
-Approximated HD error: 44.409769%	Area percentage: 54.026241%	Cell number percentage: 36.130137%
-[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2]
-Approximated HD error: 44.746462%	Area percentage: 53.357345%	Cell number percentage: 35.530822%
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 7, 8, 7, 8, 7]
+Approximated HD error: 1.484615%	Area percentage: 98.819208%	Time used: 646.527796 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 7, 7, 7, 8, 7]
+Approximated HD error: 1.873923%	Area percentage: 98.950407%	Time used: 583.766798 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 7, 6, 7, 8, 7]
+Approximated HD error: 2.431077%	Area percentage: 98.241931%	Time used: 583.588010 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 7, 5, 7, 8, 7]
+Approximated HD error: 2.983231%	Area percentage: 97.874574%	Time used: 581.089296 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 7, 4, 7, 8, 7]
+Approximated HD error: 3.367077%	Area percentage: 97.218578%	Time used: 584.160601 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 7, 3, 7, 8, 7]
+Approximated HD error: 3.762385%	Area percentage: 95.906586%	Time used: 580.224723 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 7, 2, 7, 8, 7]
+Approximated HD error: 4.167000%	Area percentage: 95.014432%	Time used: 581.996545 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 7, 2, 7, 8, 6]
+Approximated HD error: 4.562615%	Area percentage: 95.408029%	Time used: 554.765657 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 7, 2, 7, 8, 5]
+Approximated HD error: 5.107769%	Area percentage: 94.200997%	Time used: 560.459717 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 7, 2, 7, 8, 4]
+Approximated HD error: 5.685846%	Area percentage: 94.017318%	Time used: 559.866925 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 7, 2, 7, 8, 3]
+Approximated HD error: 6.060692%	Area percentage: 93.571241%	Time used: 560.180360 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 7, 2, 7, 8, 2]
+Approximated HD error: 6.442385%	Area percentage: 92.574128%	Time used: 559.408839 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 6, 2, 7, 8, 2]
+Approximated HD error: 6.753846%	Area percentage: 92.967725%	Time used: 529.568742 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 5, 2, 7, 8, 2]
+Approximated HD error: 7.256846%	Area percentage: 91.760693%	Time used: 528.819271 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 4, 2, 7, 8, 2]
+Approximated HD error: 7.752231%	Area percentage: 91.577014%	Time used: 528.159305 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 3, 2, 7, 8, 2]
+Approximated HD error: 8.086538%	Area percentage: 91.130937%	Time used: 525.036725 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 7, 8, 2, 2, 7, 8, 2]
+Approximated HD error: 8.377769%	Area percentage: 90.133823%	Time used: 528.094484 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 6, 8, 2, 2, 7, 8, 2]
+Approximated HD error: 8.745615%	Area percentage: 90.527421%	Time used: 490.542859 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 5, 8, 2, 2, 7, 8, 2]
+Approximated HD error: 9.327538%	Area percentage: 89.320388%	Time used: 497.303484 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 4, 8, 2, 2, 7, 8, 2]
+Approximated HD error: 9.888308%	Area percentage: 89.136710%	Time used: 494.234092 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 3, 8, 2, 2, 7, 8, 2]
+Approximated HD error: 10.275385%	Area percentage: 88.690632%	Time used: 494.320519 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 7, 2, 8, 2, 2, 7, 8, 2]
+Approximated HD error: 10.665462%	Area percentage: 87.693519%	Time used: 492.536054 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 6, 2, 8, 2, 2, 7, 8, 2]
+Approximated HD error: 11.038462%	Area percentage: 88.087116%	Time used: 460.575685 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 5, 2, 8, 2, 2, 7, 8, 2]
+Approximated HD error: 11.627538%	Area percentage: 86.880084%	Time used: 461.303331 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 4, 2, 8, 2, 2, 7, 8, 2]
+Approximated HD error: 12.148000%	Area percentage: 86.696405%	Time used: 461.550674 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 3, 2, 8, 2, 2, 7, 8, 2]
+Approximated HD error: 12.496538%	Area percentage: 86.250328%	Time used: 460.879199 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 2, 2, 8, 2, 2, 7, 8, 2]
+Approximated HD error: 12.793077%	Area percentage: 85.253214%	Time used: 459.572865 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 7, 7, 7, 8, 2, 2, 8, 2, 2, 6, 8, 2]
+Approximated HD error: 13.198923%	Area percentage: 85.646812%	Time used: 430.283544 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 6, 7, 7, 8, 2, 2, 8, 2, 2, 6, 8, 2]
+Approximated HD error: 12.666077%	Area percentage: 83.967463%	Time used: 438.149670 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 6, 7, 7, 8, 2, 2, 8, 2, 2, 5, 8, 2]
+Approximated HD error: 13.217538%	Area percentage: 85.017056%	Time used: 439.985148 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 5, 7, 7, 8, 2, 2, 8, 2, 2, 5, 8, 2]
+Approximated HD error: 13.792615%	Area percentage: 84.597219%	Time used: 435.587532 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 4, 7, 7, 8, 2, 2, 8, 2, 2, 5, 8, 2]
+Approximated HD error: 14.174000%	Area percentage: 83.810024%	Time used: 435.594373 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 3, 7, 7, 8, 2, 2, 8, 2, 2, 5, 8, 2]
+Approximated HD error: 14.552385%	Area percentage: 83.363946%	Time used: 436.347852 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 5, 8, 2]
+Approximated HD error: 14.938615%	Area percentage: 82.366833%	Time used: 431.881079 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 4, 8, 2]
+Approximated HD error: 15.494000%	Area percentage: 82.183154%	Time used: 399.272884 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 3, 8, 2]
+Approximated HD error: 15.874308%	Area percentage: 81.737077%	Time used: 403.575742 sec
+[7, 8, 7, 7, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 16.251154%	Area percentage: 80.739963%	Time used: 402.631060 sec
+[6, 8, 7, 7, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 16.444154%	Area percentage: 80.897402%	Time used: 370.325493 sec
+[5, 8, 7, 7, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 16.924308%	Area percentage: 79.926528%	Time used: 373.216798 sec
+[4, 8, 7, 7, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 17.400231%	Area percentage: 79.742850%	Time used: 369.752718 sec
+[3, 8, 7, 7, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 17.777769%	Area percentage: 79.296773%	Time used: 367.711589 sec
+[2, 8, 7, 7, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 18.170154%	Area percentage: 78.509578%	Time used: 371.176742 sec
+[2, 8, 6, 7, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 18.560077%	Area percentage: 78.457098%	Time used: 341.856384 sec
+[2, 8, 5, 7, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 19.139692%	Area percentage: 77.486224%	Time used: 348.640214 sec
+[2, 8, 4, 7, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 19.679077%	Area percentage: 77.302545%	Time used: 345.643270 sec
+[2, 8, 3, 7, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 20.061385%	Area percentage: 76.856468%	Time used: 342.470908 sec
+[2, 8, 2, 7, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 20.440769%	Area percentage: 75.859355%	Time used: 340.681601 sec
+[2, 8, 2, 6, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 20.739308%	Area percentage: 76.252952%	Time used: 310.812416 sec
+[2, 8, 2, 5, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 21.262462%	Area percentage: 75.045920%	Time used: 312.741924 sec
+[2, 8, 2, 4, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 21.781308%	Area percentage: 74.862241%	Time used: 309.734426 sec
+[2, 8, 2, 3, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 22.169000%	Area percentage: 74.416164%	Time used: 312.105315 sec
+[2, 8, 2, 2, 8, 7, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 22.561154%	Area percentage: 73.419050%	Time used: 305.893368 sec
+[2, 8, 2, 2, 8, 6, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 22.929385%	Area percentage: 73.812648%	Time used: 278.746147 sec
+[2, 8, 2, 2, 8, 5, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 23.519923%	Area percentage: 72.605615%	Time used: 285.723557 sec
+[2, 8, 2, 2, 8, 4, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 24.060769%	Area percentage: 72.421936%	Time used: 281.860257 sec
+[2, 8, 2, 2, 8, 3, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 24.445923%	Area percentage: 71.975859%	Time used: 281.303748 sec
+[2, 8, 2, 2, 8, 2, 8, 7, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 24.825154%	Area percentage: 70.978746%	Time used: 279.098716 sec
+[2, 8, 2, 2, 8, 2, 8, 6, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 25.130769%	Area percentage: 71.372343%	Time used: 250.593288 sec
+[2, 8, 2, 2, 8, 2, 8, 5, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 25.640615%	Area percentage: 70.165311%	Time used: 253.871744 sec
+[2, 8, 2, 2, 8, 2, 8, 4, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 26.161308%	Area percentage: 69.981632%	Time used: 256.574251 sec
+[2, 8, 2, 2, 8, 2, 8, 3, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 26.548615%	Area percentage: 69.535555%	Time used: 256.834905 sec
+[2, 8, 2, 2, 8, 2, 8, 2, 2, 7, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 26.933154%	Area percentage: 68.407242%	Time used: 254.438317 sec
+[2, 8, 2, 2, 8, 2, 8, 2, 2, 6, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 27.234692%	Area percentage: 68.932039%	Time used: 222.385637 sec
+[2, 8, 2, 2, 8, 2, 8, 2, 2, 5, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 27.749692%	Area percentage: 67.725007%	Time used: 227.797063 sec
+[2, 8, 2, 2, 8, 2, 8, 2, 2, 4, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 28.246692%	Area percentage: 67.541328%	Time used: 228.488836 sec
+[2, 8, 2, 2, 8, 2, 8, 2, 2, 3, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 28.579769%	Area percentage: 67.095251%	Time used: 228.878884 sec
+[2, 8, 2, 2, 8, 2, 8, 2, 2, 2, 7, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 28.863462%	Area percentage: 65.993178%	Time used: 225.850204 sec
+[2, 8, 2, 2, 8, 2, 8, 2, 2, 2, 6, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 29.258769%	Area percentage: 66.491734%	Time used: 194.464791 sec
+[2, 8, 2, 2, 8, 2, 8, 2, 2, 2, 5, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 29.799846%	Area percentage: 65.284702%	Time used: 201.578555 sec
+[2, 8, 2, 2, 8, 2, 8, 2, 2, 2, 4, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 30.337615%	Area percentage: 65.310942%	Time used: 200.140229 sec
+[2, 8, 2, 2, 8, 2, 8, 2, 2, 2, 3, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 30.683615%	Area percentage: 64.654946%	Time used: 195.367440 sec
+[2, 8, 2, 2, 8, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 30.966692%	Area percentage: 63.474154%	Time used: 198.792445 sec
+[2, 7, 2, 2, 8, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 31.251154%	Area percentage: 64.733666%	Time used: 167.374227 sec
+[2, 6, 2, 2, 8, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 31.786462%	Area percentage: 63.237995%	Time used: 172.444435 sec
+[2, 5, 2, 2, 8, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 32.284923%	Area percentage: 62.634479%	Time used: 168.834328 sec
+[2, 4, 2, 2, 8, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 32.654000%	Area percentage: 61.847284%	Time used: 167.567835 sec
+[2, 3, 2, 2, 8, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 32.998538%	Area percentage: 61.296248%	Time used: 167.381653 sec
+[2, 2, 2, 2, 8, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 8, 2]
+Approximated HD error: 33.288769%	Area percentage: 60.167935%	Time used: 166.626957 sec
+[2, 2, 2, 2, 8, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 7, 2]
+Approximated HD error: 33.576692%	Area percentage: 61.479927%	Time used: 136.609356 sec
+[2, 2, 2, 2, 8, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 6, 2]
+Approximated HD error: 34.130231%	Area percentage: 59.748098%	Time used: 143.089380 sec
+[2, 2, 2, 2, 8, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 5, 2]
+Approximated HD error: 34.604923%	Area percentage: 59.144581%	Time used: 145.019496 sec
+[2, 2, 2, 2, 8, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 4, 2]
+Approximated HD error: 34.974923%	Area percentage: 58.357387%	Time used: 141.463188 sec
+[2, 2, 2, 2, 8, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 3, 2]
+Approximated HD error: 35.311923%	Area percentage: 57.911309%	Time used: 140.898547 sec
+[2, 2, 2, 2, 8, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 35.606846%	Area percentage: 56.914196%	Time used: 139.195559 sec
+[2, 2, 2, 2, 7, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 35.907154%	Area percentage: 58.462346%	Time used: 109.735415 sec
+[2, 2, 2, 2, 6, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 36.416615%	Area percentage: 56.940436%	Time used: 115.420470 sec
+[2, 2, 2, 2, 5, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 36.957231%	Area percentage: 56.127001%	Time used: 114.368247 sec
+[2, 2, 2, 2, 4, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 37.346154%	Area percentage: 55.339806%	Time used: 112.651114 sec
+[2, 2, 2, 2, 3, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 37.731385%	Area percentage: 54.710050%	Time used: 112.850087 sec
+[2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 38.114000%	Area percentage: 53.634217%	Time used: 111.100977 sec
+[2, 2, 2, 2, 2, 2, 7, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 38.400538%	Area percentage: 55.208607%	Time used: 81.046218 sec
+[2, 2, 2, 2, 2, 2, 6, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 38.933385%	Area percentage: 53.476778%	Time used: 87.420815 sec
+[2, 2, 2, 2, 2, 2, 5, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 39.432462%	Area percentage: 52.873262%	Time used: 86.020871 sec
+[2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 39.802615%	Area percentage: 51.981107%	Time used: 87.458403 sec
+[2, 2, 2, 2, 2, 2, 3, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 40.145615%	Area percentage: 51.403831%	Time used: 86.854296 sec
+[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 8, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 40.430923%	Area percentage: 50.642876%	Time used: 82.512390 sec
+[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 7, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 40.720923%	Area percentage: 51.954867%	Time used: 54.589470 sec
+[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 6, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 41.253615%	Area percentage: 50.223039%	Time used: 60.592575 sec
+[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 41.757615%	Area percentage: 49.619522%	Time used: 59.841514 sec
+[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 42.122231%	Area percentage: 48.648649%	Time used: 55.522124 sec
+[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 42.454615%	Area percentage: 48.386250%	Time used: 56.401593 sec
+[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 8, 2, 2, 2, 2, 2]
+Approximated HD error: 42.748154%	Area percentage: 47.389137%	Time used: 55.441183 sec
+[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 7, 2, 2, 2, 2, 2]
+Approximated HD error: 43.050923%	Area percentage: 48.701128%	Time used: 27.049715 sec
+[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 6, 2, 2, 2, 2, 2]
+Approximated HD error: 43.567769%	Area percentage: 46.969299%	Time used: 33.397646 sec
+[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 2, 2, 2, 2, 2]
+Approximated HD error: 44.045077%	Area percentage: 46.365783%	Time used: 31.971400 sec
+[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2]
+Approximated HD error: 44.404231%	Area percentage: 45.709787%	Time used: 30.503311 sec
+[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2, 2, 2, 2]
+Approximated HD error: 44.742462%	Area percentage: 45.132511%	Time used: 30.623329 sec
 [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
-Approximated HD error: 45.041154%	Area percentage: 52.765629%	Cell number percentage: 34.589041%
+Approximated HD error: 45.041154%	Area percentage: 44.135398%	Time used: 28.797810 sec

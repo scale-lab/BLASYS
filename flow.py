@@ -4,19 +4,21 @@ import random
 import os
 import numpy as np
 import subprocess
+import multiprocessing as mp
 import shutil
 import argparse
+import time
 from utils import assess_HD, gen_truth, create_wh, synth_design, approximate
 
 
-def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path):
+def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path, num_iter, num_design):
 
     print('Evaluating Design ', k_stream)
 
     num_part = len(k_stream)
     # area = 0
 
-    tmp_verilog = os.path.join(args.output, 'temp.v')
+    tmp_verilog = os.path.join(args.output, 'approx_design', 'iter'+str(num_iter)+'design'+str(num_design)+'.v')
     toplevel_file = os.path.join(args.output, 'partition', toplevel + '.v')
     os.system('cat ' + toplevel_file + ' > ' + tmp_verilog)
 
@@ -47,22 +49,22 @@ def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, a
             approx_created[i][approx_degree] = 1
             # area += part_area
 
-    os.system('iverilog -o tmp.iv ' + tmp_verilog + ' ' + args.testbench)
-    truth_dir = os.path.join(args.output, 'tmp.truth')
-    os.system('vvp tmp.iv > ' + truth_dir)
-    os.system('rm tmp.iv')
+    truth_dir = os.path.join(args.output, 'truthtable', 'iter'+str(num_iter)+'design'+str(num_design)+'.truth')
+    os.system('iverilog -o ' + truth_dir[:-5] + 'iv ' + tmp_verilog + ' ' + args.testbench)
+    os.system('vvp ' + truth_dir[:-5] + 'iv > ' + truth_dir)
+    os.system('rm ' + truth_dir[:-5] + 'iv')
 
     ground_truth = os.path.join(args.output, toplevel + '.truth')
     
-    area, num_cells = synth_design(tmp_verilog, tmp_verilog[:-2] + '_syn', library)
+    area  = synth_design(tmp_verilog, tmp_verilog[:-2] + '_syn', library)
 
     t, h, f = assess_HD(ground_truth, truth_dir)
-    print('Simulation error: ' + str(f) + '\tCircuit area: ' + str(area) + '\tNumber of cells: ' + str(num_cells))
-    return f, area, num_cells
+    print('Simulation error: ' + str(f) + '\tCircuit area: ' + str(area))
+    return f, area
 
 
 
-def evaluate_iter(curr_k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path):
+def evaluate_iter(curr_k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path, num_iter):
     
     k_lists = []
 
@@ -78,16 +80,20 @@ def evaluate_iter(curr_k_stream, list_num_input, list_num_output, toplevel, args
     num_list = len(k_lists)
     err_list = []
     area_list = []
-    cells_list = []
 
     for i in range(num_list):
         # Evaluate each list
         print('======== Design number ' + str(i))
         k_stream = k_lists[i]
-        err, area, num_cells = evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path)
+        err, area = evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path, num_iter, i)
         err_list.append(err)
         area_list.append(area)
-        cells_list.append(num_cells)
+
+    # print('======== Design number ' + str(i))
+    # pool = mp.Pool(mp.cpu_count())
+    # [ err_list, area_list, cells_list] = [pool.apply(evaluate_design, args=(k_lists[i], list_num_input, list_num_output, toplevel, args, approx_created, app_path, num_iter, i)) for i in range(num_list)]
+    # pool.close()
+
 
     if np.min(err_list) > args.threshold:
         return False, 0, 0
@@ -100,11 +106,11 @@ def evaluate_iter(curr_k_stream, list_num_input, list_num_output, toplevel, args
 #            continue
 #        return k_lists[i], err_list[i], area_list[i], cells_list[i]
 
-    idx = optimization(err_list, area_list, cells_list, args.threshold)
-    return k_lists[idx], err_list[idx], area_list[idx], cells_list[idx]
+    idx = optimization(err_list, area_list, args.threshold)
+    return k_lists[idx], err_list[idx], area_list[idx]
 
 
-def optimization(err_list, area_list, cells_list, threshold):
+def optimization(err_list, area_list, threshold):
     np_area = np.array(area_list)
     order = np.argsort(np_area)
 
@@ -190,6 +196,9 @@ if os.path.isdir(output_dir_path):
     shutil.rmtree(output_dir_path)
 os.mkdir(output_dir_path)
 
+os.mkdir(os.path.join(output_dir_path, 'approx_design'))
+os.mkdir(os.path.join(output_dir_path, 'truthtable'))
+
 # Parse information from yaml file
 input_file = args.input
 testbench = args.testbench
@@ -241,9 +250,8 @@ input_synth = os.path.join(output_dir_path, toplevel + '_parts.v')
 parts = os.path.join(part_dir, '*.v')
 os.system('cat ' + parts + ' >> ' + input_synth)
 output_synth = os.path.join(output_dir_path, toplevel+'_syn')
-input_area, input_cells = synth_design(input_synth, output_synth, library)
+input_area = synth_design(input_synth, output_synth, library)
 print('Original design area ', str(input_area))
-print('Original cells number ', str(input_cells))
 
 
 # Generate truth table for each partitions
@@ -298,11 +306,11 @@ while True:
         curr_stream = list_num_output
 
     print('--------------- Iteration ' + str(count_iter) + ' ---------------')
+    before = time.time()
+    tmp, err, area = evaluate_iter(curr_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path, count_iter )
+    after = time.time()
 
-    tmp, err, area, n_cells = evaluate_iter(curr_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path )
-     
-    if tmp == False:
-        break
+    time_used = after - before
 
     print('--------------- Finishing Iteration' + str(count_iter) + '---------------')
     print('Previous k_stream: ' + str(curr_stream))
@@ -314,11 +322,12 @@ while True:
             print('Design number ' + str(i) + ' is chosen.')
             print('Approximated partition ' + str(i) + ' from ' + str(pre) + ' to ' + str(aft))
             break
-   # print('Approximated HD error:  ' + str(100*err) + '%')
-   # print('Area percentage:        ' + str(100 * (area / input_area)) + '%')
+    print('Approximated HD error:  ' + str(100*err) + '%')
+    print('Area percentage:        ' + str(100 * (area / input_area)) + '%')
+    print('Time used:              ' + str(time_used))
    # print('Cell number percentage: ' + str(100 * (n_cells / input_cells)) + '%')
 
-    msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.6f}%\tCell number percentage: {:.6f}%\n'.format(100*err, 100*(area/input_area), 100*(n_cells/input_cells))
+    msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err, 100*(area/input_area), time_used)
     print(msg)
     with open(os.path.join(output_dir_path, 'log'), 'a') as log_file:
         log_file.write(str(tmp))
@@ -326,6 +335,9 @@ while True:
         log_file.write(msg)
 
     curr_stream = tmp
+
+    if tmp == False:
+        break
 
     count_iter += 1
 

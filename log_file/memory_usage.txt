@@ -1,0 +1,110 @@
+top_script: line 2: syntax error near unexpected token `('
+top_script: line 2: `declare -A num = ([adder]=20 [priority]=25 [ctrl]=5)'
+Command exited with non-zero status 255
+	Command being timed: "python3 ../BLASYS_PART/flow.py -i arbiter.v -tb arbiter_tb.v -n 100 -o arbiter_output"
+	User time (seconds): 130.18
+	System time (seconds): 7.34
+	Percent of CPU this job got: 96%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:22.59
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 249620
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 2776050
+	Voluntary context switches: 3499
+	Involuntary context switches: 187215
+	Swaps: 0
+	File system inputs: 22160
+	File system outputs: 36576
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 255
+Traceback (most recent call last):
+  File "../BLASYS_PART/flow.py", line 320, in <module>
+    aft = tmp[i]
+TypeError: 'bool' object is not subscriptable
+Command exited with non-zero status 1
+	Command being timed: "python3 ../BLASYS_PART/flow.py -i ctrl.v -tb ctrl_tb.v -n 5 -o ctrl_output"
+	User time (seconds): 847.16
+	System time (seconds): 55.85
+	Percent of CPU this job got: 93%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 16:04.54
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 140940
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 24781445
+	Voluntary context switches: 46010
+	Involuntary context switches: 85498
+	Swaps: 0
+	File system inputs: 465720
+	File system outputs: 536144
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
+Traceback (most recent call last):
+  File "../BLASYS_PART/flow.py", line 320, in <module>
+    aft = tmp[i]
+TypeError: 'bool' object is not subscriptable
+Command exited with non-zero status 1
+	Command being timed: "python3 ../BLASYS_PART/flow.py -i adder.v -tb adder_tb.v -n 20 -o adder_output"
+	User time (seconds): 29323.31
+	System time (seconds): 1542.17
+	Percent of CPU this job got: 96%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 8:55:42
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 152396
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 589147554
+	Voluntary context switches: 1240849
+	Involuntary context switches: 595111
+	Swaps: 0
+	File system inputs: 13073848
+	File system outputs: 15056232
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
+Traceback (most recent call last):
+  File "../BLASYS_PART/flow.py", line 320, in <module>
+    aft = tmp[i]
+TypeError: 'bool' object is not subscriptable
+Command exited with non-zero status 1
+	Command being timed: "python3 ../BLASYS_PART/flow.py -i priority.v -tb priority_tb.v -n 25 -o priority_output"
+	User time (seconds): 46540.12
+	System time (seconds): 2426.18
+	Percent of CPU this job got: 95%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 14:10:09
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 199408
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 942374153
+	Voluntary context switches: 1467262
+	Involuntary context switches: 642995
+	Swaps: 0
+	File system inputs: 9248328
+	File system outputs: 12391904
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

@@ -56,22 +56,35 @@ def synth_design(input_file, output_file, lib_file):
     f.close
     f=open('yosys.script', 'w')
     yosys_command = 'read_verilog ' + input_file + '; ' \
-            + 'synth -flatten; opt; opt_clean -purge; techmap; abc -liberty '+lib_file \
-            + ' -script abc.script; stat -liberty '+lib_file + ' ; ' \
-            + 'write_verilog -noattr -noexpr ' + output_file + '.v;\n'
+            + 'opt; opt_clean -purge; techmap; abc -liberty '+lib_file \
+            + ' -script abc.script; flatten; stat -liberty '+lib_file + ' ;\n '
     f.write(yosys_command)
     f.close
     area = 0
-    num_cells = 0
     line=subprocess.call("yosys -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True, stdout=f)
     with open(output_file+".log", 'r') as file_handle:
         for line in file_handle:
             if 'Chip area' in line:
                 area = line.split()[-1]
-            if 'Number of cells' in line:
-                num_cells = line.split()[-1]
-    return float(area), int(num_cells)
-    
+                break
+    return float(area)
+
+def synth_design_app(input_file, output_file, lib_file):
+    f=open('abc.script', 'w')
+    #f.write('bdd;collapse;order;map')
+    f.write('strash;fraig;refactor;rewrite -z;scorr;map')
+  #  f.write('strash;refactor;rewrite;refactor;rewrite;refactor;rewrite;map')
+ #   f.write('espresso;map')
+    f.close
+    f=open('yosys.script', 'w')
+    yosys_command = 'read_verilog ' + input_file + '; ' \
+            + 'synth -flatten; opt; opt_clean -purge; techmap; ' \
+            + 'write_verilog -noattr '+ output_file + '.v;\n '
+    f.write(yosys_command)
+    f.close
+    area = 0
+    line=subprocess.call("yosys -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True, stdout=f)
+ 
 def  gen_truth(fname, modulename):
     with open(fname+'.v') as file:
         f=open(fname+'_tb.v', "w+")
@@ -296,4 +309,4 @@ def approximate(inputfile, k, num_in, num_out, liberty, modulename, app_path):
     print('Simulating truth table on approximation design...')
     # os.system('iverilog -o ' + inputfile + '_approx_k=' + str(k) + '.iv ' + inputfile + '_approx_k=' + str(k) + '.v ' + testbench)
     # os.system('vvp ' + inputfile + '_approx_k=' + str(k) + '.iv > ' + inputfile + '_approx_k=' + str(k) + '.truth' )
-    area_np, cells_np = synth_design(inputfile + '_approx_k=' + str(k) + '.v', inputfile + '_approx_k=' + str(k) + '_syn', liberty)
+    synth_design_app(inputfile + '_approx_k=' + str(k) + '.v', inputfile + '_approx_k=' + str(k), liberty)
