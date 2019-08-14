@@ -1,0 +1,661 @@
+
+ /----------------------------------------------------------------------------\
+ |                                                                            |
+ |  yosys -- Yosys Open SYnthesis Suite                                       |
+ |                                                                            |
+ |  Copyright (C) 2012 - 2018  Clifford Wolf <clifford@clifford.at>           |
+ |                                                                            |
+ |  Permission to use, copy, modify, and/or distribute this software for any  |
+ |  purpose with or without fee is hereby granted, provided that the above    |
+ |  copyright notice and this permission notice appear in all copies.         |
+ |                                                                            |
+ |  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES  |
+ |  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF          |
+ |  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR   |
+ |  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES    |
+ |  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN     |
+ |  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   |
+ |  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            |
+ |                                                                            |
+ \----------------------------------------------------------------------------/
+
+ Yosys 0.8+634 (git sha1 3414ee1, clang 3.8.0-2ubuntu4 -fPIC -Os)
+
+
+-- Running command `read_verilog top.v; opt; opt_clean -purge; techmap; flatten; stat -top adder' --
+
+1. Executing Verilog-2005 frontend: top.v
+Parsing Verilog input from `top.v' to AST representation.
+Generating RTLIL representation for module `\adder_0'.
+Generating RTLIL representation for module `\adder_10'.
+Generating RTLIL representation for module `\adder_11'.
+Generating RTLIL representation for module `\adder_12'.
+Generating RTLIL representation for module `\adder_13'.
+Generating RTLIL representation for module `\adder_14'.
+Generating RTLIL representation for module `\adder_15'.
+Generating RTLIL representation for module `\adder_16'.
+Generating RTLIL representation for module `\adder_17'.
+Generating RTLIL representation for module `\adder_18'.
+Generating RTLIL representation for module `\adder_19'.
+Generating RTLIL representation for module `\adder_1'.
+Generating RTLIL representation for module `\adder_2'.
+Generating RTLIL representation for module `\adder_3'.
+Generating RTLIL representation for module `\adder_4'.
+Generating RTLIL representation for module `\adder_5'.
+Generating RTLIL representation for module `\adder_6'.
+Generating RTLIL representation for module `\adder_7'.
+Generating RTLIL representation for module `\adder_8'.
+Generating RTLIL representation for module `\adder_9'.
+Generating RTLIL representation for module `\adder'.
+Successfully finished Verilog frontend.
+
+2. Executing OPT pass (performing simple optimizations).
+
+2.1. Executing OPT_EXPR pass (perform const folding).
+Optimizing module adder.
+Optimizing module adder_9.
+Optimizing module adder_8.
+Optimizing module adder_7.
+Optimizing module adder_6.
+Optimizing module adder_5.
+Optimizing module adder_4.
+Optimizing module adder_3.
+Optimizing module adder_2.
+Optimizing module adder_1.
+Optimizing module adder_19.
+Optimizing module adder_18.
+Optimizing module adder_17.
+Optimizing module adder_16.
+Optimizing module adder_15.
+Optimizing module adder_14.
+Optimizing module adder_13.
+Optimizing module adder_12.
+Optimizing module adder_11.
+Optimizing module adder_10.
+Optimizing module adder_0.
+
+2.2. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\adder'.
+Finding identical cells in module `\adder_9'.
+<suppressed ~54 debug messages>
+Finding identical cells in module `\adder_8'.
+<suppressed ~63 debug messages>
+Finding identical cells in module `\adder_7'.
+<suppressed ~54 debug messages>
+Finding identical cells in module `\adder_6'.
+<suppressed ~63 debug messages>
+Finding identical cells in module `\adder_5'.
+<suppressed ~54 debug messages>
+Finding identical cells in module `\adder_4'.
+<suppressed ~63 debug messages>
+Finding identical cells in module `\adder_3'.
+<suppressed ~54 debug messages>
+Finding identical cells in module `\adder_2'.
+<suppressed ~54 debug messages>
+Finding identical cells in module `\adder_1'.
+<suppressed ~63 debug messages>
+Finding identical cells in module `\adder_19'.
+<suppressed ~54 debug messages>
+Finding identical cells in module `\adder_18'.
+<suppressed ~63 debug messages>
+Finding identical cells in module `\adder_17'.
+<suppressed ~54 debug messages>
+Finding identical cells in module `\adder_16'.
+<suppressed ~51 debug messages>
+Finding identical cells in module `\adder_15'.
+<suppressed ~54 debug messages>
+Finding identical cells in module `\adder_14'.
+<suppressed ~63 debug messages>
+Finding identical cells in module `\adder_13'.
+<suppressed ~54 debug messages>
+Finding identical cells in module `\adder_12'.
+<suppressed ~54 debug messages>
+Finding identical cells in module `\adder_11'.
+<suppressed ~63 debug messages>
+Finding identical cells in module `\adder_10'.
+<suppressed ~54 debug messages>
+Finding identical cells in module `\adder_0'.
+<suppressed ~54 debug messages>
+Removed a total of 380 cells.
+
+2.3. Executing OPT_MUXTREE pass (detect dead branches in mux trees).
+Running muxtree optimizer on module \adder..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_9..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_8..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_7..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_6..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_5..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_4..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_3..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_2..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_1..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_19..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_18..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_17..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_16..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_15..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_14..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_13..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_12..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_11..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_10..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_0..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Removed 0 multiplexer ports.
+
+2.4. Executing OPT_REDUCE pass (consolidate $*mux and $reduce_* inputs).
+  Optimizing cells in module \adder.
+  Optimizing cells in module \adder_9.
+  Optimizing cells in module \adder_8.
+  Optimizing cells in module \adder_7.
+  Optimizing cells in module \adder_6.
+  Optimizing cells in module \adder_5.
+  Optimizing cells in module \adder_4.
+  Optimizing cells in module \adder_3.
+  Optimizing cells in module \adder_2.
+  Optimizing cells in module \adder_1.
+  Optimizing cells in module \adder_19.
+  Optimizing cells in module \adder_18.
+  Optimizing cells in module \adder_17.
+  Optimizing cells in module \adder_16.
+  Optimizing cells in module \adder_15.
+  Optimizing cells in module \adder_14.
+  Optimizing cells in module \adder_13.
+  Optimizing cells in module \adder_12.
+  Optimizing cells in module \adder_11.
+  Optimizing cells in module \adder_10.
+  Optimizing cells in module \adder_0.
+Performed a total of 0 changes.
+
+2.5. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\adder'.
+Finding identical cells in module `\adder_9'.
+Finding identical cells in module `\adder_8'.
+Finding identical cells in module `\adder_7'.
+Finding identical cells in module `\adder_6'.
+Finding identical cells in module `\adder_5'.
+Finding identical cells in module `\adder_4'.
+Finding identical cells in module `\adder_3'.
+Finding identical cells in module `\adder_2'.
+Finding identical cells in module `\adder_1'.
+Finding identical cells in module `\adder_19'.
+Finding identical cells in module `\adder_18'.
+Finding identical cells in module `\adder_17'.
+Finding identical cells in module `\adder_16'.
+Finding identical cells in module `\adder_15'.
+Finding identical cells in module `\adder_14'.
+Finding identical cells in module `\adder_13'.
+Finding identical cells in module `\adder_12'.
+Finding identical cells in module `\adder_11'.
+Finding identical cells in module `\adder_10'.
+Finding identical cells in module `\adder_0'.
+Removed a total of 0 cells.
+
+2.6. Executing OPT_RMDFF pass (remove dff with constant values).
+
+2.7. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \adder..
+Finding unused cells or wires in module \adder_9..
+Finding unused cells or wires in module \adder_8..
+Finding unused cells or wires in module \adder_7..
+Finding unused cells or wires in module \adder_6..
+Finding unused cells or wires in module \adder_5..
+Finding unused cells or wires in module \adder_4..
+Finding unused cells or wires in module \adder_3..
+Finding unused cells or wires in module \adder_2..
+Finding unused cells or wires in module \adder_1..
+Finding unused cells or wires in module \adder_19..
+Finding unused cells or wires in module \adder_18..
+Finding unused cells or wires in module \adder_17..
+Finding unused cells or wires in module \adder_16..
+Finding unused cells or wires in module \adder_15..
+Finding unused cells or wires in module \adder_14..
+Finding unused cells or wires in module \adder_13..
+Finding unused cells or wires in module \adder_12..
+Finding unused cells or wires in module \adder_11..
+Finding unused cells or wires in module \adder_10..
+Finding unused cells or wires in module \adder_0..
+Removed 0 unused cells and 1403 unused wires.
+<suppressed ~21 debug messages>
+
+2.8. Executing OPT_EXPR pass (perform const folding).
+Optimizing module adder.
+Optimizing module adder_0.
+Optimizing module adder_1.
+Optimizing module adder_10.
+Optimizing module adder_11.
+Optimizing module adder_12.
+Optimizing module adder_13.
+Optimizing module adder_14.
+Optimizing module adder_15.
+Optimizing module adder_16.
+Optimizing module adder_17.
+Optimizing module adder_18.
+Optimizing module adder_19.
+Optimizing module adder_2.
+Optimizing module adder_3.
+Optimizing module adder_4.
+Optimizing module adder_5.
+Optimizing module adder_6.
+Optimizing module adder_7.
+Optimizing module adder_8.
+Optimizing module adder_9.
+
+2.9. Finished OPT passes. (There is nothing left to do.)
+
+3. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \adder..
+Finding unused cells or wires in module \adder_0..
+Finding unused cells or wires in module \adder_1..
+Finding unused cells or wires in module \adder_10..
+Finding unused cells or wires in module \adder_11..
+Finding unused cells or wires in module \adder_12..
+Finding unused cells or wires in module \adder_13..
+Finding unused cells or wires in module \adder_14..
+Finding unused cells or wires in module \adder_15..
+Finding unused cells or wires in module \adder_16..
+Finding unused cells or wires in module \adder_17..
+Finding unused cells or wires in module \adder_18..
+Finding unused cells or wires in module \adder_19..
+Finding unused cells or wires in module \adder_2..
+Finding unused cells or wires in module \adder_3..
+Finding unused cells or wires in module \adder_4..
+Finding unused cells or wires in module \adder_5..
+Finding unused cells or wires in module \adder_6..
+Finding unused cells or wires in module \adder_7..
+Finding unused cells or wires in module \adder_8..
+Finding unused cells or wires in module \adder_9..
+Removed 0 unused cells and 274 unused wires.
+<suppressed ~274 debug messages>
+
+4. Executing TECHMAP pass (map to technology primitives).
+
+4.1. Executing Verilog-2005 frontend: <techmap.v>
+Parsing Verilog input from `<techmap.v>' to AST representation.
+Generating RTLIL representation for module `\_90_simplemap_bool_ops'.
+Generating RTLIL representation for module `\_90_simplemap_reduce_ops'.
+Generating RTLIL representation for module `\_90_simplemap_logic_ops'.
+Generating RTLIL representation for module `\_90_simplemap_compare_ops'.
+Generating RTLIL representation for module `\_90_simplemap_various'.
+Generating RTLIL representation for module `\_90_simplemap_registers'.
+Generating RTLIL representation for module `\_90_shift_ops_shr_shl_sshl_sshr'.
+Generating RTLIL representation for module `\_90_shift_shiftx'.
+Generating RTLIL representation for module `\_90_fa'.
+Generating RTLIL representation for module `\_90_lcu'.
+Generating RTLIL representation for module `\_90_alu'.
+Generating RTLIL representation for module `\_90_macc'.
+Generating RTLIL representation for module `\_90_alumacc'.
+Generating RTLIL representation for module `\$__div_mod_u'.
+Generating RTLIL representation for module `\$__div_mod'.
+Generating RTLIL representation for module `\_90_div'.
+Generating RTLIL representation for module `\_90_mod'.
+Generating RTLIL representation for module `\_90_pow'.
+Generating RTLIL representation for module `\_90_pmux'.
+Generating RTLIL representation for module `\_90_lut'.
+Successfully finished Verilog frontend.
+
+4.2. Continuing TECHMAP pass.
+Using extmapper simplemap for cells of type $not.
+Using extmapper simplemap for cells of type $and.
+No more expansions possible.
+<suppressed ~2170 debug messages>
+
+5. Executing FLATTEN pass (flatten design).
+Using template adder_16 for cells of type adder_16.
+Using template adder_15 for cells of type adder_15.
+Using template adder_19 for cells of type adder_19.
+Using template adder_18 for cells of type adder_18.
+Using template adder_17 for cells of type adder_17.
+Using template adder_14 for cells of type adder_14.
+Using template adder_13 for cells of type adder_13.
+Using template adder_12 for cells of type adder_12.
+Using template adder_10 for cells of type adder_10.
+Using template adder_11 for cells of type adder_11.
+Using template adder_7 for cells of type adder_7.
+Using template adder_8 for cells of type adder_8.
+Using template adder_9 for cells of type adder_9.
+Using template adder_5 for cells of type adder_5.
+Using template adder_6 for cells of type adder_6.
+Using template adder_4 for cells of type adder_4.
+Using template adder_3 for cells of type adder_3.
+Using template adder_2 for cells of type adder_2.
+Using template adder_1 for cells of type adder_1.
+Using template adder_0 for cells of type adder_0.
+<suppressed ~20 debug messages>
+No more expansions possible.
+
+6. Printing statistics.
+
+=== adder ===
+
+   Number of wires:               2849
+   Number of wire bits:           2849
+   Number of public wires:        1702
+   Number of public wire bits:    1702
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:               2170
+     $_AND_                       1020
+     $_NOT_                       1150
+
+=== adder_0 ===
+
+   Number of wires:                115
+   Number of wire bits:            115
+   Number of public wires:          61
+   Number of public wire bits:      61
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                102
+     $_AND_                         48
+     $_NOT_                         54
+
+=== adder_1 ===
+
+   Number of wires:                134
+   Number of wire bits:            134
+   Number of public wires:          71
+   Number of public wire bits:      71
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                119
+     $_AND_                         56
+     $_NOT_                         63
+
+=== adder_10 ===
+
+   Number of wires:                115
+   Number of wire bits:            115
+   Number of public wires:          61
+   Number of public wire bits:      61
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                102
+     $_AND_                         48
+     $_NOT_                         54
+
+=== adder_11 ===
+
+   Number of wires:                134
+   Number of wire bits:            134
+   Number of public wires:          71
+   Number of public wire bits:      71
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                119
+     $_AND_                         56
+     $_NOT_                         63
+
+=== adder_12 ===
+
+   Number of wires:                115
+   Number of wire bits:            115
+   Number of public wires:          61
+   Number of public wire bits:      61
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                102
+     $_AND_                         48
+     $_NOT_                         54
+
+=== adder_13 ===
+
+   Number of wires:                115
+   Number of wire bits:            115
+   Number of public wires:          61
+   Number of public wire bits:      61
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                102
+     $_AND_                         48
+     $_NOT_                         54
+
+=== adder_14 ===
+
+   Number of wires:                134
+   Number of wire bits:            134
+   Number of public wires:          71
+   Number of public wire bits:      71
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                119
+     $_AND_                         56
+     $_NOT_                         63
+
+=== adder_15 ===
+
+   Number of wires:                115
+   Number of wire bits:            115
+   Number of public wires:          61
+   Number of public wire bits:      61
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                102
+     $_AND_                         48
+     $_NOT_                         54
+
+=== adder_16 ===
+
+   Number of wires:                124
+   Number of wire bits:            124
+   Number of public wires:          66
+   Number of public wire bits:      66
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                110
+     $_AND_                         52
+     $_NOT_                         58
+
+=== adder_17 ===
+
+   Number of wires:                115
+   Number of wire bits:            115
+   Number of public wires:          61
+   Number of public wire bits:      61
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                102
+     $_AND_                         48
+     $_NOT_                         54
+
+=== adder_18 ===
+
+   Number of wires:                134
+   Number of wire bits:            134
+   Number of public wires:          71
+   Number of public wire bits:      71
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                119
+     $_AND_                         56
+     $_NOT_                         63
+
+=== adder_19 ===
+
+   Number of wires:                115
+   Number of wire bits:            115
+   Number of public wires:          61
+   Number of public wire bits:      61
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                102
+     $_AND_                         48
+     $_NOT_                         54
+
+=== adder_2 ===
+
+   Number of wires:                115
+   Number of wire bits:            115
+   Number of public wires:          61
+   Number of public wire bits:      61
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                102
+     $_AND_                         48
+     $_NOT_                         54
+
+=== adder_3 ===
+
+   Number of wires:                115
+   Number of wire bits:            115
+   Number of public wires:          61
+   Number of public wire bits:      61
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                102
+     $_AND_                         48
+     $_NOT_                         54
+
+=== adder_4 ===
+
+   Number of wires:                134
+   Number of wire bits:            134
+   Number of public wires:          71
+   Number of public wire bits:      71
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                119
+     $_AND_                         56
+     $_NOT_                         63
+
+=== adder_5 ===
+
+   Number of wires:                115
+   Number of wire bits:            115
+   Number of public wires:          61
+   Number of public wire bits:      61
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                102
+     $_AND_                         48
+     $_NOT_                         54
+
+=== adder_6 ===
+
+   Number of wires:                134
+   Number of wire bits:            134
+   Number of public wires:          71
+   Number of public wire bits:      71
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                119
+     $_AND_                         56
+     $_NOT_                         63
+
+=== adder_7 ===
+
+   Number of wires:                115
+   Number of wire bits:            115
+   Number of public wires:          61
+   Number of public wire bits:      61
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                102
+     $_AND_                         48
+     $_NOT_                         54
+
+=== adder_8 ===
+
+   Number of wires:                134
+   Number of wire bits:            134
+   Number of public wires:          71
+   Number of public wire bits:      71
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                119
+     $_AND_                         56
+     $_NOT_                         63
+
+=== adder_9 ===
+
+   Number of wires:                115
+   Number of wire bits:            115
+   Number of public wires:          61
+   Number of public wire bits:      61
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                102
+     $_AND_                         48
+     $_NOT_                         54
+
+=== design hierarchy ===
+
+   adder                             1
+
+   Number of wires:               2849
+   Number of wire bits:           2849
+   Number of public wires:        1702
+   Number of public wire bits:    1702
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:               2170
+     $_AND_                       1020
+     $_NOT_                       1150
+
+End of script. Logfile hash: 21270164da
+CPU: user 0.58s system 0.01s, MEM: 54.34 MB total, 20.96 MB resident
+Yosys 0.8+634 (git sha1 3414ee1, clang 3.8.0-2ubuntu4 -fPIC -Os)
+Time spent: 24% 3x read_verilog (0 sec), 24% 2x opt_clean (0 sec), ...

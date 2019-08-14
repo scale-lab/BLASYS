@@ -1,0 +1,1227 @@
+
+ /----------------------------------------------------------------------------\
+ |                                                                            |
+ |  yosys -- Yosys Open SYnthesis Suite                                       |
+ |                                                                            |
+ |  Copyright (C) 2012 - 2018  Clifford Wolf <clifford@clifford.at>           |
+ |                                                                            |
+ |  Permission to use, copy, modify, and/or distribute this software for any  |
+ |  purpose with or without fee is hereby granted, provided that the above    |
+ |  copyright notice and this permission notice appear in all copies.         |
+ |                                                                            |
+ |  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES  |
+ |  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF          |
+ |  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR   |
+ |  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES    |
+ |  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN     |
+ |  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   |
+ |  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            |
+ |                                                                            |
+ \----------------------------------------------------------------------------/
+
+ Yosys 0.8+634 (git sha1 3414ee1, clang 3.8.0-2ubuntu4 -fPIC -Os)
+
+
+-- Running command `read_verilog top.v; opt; opt_clean -purge; techmap; abc -liberty ../asap7.lib -script ../abc.script; flatten; stat -liberty ../asap7.lib -top adder' --
+
+1. Executing Verilog-2005 frontend: top.v
+Parsing Verilog input from `top.v' to AST representation.
+Generating RTLIL representation for module `\adder_0'.
+Generating RTLIL representation for module `\adder_1'.
+Generating RTLIL representation for module `\adder_2'.
+Generating RTLIL representation for module `\adder_3'.
+Generating RTLIL representation for module `\adder_4'.
+Generating RTLIL representation for module `\adder_5'.
+Generating RTLIL representation for module `\adder_6'.
+Generating RTLIL representation for module `\adder_7'.
+Generating RTLIL representation for module `\adder_8'.
+Generating RTLIL representation for module `\adder_9'.
+Generating RTLIL representation for module `\adder'.
+Successfully finished Verilog frontend.
+
+2. Executing OPT pass (performing simple optimizations).
+
+2.1. Executing OPT_EXPR pass (perform const folding).
+Optimizing module adder.
+Optimizing module adder_9.
+Optimizing module adder_8.
+Optimizing module adder_7.
+Optimizing module adder_6.
+Optimizing module adder_5.
+Optimizing module adder_4.
+Optimizing module adder_3.
+Optimizing module adder_2.
+Optimizing module adder_1.
+Optimizing module adder_0.
+
+2.2. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\adder'.
+Finding identical cells in module `\adder_9'.
+<suppressed ~108 debug messages>
+Finding identical cells in module `\adder_8'.
+<suppressed ~117 debug messages>
+Finding identical cells in module `\adder_7'.
+<suppressed ~117 debug messages>
+Finding identical cells in module `\adder_6'.
+<suppressed ~105 debug messages>
+Finding identical cells in module `\adder_5'.
+<suppressed ~117 debug messages>
+Finding identical cells in module `\adder_4'.
+<suppressed ~108 debug messages>
+Finding identical cells in module `\adder_3'.
+<suppressed ~117 debug messages>
+Finding identical cells in module `\adder_2'.
+<suppressed ~117 debug messages>
+Finding identical cells in module `\adder_1'.
+<suppressed ~117 debug messages>
+Finding identical cells in module `\adder_0'.
+<suppressed ~117 debug messages>
+Removed a total of 380 cells.
+
+2.3. Executing OPT_MUXTREE pass (detect dead branches in mux trees).
+Running muxtree optimizer on module \adder..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_9..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_8..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_7..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_6..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_5..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_4..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_3..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_2..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_1..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Running muxtree optimizer on module \adder_0..
+  Creating internal representation of mux trees.
+  No muxes found in this module.
+Removed 0 multiplexer ports.
+
+2.4. Executing OPT_REDUCE pass (consolidate $*mux and $reduce_* inputs).
+  Optimizing cells in module \adder.
+  Optimizing cells in module \adder_9.
+  Optimizing cells in module \adder_8.
+  Optimizing cells in module \adder_7.
+  Optimizing cells in module \adder_6.
+  Optimizing cells in module \adder_5.
+  Optimizing cells in module \adder_4.
+  Optimizing cells in module \adder_3.
+  Optimizing cells in module \adder_2.
+  Optimizing cells in module \adder_1.
+  Optimizing cells in module \adder_0.
+Performed a total of 0 changes.
+
+2.5. Executing OPT_MERGE pass (detect identical cells).
+Finding identical cells in module `\adder'.
+Finding identical cells in module `\adder_9'.
+Finding identical cells in module `\adder_8'.
+Finding identical cells in module `\adder_7'.
+Finding identical cells in module `\adder_6'.
+Finding identical cells in module `\adder_5'.
+Finding identical cells in module `\adder_4'.
+Finding identical cells in module `\adder_3'.
+Finding identical cells in module `\adder_2'.
+Finding identical cells in module `\adder_1'.
+Finding identical cells in module `\adder_0'.
+Removed a total of 0 cells.
+
+2.6. Executing OPT_RMDFF pass (remove dff with constant values).
+
+2.7. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \adder..
+Finding unused cells or wires in module \adder_9..
+Finding unused cells or wires in module \adder_8..
+Finding unused cells or wires in module \adder_7..
+Finding unused cells or wires in module \adder_6..
+Finding unused cells or wires in module \adder_5..
+Finding unused cells or wires in module \adder_4..
+Finding unused cells or wires in module \adder_3..
+Finding unused cells or wires in module \adder_2..
+Finding unused cells or wires in module \adder_1..
+Finding unused cells or wires in module \adder_0..
+Removed 0 unused cells and 1403 unused wires.
+<suppressed ~11 debug messages>
+
+2.8. Executing OPT_EXPR pass (perform const folding).
+Optimizing module adder.
+Optimizing module adder_0.
+Optimizing module adder_1.
+Optimizing module adder_2.
+Optimizing module adder_3.
+Optimizing module adder_4.
+Optimizing module adder_5.
+Optimizing module adder_6.
+Optimizing module adder_7.
+Optimizing module adder_8.
+Optimizing module adder_9.
+
+2.9. Finished OPT passes. (There is nothing left to do.)
+
+3. Executing OPT_CLEAN pass (remove unused cells and wires).
+Finding unused cells or wires in module \adder..
+Finding unused cells or wires in module \adder_0..
+Finding unused cells or wires in module \adder_1..
+Finding unused cells or wires in module \adder_2..
+Finding unused cells or wires in module \adder_3..
+Finding unused cells or wires in module \adder_4..
+Finding unused cells or wires in module \adder_5..
+Finding unused cells or wires in module \adder_6..
+Finding unused cells or wires in module \adder_7..
+Finding unused cells or wires in module \adder_8..
+Finding unused cells or wires in module \adder_9..
+Removed 0 unused cells and 264 unused wires.
+<suppressed ~264 debug messages>
+
+4. Executing TECHMAP pass (map to technology primitives).
+
+4.1. Executing Verilog-2005 frontend: <techmap.v>
+Parsing Verilog input from `<techmap.v>' to AST representation.
+Generating RTLIL representation for module `\_90_simplemap_bool_ops'.
+Generating RTLIL representation for module `\_90_simplemap_reduce_ops'.
+Generating RTLIL representation for module `\_90_simplemap_logic_ops'.
+Generating RTLIL representation for module `\_90_simplemap_compare_ops'.
+Generating RTLIL representation for module `\_90_simplemap_various'.
+Generating RTLIL representation for module `\_90_simplemap_registers'.
+Generating RTLIL representation for module `\_90_shift_ops_shr_shl_sshl_sshr'.
+Generating RTLIL representation for module `\_90_shift_shiftx'.
+Generating RTLIL representation for module `\_90_fa'.
+Generating RTLIL representation for module `\_90_lcu'.
+Generating RTLIL representation for module `\_90_alu'.
+Generating RTLIL representation for module `\_90_macc'.
+Generating RTLIL representation for module `\_90_alumacc'.
+Generating RTLIL representation for module `\$__div_mod_u'.
+Generating RTLIL representation for module `\$__div_mod'.
+Generating RTLIL representation for module `\_90_div'.
+Generating RTLIL representation for module `\_90_mod'.
+Generating RTLIL representation for module `\_90_pow'.
+Generating RTLIL representation for module `\_90_pmux'.
+Generating RTLIL representation for module `\_90_lut'.
+Successfully finished Verilog frontend.
+
+4.2. Continuing TECHMAP pass.
+Using extmapper simplemap for cells of type $not.
+Using extmapper simplemap for cells of type $and.
+No more expansions possible.
+<suppressed ~2170 debug messages>
+
+5. Executing ABC pass (technology mapping using ABC).
+
+5.1. Extracting gate netlist of module `\adder' to `<abc-temp-dir>/input.blif'..
+Extracted 3 gates and 6 wires to a netlist network with 3 inputs and 3 outputs.
+
+5.1.1. Executing ABC.
+Running ABC command: <yosys-exe-dir>/yosys-abc -s -f <abc-temp-dir>/abc.script 2>&1
+ABC: ABC command line: "source <abc-temp-dir>/abc.script".
+ABC: 
+ABC: + read_blif <abc-temp-dir>/input.blif 
+ABC: + read_lib -w /home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib 
+ABC: Parsing finished successfully.  Parsing time =     0.66 sec
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "ASYNC_DFFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx1_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx2_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx3_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx4_ASAP7_75t_L".
+ABC: Library "asap7" from "/home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib" has 159 cells (26 skipped: 23 seq; 0 tri-state; 3 no func; 0 dont_use).  Time =     0.88 sec
+ABC: Memory =   67.27 MB. Time =     0.88 sec
+ABC: Warning: Detected 2 multi-output gates (for example, "FAx1_ASAP7_75t_L").
+ABC: + source /home/jingxiao/EPFL_benchmarks/adder10/../abc.script 
+ABC: Warning: The network is combinational (run "fraig" or "fraig_sweep").
+ABC: + write_blif <abc-temp-dir>/output.blif 
+
+5.1.2. Re-integrating ABC results.
+ABC RESULTS:   INVx1_ASAP7_75t_L cells:        3
+ABC RESULTS:        internal signals:        0
+ABC RESULTS:           input signals:        3
+ABC RESULTS:          output signals:        3
+Removing temp directory.
+
+5.2. Extracting gate netlist of module `\adder_0' to `<abc-temp-dir>/input.blif'..
+Extracted 221 gates and 248 wires to a netlist network with 27 inputs and 14 outputs.
+
+5.2.1. Executing ABC.
+Running ABC command: <yosys-exe-dir>/yosys-abc -s -f <abc-temp-dir>/abc.script 2>&1
+ABC: ABC command line: "source <abc-temp-dir>/abc.script".
+ABC: 
+ABC: + read_blif <abc-temp-dir>/input.blif 
+ABC: + read_lib -w /home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib 
+ABC: Parsing finished successfully.  Parsing time =     0.49 sec
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "ASYNC_DFFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx1_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx2_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx3_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx4_ASAP7_75t_L".
+ABC: Library "asap7" from "/home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib" has 159 cells (26 skipped: 23 seq; 0 tri-state; 3 no func; 0 dont_use).  Time =     0.71 sec
+ABC: Memory =   67.27 MB. Time =     0.71 sec
+ABC: Warning: Detected 2 multi-output gates (for example, "FAx1_ASAP7_75t_L").
+ABC: + source /home/jingxiao/EPFL_benchmarks/adder10/../abc.script 
+ABC: Warning: The network is combinational (run "fraig" or "fraig_sweep").
+ABC: + write_blif <abc-temp-dir>/output.blif 
+
+5.2.2. Re-integrating ABC results.
+ABC RESULTS:   A2O1A1Ixp33_ASAP7_75t_L cells:       14
+ABC RESULTS:   A2O1A1O1Ixp25_ASAP7_75t_L cells:        9
+ABC RESULTS:   AND2x2_ASAP7_75t_L cells:        1
+ABC RESULTS:   AOI211xp5_ASAP7_75t_L cells:        1
+ABC RESULTS:   AOI21xp33_ASAP7_75t_L cells:        7
+ABC RESULTS:   AOI22xp33_ASAP7_75t_L cells:        3
+ABC RESULTS:   INVx1_ASAP7_75t_L cells:       41
+ABC RESULTS:   NAND2xp33_ASAP7_75t_L cells:       14
+ABC RESULTS:   NOR2xp33_ASAP7_75t_L cells:       19
+ABC RESULTS:   O2A1O1Ixp33_ASAP7_75t_L cells:        7
+ABC RESULTS:   OAI21xp33_ASAP7_75t_L cells:        1
+ABC RESULTS:   OR2x4_ASAP7_75t_L cells:        1
+ABC RESULTS:   XNOR2x2_ASAP7_75t_L cells:        2
+ABC RESULTS:        internal signals:      207
+ABC RESULTS:           input signals:       27
+ABC RESULTS:          output signals:       14
+Removing temp directory.
+
+5.3. Extracting gate netlist of module `\adder_1' to `<abc-temp-dir>/input.blif'..
+Extracted 221 gates and 248 wires to a netlist network with 27 inputs and 14 outputs.
+
+5.3.1. Executing ABC.
+Running ABC command: <yosys-exe-dir>/yosys-abc -s -f <abc-temp-dir>/abc.script 2>&1
+ABC: ABC command line: "source <abc-temp-dir>/abc.script".
+ABC: 
+ABC: + read_blif <abc-temp-dir>/input.blif 
+ABC: + read_lib -w /home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib 
+ABC: Parsing finished successfully.  Parsing time =     0.61 sec
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "ASYNC_DFFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx1_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx2_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx3_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx4_ASAP7_75t_L".
+ABC: Library "asap7" from "/home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib" has 159 cells (26 skipped: 23 seq; 0 tri-state; 3 no func; 0 dont_use).  Time =     0.90 sec
+ABC: Memory =   67.27 MB. Time =     0.90 sec
+ABC: Warning: Detected 2 multi-output gates (for example, "FAx1_ASAP7_75t_L").
+ABC: + source /home/jingxiao/EPFL_benchmarks/adder10/../abc.script 
+ABC: Warning: The network is combinational (run "fraig" or "fraig_sweep").
+ABC: + write_blif <abc-temp-dir>/output.blif 
+
+5.3.2. Re-integrating ABC results.
+ABC RESULTS:   A2O1A1Ixp33_ASAP7_75t_L cells:       14
+ABC RESULTS:   A2O1A1O1Ixp25_ASAP7_75t_L cells:        9
+ABC RESULTS:   AND2x2_ASAP7_75t_L cells:        1
+ABC RESULTS:   AND3x1_ASAP7_75t_L cells:        3
+ABC RESULTS:   AOI211xp5_ASAP7_75t_L cells:        1
+ABC RESULTS:   AOI21xp33_ASAP7_75t_L cells:        7
+ABC RESULTS:   INVx1_ASAP7_75t_L cells:       25
+ABC RESULTS:   NAND2xp33_ASAP7_75t_L cells:       27
+ABC RESULTS:   NOR2xp33_ASAP7_75t_L cells:       23
+ABC RESULTS:   O2A1O1Ixp33_ASAP7_75t_L cells:        3
+ABC RESULTS:   OAI21xp33_ASAP7_75t_L cells:        1
+ABC RESULTS:   OR2x4_ASAP7_75t_L cells:        1
+ABC RESULTS:   XNOR2x2_ASAP7_75t_L cells:        2
+ABC RESULTS:        internal signals:      207
+ABC RESULTS:           input signals:       27
+ABC RESULTS:          output signals:       14
+Removing temp directory.
+
+5.4. Extracting gate netlist of module `\adder_2' to `<abc-temp-dir>/input.blif'..
+Extracted 221 gates and 248 wires to a netlist network with 27 inputs and 14 outputs.
+
+5.4.1. Executing ABC.
+Running ABC command: <yosys-exe-dir>/yosys-abc -s -f <abc-temp-dir>/abc.script 2>&1
+ABC: ABC command line: "source <abc-temp-dir>/abc.script".
+ABC: 
+ABC: + read_blif <abc-temp-dir>/input.blif 
+ABC: + read_lib -w /home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib 
+ABC: Parsing finished successfully.  Parsing time =     0.74 sec
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "ASYNC_DFFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx1_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx2_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx3_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx4_ASAP7_75t_L".
+ABC: Library "asap7" from "/home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib" has 159 cells (26 skipped: 23 seq; 0 tri-state; 3 no func; 0 dont_use).  Time =     1.08 sec
+ABC: Memory =   67.27 MB. Time =     1.08 sec
+ABC: Warning: Detected 2 multi-output gates (for example, "FAx1_ASAP7_75t_L").
+ABC: + source /home/jingxiao/EPFL_benchmarks/adder10/../abc.script 
+ABC: Warning: The network is combinational (run "fraig" or "fraig_sweep").
+ABC: + write_blif <abc-temp-dir>/output.blif 
+
+5.4.2. Re-integrating ABC results.
+ABC RESULTS:   A2O1A1Ixp33_ASAP7_75t_L cells:       14
+ABC RESULTS:   A2O1A1O1Ixp25_ASAP7_75t_L cells:        9
+ABC RESULTS:   AND2x2_ASAP7_75t_L cells:        1
+ABC RESULTS:   AND3x1_ASAP7_75t_L cells:        3
+ABC RESULTS:   AOI211xp5_ASAP7_75t_L cells:        1
+ABC RESULTS:   AOI21xp33_ASAP7_75t_L cells:        7
+ABC RESULTS:   INVx1_ASAP7_75t_L cells:       25
+ABC RESULTS:   NAND2xp33_ASAP7_75t_L cells:       27
+ABC RESULTS:   NOR2xp33_ASAP7_75t_L cells:       23
+ABC RESULTS:   O2A1O1Ixp33_ASAP7_75t_L cells:        3
+ABC RESULTS:   OAI21xp33_ASAP7_75t_L cells:        1
+ABC RESULTS:   OR2x4_ASAP7_75t_L cells:        1
+ABC RESULTS:   XNOR2x2_ASAP7_75t_L cells:        2
+ABC RESULTS:        internal signals:      207
+ABC RESULTS:           input signals:       27
+ABC RESULTS:          output signals:       14
+Removing temp directory.
+
+5.5. Extracting gate netlist of module `\adder_3' to `<abc-temp-dir>/input.blif'..
+Extracted 221 gates and 248 wires to a netlist network with 27 inputs and 14 outputs.
+
+5.5.1. Executing ABC.
+Running ABC command: <yosys-exe-dir>/yosys-abc -s -f <abc-temp-dir>/abc.script 2>&1
+ABC: ABC command line: "source <abc-temp-dir>/abc.script".
+ABC: 
+ABC: + read_blif <abc-temp-dir>/input.blif 
+ABC: + read_lib -w /home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib 
+ABC: Parsing finished successfully.  Parsing time =     0.66 sec
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "ASYNC_DFFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx1_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx2_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx3_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx4_ASAP7_75t_L".
+ABC: Library "asap7" from "/home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib" has 159 cells (26 skipped: 23 seq; 0 tri-state; 3 no func; 0 dont_use).  Time =     0.88 sec
+ABC: Memory =   67.27 MB. Time =     0.88 sec
+ABC: Warning: Detected 2 multi-output gates (for example, "FAx1_ASAP7_75t_L").
+ABC: + source /home/jingxiao/EPFL_benchmarks/adder10/../abc.script 
+ABC: Warning: The network is combinational (run "fraig" or "fraig_sweep").
+ABC: + write_blif <abc-temp-dir>/output.blif 
+
+5.5.2. Re-integrating ABC results.
+ABC RESULTS:   A2O1A1Ixp33_ASAP7_75t_L cells:       14
+ABC RESULTS:   A2O1A1O1Ixp25_ASAP7_75t_L cells:        9
+ABC RESULTS:   AND2x2_ASAP7_75t_L cells:        1
+ABC RESULTS:   AND3x1_ASAP7_75t_L cells:        3
+ABC RESULTS:   AOI211xp5_ASAP7_75t_L cells:        1
+ABC RESULTS:   AOI21xp33_ASAP7_75t_L cells:        7
+ABC RESULTS:   INVx1_ASAP7_75t_L cells:       25
+ABC RESULTS:   NAND2xp33_ASAP7_75t_L cells:       27
+ABC RESULTS:   NOR2xp33_ASAP7_75t_L cells:       23
+ABC RESULTS:   O2A1O1Ixp33_ASAP7_75t_L cells:        3
+ABC RESULTS:   OAI21xp33_ASAP7_75t_L cells:        1
+ABC RESULTS:   OR2x4_ASAP7_75t_L cells:        1
+ABC RESULTS:   XNOR2x2_ASAP7_75t_L cells:        2
+ABC RESULTS:        internal signals:      207
+ABC RESULTS:           input signals:       27
+ABC RESULTS:          output signals:       14
+Removing temp directory.
+
+5.6. Extracting gate netlist of module `\adder_4' to `<abc-temp-dir>/input.blif'..
+Extracted 204 gates and 229 wires to a netlist network with 25 inputs and 13 outputs.
+
+5.6.1. Executing ABC.
+Running ABC command: <yosys-exe-dir>/yosys-abc -s -f <abc-temp-dir>/abc.script 2>&1
+ABC: ABC command line: "source <abc-temp-dir>/abc.script".
+ABC: 
+ABC: + read_blif <abc-temp-dir>/input.blif 
+ABC: + read_lib -w /home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib 
+ABC: Parsing finished successfully.  Parsing time =     0.74 sec
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "ASYNC_DFFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx1_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx2_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx3_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx4_ASAP7_75t_L".
+ABC: Library "asap7" from "/home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib" has 159 cells (26 skipped: 23 seq; 0 tri-state; 3 no func; 0 dont_use).  Time =     1.07 sec
+ABC: Memory =   67.27 MB. Time =     1.07 sec
+ABC: Warning: Detected 2 multi-output gates (for example, "FAx1_ASAP7_75t_L").
+ABC: + source /home/jingxiao/EPFL_benchmarks/adder10/../abc.script 
+ABC: Warning: The network is combinational (run "fraig" or "fraig_sweep").
+ABC: + write_blif <abc-temp-dir>/output.blif 
+
+5.6.2. Re-integrating ABC results.
+ABC RESULTS:   A2O1A1Ixp33_ASAP7_75t_L cells:       12
+ABC RESULTS:   A2O1A1O1Ixp25_ASAP7_75t_L cells:        8
+ABC RESULTS:   AND3x1_ASAP7_75t_L cells:        3
+ABC RESULTS:   AOI211xp5_ASAP7_75t_L cells:        1
+ABC RESULTS:   AOI21xp33_ASAP7_75t_L cells:        7
+ABC RESULTS:   INVx1_ASAP7_75t_L cells:       25
+ABC RESULTS:   NAND2xp33_ASAP7_75t_L cells:       22
+ABC RESULTS:   NOR2xp33_ASAP7_75t_L cells:       25
+ABC RESULTS:   O2A1O1Ixp33_ASAP7_75t_L cells:        4
+ABC RESULTS:   OAI21xp33_ASAP7_75t_L cells:        2
+ABC RESULTS:   XNOR2x2_ASAP7_75t_L cells:        1
+ABC RESULTS:        internal signals:      191
+ABC RESULTS:           input signals:       25
+ABC RESULTS:          output signals:       13
+Removing temp directory.
+
+5.7. Extracting gate netlist of module `\adder_5' to `<abc-temp-dir>/input.blif'..
+Extracted 221 gates and 248 wires to a netlist network with 27 inputs and 14 outputs.
+
+5.7.1. Executing ABC.
+Running ABC command: <yosys-exe-dir>/yosys-abc -s -f <abc-temp-dir>/abc.script 2>&1
+ABC: ABC command line: "source <abc-temp-dir>/abc.script".
+ABC: 
+ABC: + read_blif <abc-temp-dir>/input.blif 
+ABC: + read_lib -w /home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib 
+ABC: Parsing finished successfully.  Parsing time =     0.66 sec
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "ASYNC_DFFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx1_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx2_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx3_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx4_ASAP7_75t_L".
+ABC: Library "asap7" from "/home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib" has 159 cells (26 skipped: 23 seq; 0 tri-state; 3 no func; 0 dont_use).  Time =     0.88 sec
+ABC: Memory =   67.27 MB. Time =     0.88 sec
+ABC: Warning: Detected 2 multi-output gates (for example, "FAx1_ASAP7_75t_L").
+ABC: + source /home/jingxiao/EPFL_benchmarks/adder10/../abc.script 
+ABC: Warning: The network is combinational (run "fraig" or "fraig_sweep").
+ABC: + write_blif <abc-temp-dir>/output.blif 
+
+5.7.2. Re-integrating ABC results.
+ABC RESULTS:   A2O1A1Ixp33_ASAP7_75t_L cells:       14
+ABC RESULTS:   A2O1A1O1Ixp25_ASAP7_75t_L cells:        9
+ABC RESULTS:   AND2x2_ASAP7_75t_L cells:        1
+ABC RESULTS:   AND3x1_ASAP7_75t_L cells:        3
+ABC RESULTS:   AOI211xp5_ASAP7_75t_L cells:        1
+ABC RESULTS:   AOI21xp33_ASAP7_75t_L cells:        7
+ABC RESULTS:   INVx1_ASAP7_75t_L cells:       25
+ABC RESULTS:   NAND2xp33_ASAP7_75t_L cells:       27
+ABC RESULTS:   NOR2xp33_ASAP7_75t_L cells:       23
+ABC RESULTS:   O2A1O1Ixp33_ASAP7_75t_L cells:        3
+ABC RESULTS:   OAI21xp33_ASAP7_75t_L cells:        1
+ABC RESULTS:   OR2x4_ASAP7_75t_L cells:        1
+ABC RESULTS:   XNOR2x2_ASAP7_75t_L cells:        2
+ABC RESULTS:        internal signals:      207
+ABC RESULTS:           input signals:       27
+ABC RESULTS:          output signals:       14
+Removing temp directory.
+
+5.8. Extracting gate netlist of module `\adder_6' to `<abc-temp-dir>/input.blif'..
+Extracted 212 gates and 238 wires to a netlist network with 26 inputs and 14 outputs.
+
+5.8.1. Executing ABC.
+Running ABC command: <yosys-exe-dir>/yosys-abc -s -f <abc-temp-dir>/abc.script 2>&1
+ABC: ABC command line: "source <abc-temp-dir>/abc.script".
+ABC: 
+ABC: + read_blif <abc-temp-dir>/input.blif 
+ABC: + read_lib -w /home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib 
+ABC: Parsing finished successfully.  Parsing time =     0.66 sec
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "ASYNC_DFFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx1_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx2_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx3_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx4_ASAP7_75t_L".
+ABC: Library "asap7" from "/home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib" has 159 cells (26 skipped: 23 seq; 0 tri-state; 3 no func; 0 dont_use).  Time =     0.88 sec
+ABC: Memory =   67.27 MB. Time =     0.88 sec
+ABC: Warning: Detected 2 multi-output gates (for example, "FAx1_ASAP7_75t_L").
+ABC: + source /home/jingxiao/EPFL_benchmarks/adder10/../abc.script 
+ABC: Warning: The network is combinational (run "fraig" or "fraig_sweep").
+ABC: + write_blif <abc-temp-dir>/output.blif 
+
+5.8.2. Re-integrating ABC results.
+ABC RESULTS:   A2O1A1Ixp33_ASAP7_75t_L cells:        6
+ABC RESULTS:   A2O1A1O1Ixp25_ASAP7_75t_L cells:        2
+ABC RESULTS:   AND2x2_ASAP7_75t_L cells:        3
+ABC RESULTS:   INVx1_ASAP7_75t_L cells:       11
+ABC RESULTS:   MAJIxp5_ASAP7_75t_L cells:        1
+ABC RESULTS:   NAND2xp33_ASAP7_75t_L cells:       21
+ABC RESULTS:   NOR2xp33_ASAP7_75t_L cells:       13
+ABC RESULTS:   O2A1O1Ixp33_ASAP7_75t_L cells:        7
+ABC RESULTS:   OR2x4_ASAP7_75t_L cells:        2
+ABC RESULTS:   XNOR2x2_ASAP7_75t_L cells:        9
+ABC RESULTS:   XOR2x2_ASAP7_75t_L cells:        4
+ABC RESULTS:        internal signals:      198
+ABC RESULTS:           input signals:       26
+ABC RESULTS:          output signals:       14
+Removing temp directory.
+
+5.9. Extracting gate netlist of module `\adder_7' to `<abc-temp-dir>/input.blif'..
+Extracted 221 gates and 248 wires to a netlist network with 27 inputs and 14 outputs.
+
+5.9.1. Executing ABC.
+Running ABC command: <yosys-exe-dir>/yosys-abc -s -f <abc-temp-dir>/abc.script 2>&1
+ABC: ABC command line: "source <abc-temp-dir>/abc.script".
+ABC: 
+ABC: + read_blif <abc-temp-dir>/input.blif 
+ABC: + read_lib -w /home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib 
+ABC: Parsing finished successfully.  Parsing time =     0.73 sec
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "ASYNC_DFFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx1_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx2_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx3_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx4_ASAP7_75t_L".
+ABC: Library "asap7" from "/home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib" has 159 cells (26 skipped: 23 seq; 0 tri-state; 3 no func; 0 dont_use).  Time =     1.03 sec
+ABC: Memory =   67.27 MB. Time =     1.03 sec
+ABC: Warning: Detected 2 multi-output gates (for example, "FAx1_ASAP7_75t_L").
+ABC: + source /home/jingxiao/EPFL_benchmarks/adder10/../abc.script 
+ABC: Warning: The network is combinational (run "fraig" or "fraig_sweep").
+ABC: + write_blif <abc-temp-dir>/output.blif 
+
+5.9.2. Re-integrating ABC results.
+ABC RESULTS:   A2O1A1Ixp33_ASAP7_75t_L cells:       14
+ABC RESULTS:   A2O1A1O1Ixp25_ASAP7_75t_L cells:        9
+ABC RESULTS:   AND2x2_ASAP7_75t_L cells:        1
+ABC RESULTS:   AND3x1_ASAP7_75t_L cells:        3
+ABC RESULTS:   AOI211xp5_ASAP7_75t_L cells:        1
+ABC RESULTS:   AOI21xp33_ASAP7_75t_L cells:        7
+ABC RESULTS:   INVx1_ASAP7_75t_L cells:       25
+ABC RESULTS:   NAND2xp33_ASAP7_75t_L cells:       27
+ABC RESULTS:   NOR2xp33_ASAP7_75t_L cells:       23
+ABC RESULTS:   O2A1O1Ixp33_ASAP7_75t_L cells:        3
+ABC RESULTS:   OAI21xp33_ASAP7_75t_L cells:        1
+ABC RESULTS:   OR2x4_ASAP7_75t_L cells:        1
+ABC RESULTS:   XNOR2x2_ASAP7_75t_L cells:        2
+ABC RESULTS:        internal signals:      207
+ABC RESULTS:           input signals:       27
+ABC RESULTS:          output signals:       14
+Removing temp directory.
+
+5.10. Extracting gate netlist of module `\adder_8' to `<abc-temp-dir>/input.blif'..
+Extracted 221 gates and 248 wires to a netlist network with 27 inputs and 14 outputs.
+
+5.10.1. Executing ABC.
+Running ABC command: <yosys-exe-dir>/yosys-abc -s -f <abc-temp-dir>/abc.script 2>&1
+ABC: ABC command line: "source <abc-temp-dir>/abc.script".
+ABC: 
+ABC: + read_blif <abc-temp-dir>/input.blif 
+ABC: + read_lib -w /home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib 
+ABC: Parsing finished successfully.  Parsing time =     0.70 sec
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "ASYNC_DFFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx1_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx2_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx3_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx4_ASAP7_75t_L".
+ABC: Library "asap7" from "/home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib" has 159 cells (26 skipped: 23 seq; 0 tri-state; 3 no func; 0 dont_use).  Time =     0.98 sec
+ABC: Memory =   67.27 MB. Time =     0.98 sec
+ABC: Warning: Detected 2 multi-output gates (for example, "FAx1_ASAP7_75t_L").
+ABC: + source /home/jingxiao/EPFL_benchmarks/adder10/../abc.script 
+ABC: Warning: The network is combinational (run "fraig" or "fraig_sweep").
+ABC: + write_blif <abc-temp-dir>/output.blif 
+
+5.10.2. Re-integrating ABC results.
+ABC RESULTS:   A2O1A1Ixp33_ASAP7_75t_L cells:       18
+ABC RESULTS:   A2O1A1O1Ixp25_ASAP7_75t_L cells:        9
+ABC RESULTS:   AND2x2_ASAP7_75t_L cells:        1
+ABC RESULTS:   AND3x1_ASAP7_75t_L cells:        1
+ABC RESULTS:   AOI211xp5_ASAP7_75t_L cells:        1
+ABC RESULTS:   AOI21xp33_ASAP7_75t_L cells:        9
+ABC RESULTS:   AOI32xp33_ASAP7_75t_L cells:        1
+ABC RESULTS:   INVx1_ASAP7_75t_L cells:       29
+ABC RESULTS:   NAND2xp33_ASAP7_75t_L cells:       24
+ABC RESULTS:   NOR2xp33_ASAP7_75t_L cells:       23
+ABC RESULTS:   O2A1O1Ixp33_ASAP7_75t_L cells:        4
+ABC RESULTS:   OAI21xp33_ASAP7_75t_L cells:        1
+ABC RESULTS:   OR2x4_ASAP7_75t_L cells:        1
+ABC RESULTS:   XNOR2x2_ASAP7_75t_L cells:        1
+ABC RESULTS:        internal signals:      207
+ABC RESULTS:           input signals:       27
+ABC RESULTS:          output signals:       14
+Removing temp directory.
+
+5.11. Extracting gate netlist of module `\adder_9' to `<abc-temp-dir>/input.blif'..
+Extracted 204 gates and 229 wires to a netlist network with 25 inputs and 13 outputs.
+
+5.11.1. Executing ABC.
+Running ABC command: <yosys-exe-dir>/yosys-abc -s -f <abc-temp-dir>/abc.script 2>&1
+ABC: ABC command line: "source <abc-temp-dir>/abc.script".
+ABC: 
+ABC: + read_blif <abc-temp-dir>/input.blif 
+ABC: + read_lib -w /home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib 
+ABC: Parsing finished successfully.  Parsing time =     0.66 sec
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "ASYNC_DFFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFHQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQNx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DFFLQx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DHLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "DLLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx1_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx2_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped cell "ICGx3_ASAP7_75t_L" without logic function.
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFHx4_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx1_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx2_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx3_ASAP7_75t_L".
+ABC: Scl_LibertyReadGenlib() skipped sequential cell "SDFLx4_ASAP7_75t_L".
+ABC: Library "asap7" from "/home/jingxiao/EPFL_benchmarks/adder10/../asap7.lib" has 159 cells (26 skipped: 23 seq; 0 tri-state; 3 no func; 0 dont_use).  Time =     0.88 sec
+ABC: Memory =   67.27 MB. Time =     0.88 sec
+ABC: Warning: Detected 2 multi-output gates (for example, "FAx1_ASAP7_75t_L").
+ABC: + source /home/jingxiao/EPFL_benchmarks/adder10/../abc.script 
+ABC: Warning: The network is combinational (run "fraig" or "fraig_sweep").
+ABC: + write_blif <abc-temp-dir>/output.blif 
+
+5.11.2. Re-integrating ABC results.
+ABC RESULTS:   A2O1A1Ixp33_ASAP7_75t_L cells:       12
+ABC RESULTS:   A2O1A1O1Ixp25_ASAP7_75t_L cells:        8
+ABC RESULTS:   AND3x1_ASAP7_75t_L cells:        3
+ABC RESULTS:   AOI211xp5_ASAP7_75t_L cells:        1
+ABC RESULTS:   AOI21xp33_ASAP7_75t_L cells:        7
+ABC RESULTS:   INVx1_ASAP7_75t_L cells:       25
+ABC RESULTS:   NAND2xp33_ASAP7_75t_L cells:       22
+ABC RESULTS:   NOR2xp33_ASAP7_75t_L cells:       25
+ABC RESULTS:   O2A1O1Ixp33_ASAP7_75t_L cells:        4
+ABC RESULTS:   OAI21xp33_ASAP7_75t_L cells:        2
+ABC RESULTS:   XNOR2x2_ASAP7_75t_L cells:        1
+ABC RESULTS:        internal signals:      191
+ABC RESULTS:           input signals:       25
+ABC RESULTS:          output signals:       13
+Removing temp directory.
+
+6. Executing FLATTEN pass (flatten design).
+Using template adder_6 for cells of type adder_6.
+Using template adder_5 for cells of type adder_5.
+Using template adder_7 for cells of type adder_7.
+Using template adder_9 for cells of type adder_9.
+Using template adder_8 for cells of type adder_8.
+Using template adder_2 for cells of type adder_2.
+Using template adder_4 for cells of type adder_4.
+Using template adder_3 for cells of type adder_3.
+Using template adder_0 for cells of type adder_0.
+Using template adder_1 for cells of type adder_1.
+<suppressed ~10 debug messages>
+No more expansions possible.
+
+7. Printing statistics.
+
+=== adder ===
+
+   Number of wires:               4227
+   Number of wire bits:           4227
+   Number of public wires:        1682
+   Number of public wire bits:    1682
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:               1130
+     A2O1A1Ixp33_ASAP7_75t_L       132
+     A2O1A1O1Ixp25_ASAP7_75t_L      81
+     AND2x2_ASAP7_75t_L             10
+     AND3x1_ASAP7_75t_L             22
+     AOI211xp5_ASAP7_75t_L           9
+     AOI21xp33_ASAP7_75t_L          65
+     AOI22xp33_ASAP7_75t_L           3
+     AOI32xp33_ASAP7_75t_L           1
+     INVx1_ASAP7_75t_L             259
+     MAJIxp5_ASAP7_75t_L             1
+     NAND2xp33_ASAP7_75t_L         238
+     NOR2xp33_ASAP7_75t_L          220
+     O2A1O1Ixp33_ASAP7_75t_L        41
+     OAI21xp33_ASAP7_75t_L          11
+     OR2x4_ASAP7_75t_L               9
+     XNOR2x2_ASAP7_75t_L            24
+     XOR2x2_ASAP7_75t_L              4
+
+   Chip area for module '\adder': 850.772160
+
+=== adder_0 ===
+
+   Number of wires:                395
+   Number of wire bits:            395
+   Number of public wires:         131
+   Number of public wire bits:     131
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                120
+     A2O1A1Ixp33_ASAP7_75t_L        14
+     A2O1A1O1Ixp25_ASAP7_75t_L       9
+     AND2x2_ASAP7_75t_L              1
+     AOI211xp5_ASAP7_75t_L           1
+     AOI21xp33_ASAP7_75t_L           7
+     AOI22xp33_ASAP7_75t_L           3
+     INVx1_ASAP7_75t_L              41
+     NAND2xp33_ASAP7_75t_L          14
+     NOR2xp33_ASAP7_75t_L           19
+     O2A1O1Ixp33_ASAP7_75t_L         7
+     OAI21xp33_ASAP7_75t_L           1
+     OR2x4_ASAP7_75t_L               1
+     XNOR2x2_ASAP7_75t_L             2
+
+   Chip area for module '\adder_0': 82.814400
+
+=== adder_1 ===
+
+   Number of wires:                392
+   Number of wire bits:            392
+   Number of public wires:         131
+   Number of public wire bits:     131
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                117
+     A2O1A1Ixp33_ASAP7_75t_L        14
+     A2O1A1O1Ixp25_ASAP7_75t_L       9
+     AND2x2_ASAP7_75t_L              1
+     AND3x1_ASAP7_75t_L              3
+     AOI211xp5_ASAP7_75t_L           1
+     AOI21xp33_ASAP7_75t_L           7
+     INVx1_ASAP7_75t_L              25
+     NAND2xp33_ASAP7_75t_L          27
+     NOR2xp33_ASAP7_75t_L           23
+     O2A1O1Ixp33_ASAP7_75t_L         3
+     OAI21xp33_ASAP7_75t_L           1
+     OR2x4_ASAP7_75t_L               1
+     XNOR2x2_ASAP7_75t_L             2
+
+   Chip area for module '\adder_1': 87.480000
+
+=== adder_2 ===
+
+   Number of wires:                392
+   Number of wire bits:            392
+   Number of public wires:         131
+   Number of public wire bits:     131
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                117
+     A2O1A1Ixp33_ASAP7_75t_L        14
+     A2O1A1O1Ixp25_ASAP7_75t_L       9
+     AND2x2_ASAP7_75t_L              1
+     AND3x1_ASAP7_75t_L              3
+     AOI211xp5_ASAP7_75t_L           1
+     AOI21xp33_ASAP7_75t_L           7
+     INVx1_ASAP7_75t_L              25
+     NAND2xp33_ASAP7_75t_L          27
+     NOR2xp33_ASAP7_75t_L           23
+     O2A1O1Ixp33_ASAP7_75t_L         3
+     OAI21xp33_ASAP7_75t_L           1
+     OR2x4_ASAP7_75t_L               1
+     XNOR2x2_ASAP7_75t_L             2
+
+   Chip area for module '\adder_2': 87.480000
+
+=== adder_3 ===
+
+   Number of wires:                392
+   Number of wire bits:            392
+   Number of public wires:         131
+   Number of public wire bits:     131
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                117
+     A2O1A1Ixp33_ASAP7_75t_L        14
+     A2O1A1O1Ixp25_ASAP7_75t_L       9
+     AND2x2_ASAP7_75t_L              1
+     AND3x1_ASAP7_75t_L              3
+     AOI211xp5_ASAP7_75t_L           1
+     AOI21xp33_ASAP7_75t_L           7
+     INVx1_ASAP7_75t_L              25
+     NAND2xp33_ASAP7_75t_L          27
+     NOR2xp33_ASAP7_75t_L           23
+     O2A1O1Ixp33_ASAP7_75t_L         3
+     OAI21xp33_ASAP7_75t_L           1
+     OR2x4_ASAP7_75t_L               1
+     XNOR2x2_ASAP7_75t_L             2
+
+   Chip area for module '\adder_3': 87.480000
+
+=== adder_4 ===
+
+   Number of wires:                364
+   Number of wire bits:            364
+   Number of public wires:         121
+   Number of public wire bits:     121
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                110
+     A2O1A1Ixp33_ASAP7_75t_L        12
+     A2O1A1O1Ixp25_ASAP7_75t_L       8
+     AND3x1_ASAP7_75t_L              3
+     AOI211xp5_ASAP7_75t_L           1
+     AOI21xp33_ASAP7_75t_L           7
+     INVx1_ASAP7_75t_L              25
+     NAND2xp33_ASAP7_75t_L          22
+     NOR2xp33_ASAP7_75t_L           25
+     O2A1O1Ixp33_ASAP7_75t_L         4
+     OAI21xp33_ASAP7_75t_L           2
+     XNOR2x2_ASAP7_75t_L             1
+
+   Chip area for module '\adder_4': 80.015040
+
+=== adder_5 ===
+
+   Number of wires:                392
+   Number of wire bits:            392
+   Number of public wires:         131
+   Number of public wire bits:     131
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                117
+     A2O1A1Ixp33_ASAP7_75t_L        14
+     A2O1A1O1Ixp25_ASAP7_75t_L       9
+     AND2x2_ASAP7_75t_L              1
+     AND3x1_ASAP7_75t_L              3
+     AOI211xp5_ASAP7_75t_L           1
+     AOI21xp33_ASAP7_75t_L           7
+     INVx1_ASAP7_75t_L              25
+     NAND2xp33_ASAP7_75t_L          27
+     NOR2xp33_ASAP7_75t_L           23
+     O2A1O1Ixp33_ASAP7_75t_L         3
+     OAI21xp33_ASAP7_75t_L           1
+     OR2x4_ASAP7_75t_L               1
+     XNOR2x2_ASAP7_75t_L             2
+
+   Chip area for module '\adder_5': 87.480000
+
+=== adder_6 ===
+
+   Number of wires:                343
+   Number of wire bits:            343
+   Number of public wires:         126
+   Number of public wire bits:     126
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                 79
+     A2O1A1Ixp33_ASAP7_75t_L         6
+     A2O1A1O1Ixp25_ASAP7_75t_L       2
+     AND2x2_ASAP7_75t_L              3
+     INVx1_ASAP7_75t_L              11
+     MAJIxp5_ASAP7_75t_L             1
+     NAND2xp33_ASAP7_75t_L          21
+     NOR2xp33_ASAP7_75t_L           13
+     O2A1O1Ixp33_ASAP7_75t_L         7
+     OR2x4_ASAP7_75t_L               2
+     XNOR2x2_ASAP7_75t_L             9
+     XOR2x2_ASAP7_75t_L              4
+
+   Chip area for module '\adder_6': 82.347840
+
+=== adder_7 ===
+
+   Number of wires:                392
+   Number of wire bits:            392
+   Number of public wires:         131
+   Number of public wire bits:     131
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                117
+     A2O1A1Ixp33_ASAP7_75t_L        14
+     A2O1A1O1Ixp25_ASAP7_75t_L       9
+     AND2x2_ASAP7_75t_L              1
+     AND3x1_ASAP7_75t_L              3
+     AOI211xp5_ASAP7_75t_L           1
+     AOI21xp33_ASAP7_75t_L           7
+     INVx1_ASAP7_75t_L              25
+     NAND2xp33_ASAP7_75t_L          27
+     NOR2xp33_ASAP7_75t_L           23
+     O2A1O1Ixp33_ASAP7_75t_L         3
+     OAI21xp33_ASAP7_75t_L           1
+     OR2x4_ASAP7_75t_L               1
+     XNOR2x2_ASAP7_75t_L             2
+
+   Chip area for module '\adder_7': 87.480000
+
+=== adder_8 ===
+
+   Number of wires:                398
+   Number of wire bits:            398
+   Number of public wires:         131
+   Number of public wire bits:     131
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                123
+     A2O1A1Ixp33_ASAP7_75t_L        18
+     A2O1A1O1Ixp25_ASAP7_75t_L       9
+     AND2x2_ASAP7_75t_L              1
+     AND3x1_ASAP7_75t_L              1
+     AOI211xp5_ASAP7_75t_L           1
+     AOI21xp33_ASAP7_75t_L           9
+     AOI32xp33_ASAP7_75t_L           1
+     INVx1_ASAP7_75t_L              29
+     NAND2xp33_ASAP7_75t_L          24
+     NOR2xp33_ASAP7_75t_L           23
+     O2A1O1Ixp33_ASAP7_75t_L         4
+     OAI21xp33_ASAP7_75t_L           1
+     OR2x4_ASAP7_75t_L               1
+     XNOR2x2_ASAP7_75t_L             1
+
+   Chip area for module '\adder_8': 86.080320
+
+=== adder_9 ===
+
+   Number of wires:                364
+   Number of wire bits:            364
+   Number of public wires:         121
+   Number of public wire bits:     121
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                110
+     A2O1A1Ixp33_ASAP7_75t_L        12
+     A2O1A1O1Ixp25_ASAP7_75t_L       8
+     AND3x1_ASAP7_75t_L              3
+     AOI211xp5_ASAP7_75t_L           1
+     AOI21xp33_ASAP7_75t_L           7
+     INVx1_ASAP7_75t_L              25
+     NAND2xp33_ASAP7_75t_L          22
+     NOR2xp33_ASAP7_75t_L           25
+     O2A1O1Ixp33_ASAP7_75t_L         4
+     OAI21xp33_ASAP7_75t_L           2
+     XNOR2x2_ASAP7_75t_L             1
+
+   Chip area for module '\adder_9': 80.015040
+
+=== design hierarchy ===
+
+   adder                             1
+
+   Number of wires:               4227
+   Number of wire bits:           4227
+   Number of public wires:        1682
+   Number of public wire bits:    1682
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:               1130
+     A2O1A1Ixp33_ASAP7_75t_L       132
+     A2O1A1O1Ixp25_ASAP7_75t_L      81
+     AND2x2_ASAP7_75t_L             10
+     AND3x1_ASAP7_75t_L             22
+     AOI211xp5_ASAP7_75t_L           9
+     AOI21xp33_ASAP7_75t_L          65
+     AOI22xp33_ASAP7_75t_L           3
+     AOI32xp33_ASAP7_75t_L           1
+     INVx1_ASAP7_75t_L             259
+     MAJIxp5_ASAP7_75t_L             1
+     NAND2xp33_ASAP7_75t_L         238
+     NOR2xp33_ASAP7_75t_L          220
+     O2A1O1Ixp33_ASAP7_75t_L        41
+     OAI21xp33_ASAP7_75t_L          11
+     OR2x4_ASAP7_75t_L               9
+     XNOR2x2_ASAP7_75t_L            24
+     XOR2x2_ASAP7_75t_L              4
+
+   Chip area for top module '\adder': 850.772160
+
+End of script. Logfile hash: 5b98fbe9bd
+CPU: user 1.73s system 0.10s, MEM: 178.14 MB total, 145.36 MB resident
+Yosys 0.8+634 (git sha1 3414ee1, clang 3.8.0-2ubuntu4 -fPIC -Os)
+Time spent: 62% 1x stat (1 sec), 8% 3x read_verilog (0 sec), ...
