@@ -43,7 +43,7 @@ def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, a
             print('----- Approximating part ' + str(i) + ' to degree ' + str(approx_degree))
 
             directory = os.path.join(args.output, toplevel + '_' + str(i), toplevel + '_' + str(i))
-            approximate(directory, approx_degree, list_num_input[i], list_num_output[i], args.liberty, toplevel + '_' + str(i), app_path)
+            approximate(directory, approx_degree, list_num_input[i], list_num_output[i], args.liberty, toplevel + '_' + str(i), app_path, args.output)
             os.system('cat ' + part_verilog + ' >> ' + tmp_verilog)
             # part_area = synth_design(part_verilog, part_verilog[:-2]+'_syn', config['liberty_file'], True)
             approx_created[i][approx_degree] = 1
@@ -56,7 +56,7 @@ def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, a
 
     ground_truth = os.path.join(args.output, toplevel + '.truth')
     
-    area  = synth_design(tmp_verilog, tmp_verilog[:-2] + '_syn', library)
+    area  = synth_design(tmp_verilog, tmp_verilog[:-2] + '_syn', library, args.output)
 
     t, h, f = assess_HD(ground_truth, truth_dir)
     print('Simulation error: ' + str(f) + '\tCircuit area: ' + str(area))
@@ -89,22 +89,9 @@ def evaluate_iter(curr_k_stream, list_num_input, list_num_output, toplevel, args
         err_list.append(err)
         area_list.append(area)
 
-    # print('======== Design number ' + str(i))
-    # pool = mp.Pool(mp.cpu_count())
-    # [ err_list, area_list, cells_list] = [pool.apply(evaluate_design, args=(k_lists[i], list_num_input, list_num_output, toplevel, args, approx_created, app_path, num_iter, i)) for i in range(num_list)]
-    # pool.close()
-
-
     if np.min(err_list) > args.threshold:
         return False, 0, 0
 
-    #np_area = np.array(area_list)
-    #order = np.argsort(np_area)
-#
-#    for i in order:
-#        if err_list[i] > config['threshold']:
-#            continue
-#        return k_lists[i], err_list[i], area_list[i], cells_list[i]
 
     idx = optimization(err_list, area_list, args.threshold)
     return k_lists[idx], err_list[idx], area_list[idx]
@@ -148,23 +135,7 @@ def print_banner():
 #        MAIN        #
 ######################
 
-#if len(sys.argv) == 2:
-#    arg = sys.argv[1]
-#    if arg == '--version' or arg == '-v':
-#        print('BLASYS Approximate Logic Synthesis Framework')
-#        print('Version 0.2.0')
-#        sys.exit()
-#    elif arg == '--help' or arg == '-h':
-#        print_usage()
-#        sys.exit()
-#    elif arg[-4:] == '.yml':
-#        yaml_file = arg
-#    else:
-#        print_usage()
-#        sys.exit()
-#else:
-#    print_usage()
-#    sys.exit()
+app_path = os.path.dirname(sys.argv[0])
 
 parser = argparse.ArgumentParser(description='BLASYS -- Approximate Logic Synthesis Using Boolean Matrix Factorization')
 parser.add_argument('-i', help='Input verilog file', required=True, dest='input')
@@ -172,7 +143,7 @@ parser.add_argument('-tb', help='Testbench verilog file', required=True, dest='t
 parser.add_argument('-n', help='Number of partitions', required=True, type=int, dest='npart')
 parser.add_argument('-o', help='Output directory', default='output', dest='output')
 parser.add_argument('-ts', help='Threshold on error', default=0.5, type=int, dest='threshold')
-parser.add_argument('-lib', help='Liberty file name', default='', dest='liberty')
+parser.add_argument('-lib', help='Liberty file name', default=os.path.join(app_path, 'asap7.lib'), dest='liberty')
 parser.add_argument('--lsoracle', help='Path to LSOracle tool', default='lstools', dest='lsoracle')
 parser.add_argument('--yosys', help='Path to YOSYS', default='yosys', dest='yosys')
 parser.add_argument('--vvp', help='Path to vvp', default='vvp', dest='vvp')
@@ -180,15 +151,8 @@ parser.add_argument('--iverilog', help='Path to iVerilog', default='iverilog', d
 
 args = parser.parse_args()
 
-app_path = os.path.dirname(sys.argv[0])
-
-if args.liberty == '':
-    args.liberty = os.path.join(app_path, 'asap7.lib')
-
 print_banner()
 
-#with open('params.yml', 'r') as config_file:
-#    config = yaml.safe_load(config_file)
 
 # Create temporary output directory
 output_dir_path = args.output
@@ -228,11 +192,9 @@ output_truth = os.path.join(output_dir_path, toplevel+'.truth')
 os.system(vvp + ' ' + toplevel + '.iv > ' + output_truth)
 os.system('rm ' + toplevel + '.iv')
 
-#print('Synthesizing input design...')
-#output_synth = os.path.join(output_dir_path, toplevel+'_syn')
-#input_area, input_cells = synth_design(input_file, output_synth, library)
-#print('Original design area ', str(input_area))
-#print('Original cells number ', str(input_cells))
+# Write abc script
+with open(os.path.join(output_dir_path, 'abc.script'), 'w') as file:
+    file.write('strash;fraig;refactor;rewrite -z;scorr;map')
 
 # Partitioning circuit
 print('Partitioning input circuit...')
@@ -250,7 +212,7 @@ input_synth = os.path.join(output_dir_path, toplevel + '_parts.v')
 parts = os.path.join(part_dir, '*.v')
 os.system('cat ' + parts + ' >> ' + input_synth)
 output_synth = os.path.join(output_dir_path, toplevel+'_syn')
-input_area = synth_design(input_synth, output_synth, library)
+input_area = synth_design(input_synth, output_synth, library, args.output)
 print('Original design area ', str(input_area))
 
 
@@ -291,13 +253,6 @@ for i in range(num_parts):
 
 print('==================== Starting Approximation by Greedy Search  ====================')
 
-
-# test with 2
-# directory = os.path.join(list_part_output_dir[1], 'adder_1')
-# approximate(directory, list_num_output[1] - 1, list_num_input[1], list_num_output[1], library, toplevel + '_1')
-
-# f = evaluate_design([4]*len(list_num_output), list_num_input,list_num_output,config,approx_area)
-# print('error ' + str(f))
 count_iter = 1
 curr_stream = []
 
@@ -325,7 +280,6 @@ while True:
     print('Approximated HD error:  ' + str(100*err) + '%')
     print('Area percentage:        ' + str(100 * (area / input_area)) + '%')
     print('Time used:              ' + str(time_used))
-   # print('Cell number percentage: ' + str(100 * (n_cells / input_cells)) + '%')
 
     msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err, 100*(area/input_area), time_used)
     print(msg)
@@ -341,34 +295,3 @@ while True:
 
     count_iter += 1
 
-
-
-
-
-
-#k=int(sys.argv[2])
-# generate the input side of the truth of the module	
-#print('Creating truth table testbench...')
-#n, m =gen_truth(sys.argv[1])
-# simulate the module to generate the output side of the truth table
-#print('Simulating truth table on input design...')
-#os.system('iverilog -o '+ sys.argv[1] + '.iv ' + sys.argv[1]+ '.v '+sys.argv[1] + '_tb.v')
-#os.system('vvp '+sys.argv[1]+'.iv >'+sys.argv[1]+'.truth')
-#print('Synthesizing input design...')
-#area = synth_design(sys.argv[1]+'.v', sys.argv[1]+'_syn', sys.argv[2])
-#print('Original design area', str(area))
-# run BMF on the output side of the truth table
-#for k in range(m-1, 1, -1):
-#    print('Executing BMF with k =', str(k), '...')
-#    os.system('../asso '+sys.argv[1]+'.truth '+str(k))
-#    W=np.loadtxt(sys.argv[1]+'.truth_w_'+str(k), dtype=int)
-#    H=np.loadtxt(sys.argv[1]+'.truth_h_'+str(k), dtype=int)
-#    print('Writing approximate design...')
-#    create_wh(n, m, k, W, H, sys.argv[1])
-#    print('Simulating truth table on approximate design...')
-#    os.system('iverilog -o '+ sys.argv[1]+'_approx_k='+str(k)+'.iv ' + sys.argv[1]+'_approx_k='+str(k)+'.v '+ sys.argv[1] + '_tb.v')
-#    os.system('vvp '+sys.argv[1]+'_approx_k='+str(k)+'.iv > ' + sys.argv[1]+'_approx_k='+str(k)+'.truth')
-#    t, h, f = assess_HD(sys.argv[1]+'.truth', sys.argv[1]+'_approx_k='+str(k)+'.truth')
-#    print('Synthesizing approximate design...')
-#    area_ap = synth_design(sys.argv[1]+'_approx_k='+str(k)+'.v', sys.argv[1]+'_approx_k='+str(k)+'_syn', sys.argv[2])
-#    print('Metrics HD - total bits:'+str(t)+' flipped: '+str(h)+' percent: '+str(100*f)+'%'+ ' Area: '+str(area_ap)+ ' percent: '+str(100*(area-area_ap)/area))
