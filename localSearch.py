@@ -12,14 +12,12 @@ import time
 from utils import assess_HD, gen_truth, create_wh, synth_design, approximate
 
 
-def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path, num_iter, num_design):
-
-    print('Evaluating Design ', k_stream)
+def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path, num_iter):
 
     num_part = len(k_stream)
     # area = 0
 
-    tmp_verilog = os.path.join(args.output, 'approx_design', 'iter'+str(num_iter)+'design'+str(num_design)+'.v')
+    tmp_verilog = os.path.join(args.output, 'approx_design', 'iter'+str(num_iter)+'.v')
     toplevel_file = os.path.join(args.output, 'partition', toplevel + '.v')
     os.system('cat ' + toplevel_file + ' > ' + tmp_verilog)
 
@@ -50,7 +48,7 @@ def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, a
             approx_created[i][approx_degree] = 1
             # area += part_area
 
-    truth_dir = os.path.join(args.output, 'truthtable', 'iter'+str(num_iter)+'design'+str(num_design)+'.truth')
+    truth_dir = os.path.join(args.output, 'truthtable', 'iter'+str(num_iter)+'.truth')
     os.system('iverilog -o ' + truth_dir[:-5] + 'iv ' + tmp_verilog + ' ' + args.testbench)
     os.system('vvp ' + truth_dir[:-5] + 'iv > ' + truth_dir)
     os.system('rm ' + truth_dir[:-5] + 'iv')
@@ -60,52 +58,7 @@ def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, a
     area  = synth_design(tmp_verilog, tmp_verilog[:-2] + '_syn', library, args.output)
 
     t, h, f = assess_HD(ground_truth, truth_dir)
-    print('Simulation error: ' + str(f) + '\tCircuit area: ' + str(area))
     return f, area
-
-
-
-def evaluate_iter(curr_k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path, num_iter):
-    
-    k_lists = []
-
-    for i in range(len(curr_k_stream)):
-        new_k_stream = list(curr_k_stream)
-        new_k_stream[i] = new_k_stream[i] - 1
-        if new_k_stream[i] > 0:
-            k_lists.append(new_k_stream)
-    
-    if len(k_lists) == 0:
-        return False, 0, 0
-
-    num_list = len(k_lists)
-    err_list = []
-    area_list = []
-
-    for i in range(num_list):
-        # Evaluate each list
-        print('======== Design number ' + str(i))
-        k_stream = k_lists[i]
-        err, area = evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path, num_iter, i)
-        err_list.append(err)
-        area_list.append(area)
-
-    if np.min(err_list) > args.threshold:
-        return False, 0, 0
-
-
-    idx = optimization(err_list, area_list, args.threshold)
-    return k_lists[idx], err_list[idx], area_list[idx]
-
-
-def optimization(err_list, area_list, threshold):
-    np_area = np.array(area_list)
-    order = np.argsort(np_area)
-
-    for i in order:
-        if err_list[i] > threshold:
-            continue
-        return i
 
 
 def print_banner():
@@ -145,6 +98,7 @@ parser.add_argument('-n', help='Number of partitions', required=True, type=int, 
 parser.add_argument('-o', help='Output directory', default='output', dest='output')
 parser.add_argument('-ts', help='Threshold on error', default=0.9, type=int, dest='threshold')
 parser.add_argument('-lib', help='Liberty file name', default=os.path.join(app_path, 'asap7.lib'), dest='liberty')
+parser.add_argument('--iteration', help='Number of estimation', default=5000, type=int, dest='iteration')
 parser.add_argument('--lsoracle', help='Path to LSOracle tool', default='lstools', dest='lsoracle')
 parser.add_argument('--yosys', help='Path to YOSYS', default='yosys', dest='yosys')
 parser.add_argument('--vvp', help='Path to vvp', default='vvp', dest='vvp')
@@ -152,8 +106,8 @@ parser.add_argument('--iverilog', help='Path to iVerilog', default='iverilog', d
 
 args = parser.parse_args()
 
-print_banner()
 
+print_banner()
 
 # Create temporary output directory
 output_dir_path = args.output
@@ -164,7 +118,7 @@ os.mkdir(output_dir_path)
 os.mkdir(os.path.join(output_dir_path, 'approx_design'))
 os.mkdir(os.path.join(output_dir_path, 'truthtable'))
 
-# Parse information from yaml file
+# Parse information from command-line input
 input_file = args.input
 testbench = args.testbench
 lsoracle = args.lsoracle
@@ -194,8 +148,8 @@ os.system(vvp + ' ' + toplevel + '.iv > ' + output_truth)
 os.system('rm ' + toplevel + '.iv')
 
 # Write abc script
-with open(os.path.join(output_dir_path, 'abc.script'), 'w') as file:
-    file.write('strash;fraig;refactor;rewrite -z;scorr;map')
+with open(os.path.join(output_dir_path, 'abc.script'), 'w') as f:
+    f.write('strash;fraig;refactor;rewrite -z;scorr;map')
 
 # Partitioning circuit
 print('Partitioning input circuit...')
@@ -218,17 +172,17 @@ print('Original design area ', str(input_area))
 
 
 # Generate truth table for each partitions
-approx_created = []
 list_num_input = []
 list_num_output = []
+approx_created = []
 for i in range(num_parts):
     modulename = toplevel + '_' + str(i)
     file_path = os.path.join(part_dir, modulename)
     if not os.path.exists(file_path + '.v'):
         print('Submodule ' + str(i) + ' is empty')
-        approx_created.append(-1)
         list_num_input.append(-1)
         list_num_output.append(-1)
+        approx_created.append(-1)
         continue
 
     # Create testbench for partition
@@ -245,79 +199,99 @@ for i in range(num_parts):
     truth_dir = os.path.join(part_output_dir, modulename + '.truth')
     os.system(vvp + ' ' + file_path + '.iv > ' + truth_dir)
 
-    # Evaluate partition area
-    #print('Evaluate partition area ' + str(i))
-    #part_synth = os.path.join(part_output_dir, modulename + '_syn')
-    #part_area = synth_design(file_path + '.v', part_synth, library, True)
-    #print('Partition area ' + str(part_area))
-    approx_created.append([0] * m + [1])
+    approx_created.append([0]*m + [1])
 
-print('==================== Starting Approximation by Greedy Search  ====================')
+    error_list = []
 
-error_list = []
-area_list = []
+    area_list = []
 
-count_iter = 1
-curr_stream = []
+k_stream = list_num_output.copy()
+prev_area = input_area
+best_area = 1
+best_err = 0
 
-while True:
-    if count_iter == 1:
-        curr_stream = list_num_output
+distribution = np.array(list_num_output)
+for i in range(distribution.size):
+    if distribution[i] == -1:
+        distribution[i] = 0
+    else:
+        distribution[i] = distribution[i] - 1
 
-    print('--------------- Iteration ' + str(count_iter) + ' ---------------')
-    before = time.time()
-    tmp, err, area = evaluate_iter(curr_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path, count_iter )
-    after = time.time()
+distribution = distribution / sum(distribution)
 
-    time_used = after - before
+print('==================== Starting Approximation by Monte Carlo Method  ====================')
 
-    print('--------------- Finishing Iteration' + str(count_iter) + '---------------')
-    print('Previous k_stream: ' + str(curr_stream))
-    print('Chosen k_stream:   ' + str(tmp))
-    for i in range(len(curr_stream)):
-        pre = curr_stream[i]
-        aft = tmp[i]
-        if pre != aft:
-            print('Design number ' + str(i) + ' is chosen.')
-            print('Approximated partition ' + str(i) + ' from ' + str(pre) + ' to ' + str(aft))
-            break
-    print('Approximated HD error:  ' + str(100*err) + '%')
-    print('Area percentage:        ' + str(100 * (area / input_area)) + '%')
-    print('Time used:              ' + str(time_used))
+for i in range(args.iteration):
+    print('--------------- Estimation #' + str(i) + ' ---------------')
+
+    np.random.seed(int(time.time()))
+
+    # Proposal design
+    prop_stream = k_stream.copy()
+    #approx_part = 0
+    #while 1:
+    approx_part = np.random.choice(np.arange(len(list_num_output)), p=distribution)
+    #    if list_num_output[approx_part] > 1:
+    #        break
+
+    if prop_stream[approx_part] == list_num_output[approx_part]:
+        prop_stream[approx_part] = prop_stream[approx_part] - 1
+    elif prop_stream[approx_part] == 1:
+        prop_stream[approx_part] = prop_stream[approx_part] + 1
+    else:
+        change = np.random.choice([-1,1], p=[0.1,0.9])
+        prop_stream[approx_part] = prop_stream[approx_part] + change
+
+
+    print(prop_stream)
+    
+    begin = time.time()
+    err, area = evaluate_design(prop_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path, i)
+    end = time.time()
+    time_used = end - begin
+
+
 
     msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err, 100*(area/input_area), time_used)
+    print(prop_stream)
     print(msg)
+
+    # Make decision
+    if area/input_area > prev_area/input_area + 0.05 or err > args.threshold:
+        print('Reject proposal.')
+        continue
+
+    k_stream = prop_stream.copy()
+    prev_area = area
+    if area / input_area < best_area:
+        print('sadfasfsafasfdasfas')
+        best_area = area / input_area
+        best_err = err
+
     with open(os.path.join(output_dir_path, 'log'), 'a') as log_file:
-        log_file.write(str(tmp))
-        log_file.write('\n')
         log_file.write(msg)
 
-    curr_stream = tmp
+    with open(os.path.join(output_dir_path, 'data'), 'a') as data:
+        data.write('{:.6f},{:.6f}\n'.format(err, area/input_area))
+    
 
-    if tmp == False:
-        break
-
-    count_iter += 1
-
-    error_list.append(err)
+    error_list.append( err )
     area_list.append( area/input_area )
 
     error_np = np.array(error_list)
-    area_np = np.array( area_list )
-    c = np.random.rand(len(error_list))
+    area_np = np.array(area_list)
 
-    plt.scatter(error_np, area_np, c='r', s=6)
+    plt.clf()
+    plt.scatter(error_np, area_np, c='g', s=5)
     plt.plot(error_np, area_np, c='b')
+    plt.scatter([best_err], [best_area], c='r', s=10)
     plt.xlim(0,1.1)
     plt.ylim(0,1.1)
     plt.ylabel('Area ratio')
     plt.xlabel('HD Approximation Error')
-    ticks = np.arange(0,1.1,0.1)
+    ticks = np.arange(0, 1.1, 0.1)
     plt.xticks(ticks)
     plt.yticks(ticks)
-    plt.title('Greedy search on ' + toplevel)
+    plt.title('Approximating ' + toplevel )
     plt.savefig(os.path.join(output_dir_path, 'visualization.png'))
-
-    with open(os.path.join(output_dir_path, 'data'), 'a') as data:
-        data.write('{:.6f},{:.6f}\n'.format(err, area/input_area))
 

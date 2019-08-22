@@ -98,7 +98,7 @@ parser.add_argument('-n', help='Number of partitions', required=True, type=int, 
 parser.add_argument('-o', help='Output directory', default='output', dest='output')
 parser.add_argument('-ts', help='Threshold on error', default=0.5, type=int, dest='threshold')
 parser.add_argument('-lib', help='Liberty file name', default=os.path.join(app_path, 'asap7.lib'), dest='liberty')
-parser.add_argument('--iteration', help='Number of estimation', default=1000, type=int, dest='iteration')
+parser.add_argument('--iteration', help='Number of estimation', default=5000, type=int, dest='iteration')
 parser.add_argument('--lsoracle', help='Path to LSOracle tool', default='lstools', dest='lsoracle')
 parser.add_argument('--yosys', help='Path to YOSYS', default='yosys', dest='yosys')
 parser.add_argument('--vvp', help='Path to vvp', default='vvp', dest='vvp')
@@ -206,6 +206,20 @@ for i in range(num_parts):
     area_list = []
 
 
+max_approx = 0
+for i in list_num_output:
+    if i != -1:
+        max_approx += i - 1
+
+
+distribution = np.array(list_num_output)
+for i in range(distribution.size):
+    if distribution[i] == -1:
+        distribution[i] = 0
+    else:
+        distribution[i] = distribution[i] - 1
+
+distribution = distribution / sum(distribution)
 
 print('==================== Starting Approximation by Monte Carlo Method  ====================')
 
@@ -213,15 +227,21 @@ for i in range(args.iteration):
     print('--------------- Estimation #' + str(i) + ' ---------------')
 
     random.seed(time.time())
-    k_stream = []
+    k_stream = list_num_output.copy()
+    approx_degree = random.randint(1, max_approx)
 
-    for k in range(len(list_num_output)):
-        if list_num_output[k] == -1:
-            k_stream.append( -1 )
-        elif list_num_output[k] == 1:
-            k_stream.append( 1 )
-        else:
-            k_stream.append(random.randint(2, list_num_output[k]))
+    while approx_degree > 0:
+        #approx_part = random.randint(0, len(list_num_output)-1)i
+        approx_part = np.random.choice(np.arange(len(list_num_output)), p=distribution)
+        if k_stream[approx_part] > 1:
+            k_stream[approx_part] = k_stream[approx_part] - 1
+            approx_degree -= 1
+
+    #for k in range(len(list_num_output)):
+    #    if list_num_output[k] == -1:
+    #        k_stream.append( -1 )
+    #    else:
+    #        k_stream.append(random.randint(1, list_num_output[k]))
 
     print(k_stream)
     
@@ -237,7 +257,7 @@ for i in range(args.iteration):
         log_file.write(msg)
 
     with open(os.path.join(output_dir_path, 'data'), 'a') as data:
-        data.write('{:.6f},{:.6f}\n'.format(100*err, 100*(area/input_area)))
+        data.write('{:.6f},{:.6f}\n'.format(err, area/input_area))
 
     error_list.append( err )
     area_list.append( area/input_area )
