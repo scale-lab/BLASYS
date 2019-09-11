@@ -12,16 +12,13 @@ import time
 from utils import assess_HD, gen_truth, create_wh, synth_design, approximate
 
 
-def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path, num_iter, num_design):
+def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, app_path, num_iter, num_design):
 
     print('Evaluating Design ', k_stream)
 
     num_part = len(k_stream)
-    # area = 0
 
-    tmp_verilog = os.path.join(args.output, 'approx_design', 'iter'+str(num_iter)+'design'+str(num_design)+'.v')
-    toplevel_file = os.path.join(args.output, 'partition', toplevel + '.v')
-    os.system('cat ' + toplevel_file + ' > ' + tmp_verilog)
+    verilog_list = os.path.join(args.output, 'partition', toplevel + '.v')
 
     for i in range(num_part):
 
@@ -32,32 +29,28 @@ def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, a
 
         if approx_degree == list_num_output[i]:
             part_verilog = os.path.join(args.output, 'partition', toplevel + '_' + str(i) + '.v')
-            os.system('cat ' + part_verilog + ' >> ' + tmp_verilog)
-            # area += approx_area[i][approx_degree]
+            verilog_list += ' ' + part_verilog
             continue
         
         part_verilog = os.path.join(args.output, toplevel + '_' + str(i), toplevel + '_' + str(i) + '_approx_k=' + str(approx_degree) + '.v')
-        if approx_created[i][approx_degree] == 1:
-            os.system('cat ' + part_verilog + ' >> ' + tmp_verilog)
-            # area += approx_area[i][approx_degree]
-        else:
+
+        if not os.path.exists(part_verilog):
             print('----- Approximating part ' + str(i) + ' to degree ' + str(approx_degree))
 
             directory = os.path.join(args.output, toplevel + '_' + str(i), toplevel + '_' + str(i))
             approximate(directory, approx_degree, list_num_input[i], list_num_output[i], args.liberty, toplevel + '_' + str(i), app_path, args.output)
-            os.system('cat ' + part_verilog + ' >> ' + tmp_verilog)
-            # part_area = synth_design(part_verilog, part_verilog[:-2]+'_syn', config['liberty_file'], True)
-            approx_created[i][approx_degree] = 1
-            # area += part_area
-
+        
+        verilog_list += ' ' + part_verilog
+            
     truth_dir = os.path.join(args.output, 'truthtable', 'iter'+str(num_iter)+'design'+str(num_design)+'.truth')
-    os.system('iverilog -o ' + truth_dir[:-5] + 'iv ' + tmp_verilog + ' ' + args.testbench)
+    os.system('iverilog -o ' + truth_dir[:-5] + 'iv ' + verilog_list + ' ' + args.testbench)
     os.system('vvp ' + truth_dir[:-5] + 'iv > ' + truth_dir)
     os.system('rm ' + truth_dir[:-5] + 'iv')
 
     ground_truth = os.path.join(args.output, toplevel + '.truth')
     
-    area  = synth_design(tmp_verilog, tmp_verilog[:-2] + '_syn', library, args.output)
+    output_syn = os.path.join(args.output, 'approx_design', 'iter'+str(num_iter)+'design'+str(num_design)+'_syn')
+    area  = synth_design(verilog_list, output_syn, library, args.output)
 
     t, h, f = assess_HD(ground_truth, truth_dir)
     print('Simulation error: ' + str(f) + '\tCircuit area: ' + str(area))
@@ -65,7 +58,7 @@ def evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, a
 
 
 
-def evaluate_iter(curr_k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path, num_iter):
+def evaluate_iter(curr_k_stream, list_num_input, list_num_output, toplevel, args, app_path, num_iter, input_area):
     
     k_lists = []
 
@@ -81,31 +74,55 @@ def evaluate_iter(curr_k_stream, list_num_input, list_num_output, toplevel, args
     num_list = len(k_lists)
     err_list = []
     area_list = []
-
-    for i in range(num_list):
-        # Evaluate each list
-        print('======== Design number ' + str(i))
-        k_stream = k_lists[i]
-        err, area = evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path, num_iter, i)
-        err_list.append(err)
-        area_list.append(area)
+    
+    if args.parallel:
+        lock = mp.Lock()
+        pool = mp.Pool(mp.cpu_count())
+        results = [pool.apply_async(evaluate_design,args=(k_lists[i], list_num_input, list_num_output, toplevel, args, app_path, num_iter, i)) for i in range(num_list)]
+        pool.close()
+        pool.join()
+        for result in results:
+            err_list.append(result.get()[0])
+            area_list.append(result.get()[1] / input_area)
+    else:
+        for i in range(num_list):
+            # Evaluate each list
+            print('======== Design number ' + str(i))
+            k_stream = k_lists[i]
+            err, area = evaluate_design(k_stream, list_num_input, list_num_output, toplevel, args, app_path, num_iter, i)
+            err_list.append(err)
+            area_list.append(area/input_area)
 
     if np.min(err_list) > args.threshold:
         return False, 0, 0
 
 
     idx = optimization(err_list, area_list, args.threshold)
+
     return k_lists[idx], err_list[idx], area_list[idx]
 
 
 def optimization(err_list, area_list, threshold):
     np_area = np.array(area_list)
-    order = np.argsort(np_area)
 
-    for i in order:
-        if err_list[i] > threshold:
-            continue
-        return i
+    np_err = np.array(err_list)
+
+    grad = np.divide(np_area - 1, np_err)
+
+    grad[np.isnan(grad)] = np.inf
+
+    index_min, = np.where(grad == grad.min())
+
+    area_min_grad = np_area[index_min]
+
+    return index_min[area_min_grad.argmin()]
+
+    # order = np.argsort(grad)
+
+    # for i in order:
+        # if err_list[i] > threshold:
+            # continue
+        # return i
 
 
 def print_banner():
@@ -149,6 +166,7 @@ parser.add_argument('--lsoracle', help='Path to LSOracle tool', default='lstools
 parser.add_argument('--yosys', help='Path to YOSYS', default='yosys', dest='yosys')
 parser.add_argument('--vvp', help='Path to vvp', default='vvp', dest='vvp')
 parser.add_argument('--iverilog', help='Path to iVerilog', default='iverilog', dest='iverilog')
+parser.add_argument('--parallel', help='Run the flow in parallel mode if specified', type=bool, default=False, dest='parallel')
 
 args = parser.parse_args()
 
@@ -205,7 +223,7 @@ lsoracle_command = 'read_verilog ' + input_file + '; ' \
         'get_all_partitions ' + part_dir
 log_partition = os.path.join(output_dir_path, 'lsoracle.log')
 with open(log_partition, 'w') as file_handler:
-    file_handler.write(lsoracle_command)
+    # file_handler.write(lsoracle_command)
     subprocess.call([lsoracle, '-c', lsoracle_command], stderr=file_handler, stdout=file_handler)
 
 print('Synthesizing input design with original partitions...')
@@ -218,7 +236,6 @@ print('Original design area ', str(input_area))
 
 
 # Generate truth table for each partitions
-approx_created = []
 list_num_input = []
 list_num_output = []
 for i in range(num_parts):
@@ -226,7 +243,6 @@ for i in range(num_parts):
     file_path = os.path.join(part_dir, modulename)
     if not os.path.exists(file_path + '.v'):
         print('Submodule ' + str(i) + ' is empty')
-        approx_created.append(-1)
         list_num_input.append(-1)
         list_num_output.append(-1)
         continue
@@ -250,8 +266,8 @@ for i in range(num_parts):
     #part_synth = os.path.join(part_output_dir, modulename + '_syn')
     #part_area = synth_design(file_path + '.v', part_synth, library, True)
     #print('Partition area ' + str(part_area))
-    approx_created.append([0] * m + [1])
 
+print('Input list:\t'+ str(list_num_input))
 print('==================== Starting Approximation by Greedy Search  ====================')
 
 error_list = []
@@ -266,7 +282,7 @@ while True:
 
     print('--------------- Iteration ' + str(count_iter) + ' ---------------')
     before = time.time()
-    tmp, err, area = evaluate_iter(curr_stream, list_num_input, list_num_output, toplevel, args, approx_created, app_path, count_iter )
+    tmp, err, area = evaluate_iter(curr_stream, list_num_input, list_num_output, toplevel, args, app_path, count_iter, input_area )
     after = time.time()
 
     time_used = after - before
@@ -277,15 +293,14 @@ while True:
     for i in range(len(curr_stream)):
         pre = curr_stream[i]
         aft = tmp[i]
-        if pre != aft:
-            print('Design number ' + str(i) + ' is chosen.')
+        if pre != aft: 
             print('Approximated partition ' + str(i) + ' from ' + str(pre) + ' to ' + str(aft))
             break
     print('Approximated HD error:  ' + str(100*err) + '%')
-    print('Area percentage:        ' + str(100 * (area / input_area)) + '%')
+    print('Area percentage:        ' + str(100 * area) + '%')
     print('Time used:              ' + str(time_used))
 
-    msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err, 100*(area/input_area), time_used)
+    msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err, 100*area, time_used)
     print(msg)
     with open(os.path.join(output_dir_path, 'log'), 'a') as log_file:
         log_file.write(str(tmp))
@@ -300,7 +315,7 @@ while True:
     count_iter += 1
 
     error_list.append(err)
-    area_list.append( area/input_area )
+    area_list.append( area)
 
     error_np = np.array(error_list)
     area_np = np.array( area_list )
@@ -319,5 +334,5 @@ while True:
     plt.savefig(os.path.join(output_dir_path, 'visualization.png'))
 
     with open(os.path.join(output_dir_path, 'data'), 'a') as data:
-        data.write('{:.6f},{:.6f}\n'.format(err, area/input_area))
+        data.write('{:.6f},{:.6f}\n'.format(err, area))
 
