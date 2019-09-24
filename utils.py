@@ -5,6 +5,50 @@ import os
 import numpy as np
 import subprocess
 
+def evaluate_design(k_stream, worker, num_iter, num_design):
+
+    print('Evaluating Design:', k_stream)
+    verilog_list = [os.path.join(worker.output, 'partition', worker.modulename + '.v')]
+
+    # Parse each subcircuit
+    for i in range(worker.num_parts):
+        approx_degree = k_stream[i]
+        # If subcircuit does not exist
+        if approx_degree == -1:
+            continue
+        # If subcircuit is not approximated
+        if approx_degree == worker.output_list[i]:
+            part_verilog = os.path.join(worker.output, 'partition', worker.modulename + '_' + str(i) + '.v')
+            verilog_list.append(part_verilog)
+            continue
+        
+        part_verilog = os.path.join(worker.output, worker.modulename + '_' + str(i), worker.modulename + '_' + str(i) + '_approx_k=' + str(approx_degree) + '.v')
+        # If has not been approximated before
+        if not os.path.exists(part_verilog):
+            print('----- Approximating part ' + str(i) + ' to degree ' + str(approx_degree))
+
+            directory = os.path.join(worker.output, worker.modulename + '_' + str(i), worker.modulename + '_' + str(i))
+            approximate(directory, approx_degree, worker, i)
+        
+        verilog_list.append(part_verilog)
+            
+    truth_dir = os.path.join(worker.output, 'truthtable', 'iter'+str(num_iter)+'design'+str(num_design)+'.truth')
+    subprocess.call([worker.path['iverilog'], '-o', truth_dir[:-5]+'iv'] + verilog_list + [worker.testbench])
+    with open(truth_dir, 'w') as f:
+        subprocess.call([worker.path['vvp'], truth_dir[:-5]+'iv'], stdout=f)
+    os.remove(truth_dir[:-5] + 'iv')
+
+    ground_truth = os.path.join(worker.output, worker.modulename + '.truth')
+    
+    output_syn = os.path.join(worker.output, 'approx_design', 'iter'+str(num_iter)+'design'+str(num_design)+'_syn')
+    area  = synth_design(' '.join(verilog_list), output_syn, worker.library, worker.script, worker.path['yosys'])
+
+    t, h, f = assess_HD(ground_truth, truth_dir)
+    print('Simulation error: ' + str(f) + '\tCircuit area: ' + str(area))
+    return f, area
+
+
+
 def assess_HD(original_path, approximate_path):
     with open(original_path, 'r') as fo:
         org_line_list = fo.readlines()
@@ -29,32 +73,13 @@ def assess_HD(original_path, approximate_path):
                 HD+=1
     return [total, HD, HD/total]
 
-def synth_gen(input_file, output_file, lib_file):
-    f=open('abc.script', 'w')
-    f.write('bdd;collapse;order')
-    f.close
-    f=open('yosys.script', 'w')
-    yosys_command = 'read_verilog ' + input_file + '; ' \
-            + 'synth -flatten; opt; opt_clean -purge; techmap; abc -script abc.script; ' \
-            + 'write_verilog -noattr ' + output_file + '.v;\n'
-    f.write(yosys_command)
-    f.close
-    area = 0
-    line=subprocess.call("yosys -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True)
-    with open(output_file+".log", 'r') as file_handle:
-        for line in file_handle:
-            if 'Chip area' in line:
-                area = line.split()[-1]
-    return float(area)
-
-def synth_design(input_file, output_file, lib_file, script_dir):
-
+def synth_design(input_file, output_file, lib_file, script, yosys):
     yosys_command = 'read_verilog ' + input_file + '; ' \
             + 'synth -flatten; opt; opt_clean -purge; techmap; abc -liberty '+lib_file \
-            + ' -script ' + os.path.join(script_dir, 'abc.script') + '; stat -liberty '+lib_file + '; write_verilog -noattr ' +output_file + '.v;\n '
+            + ' -script ' + script + '; stat -liberty '+lib_file + '; write_verilog -noattr ' +output_file + '.v;\n '
 
     area = 0
-    line=subprocess.call("yosys -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True)
+    line=subprocess.call(yosys+" -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True)
     with open(output_file+".log", 'r') as file_handle:
         for line in file_handle:
             if 'Chip area' in line:
@@ -62,22 +87,35 @@ def synth_design(input_file, output_file, lib_file, script_dir):
                 break
     return float(area)
 
-def synth_design_app(input_file, output_file, lib_file):
-    #f=open('abc.script', 'w')
-    #f.write('bdd;collapse;order;map')
-   # f.write('strash;fraig;refactor;rewrite -z;scorr;map')
-  #  f.write('strash;refactor;rewrite;refactor;rewrite;refactor;rewrite;map')
- #   f.write('espresso;map')
-   # f.close
-    #f=open('yosys.script', 'w')
-    yosys_command = 'read_verilog ' + input_file + '; ' \
-            + 'synth -flatten; opt; opt_clean -purge; techmap; ' \
-            + 'write_verilog -noattr '+ output_file + '.v;\n '
-    #f.write(yosys_command)
-    #f.close
-    #area = 0
-    line=subprocess.call("yosys -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True)
- 
+def inpout(fname):
+    with open(fname+'.v') as file:
+        line = file.readline()
+        inp=0
+        out=0
+        n_inputs=0
+        n_outputs=0
+        while line:
+            line.strip()
+            tokens=re.split('[ ,;\n]', line)
+            for t in tokens:
+                t.strip()
+                if t != "":
+                    if inp == 1 and t != 'output':
+                        n_inputs+=1
+                    if out == 1 and t != 'wire' and t != 'assign':
+                        n_outputs+=1
+                    if t == 'input':
+                        inp=1
+                    elif t == 'output':
+                        out=1
+                        inp=0
+                    elif t == 'wire' or t == 'assign':
+                        out=0
+            line=file.readline()
+
+    return n_inputs, n_outputs
+
+
 def  gen_truth(fname, modulename):
     with open(fname+'.v') as file:
         f=open(fname+'_tb.v', "w+")
@@ -196,7 +234,7 @@ def v2w(signal,  n):
     return s
 
 
-def create_w(n, k, W, f1, modulename, formula_file):    
+def create_w(n, k, W, f1, modulename, formula_file, abc):    
     f1.write('module '+modulename+'_w'+str(k)+'('+v2w('in', n)+', '+ v2w('k', k)+');\n')
     f1.write('input '+v2w('in', n)+';\n')
     f1.write('output '+v2w('k', k)+';\n')
@@ -210,7 +248,8 @@ def create_w(n, k, W, f1, modulename, formula_file):
 #        print(truth)
         if truth.find('1') != -1:
             script='read_truth -x '+truth+';bdd;order;write_verilog '+formula_file
-            os.system('abc -q '+'\''+script+'\'')
+            #os.system(abc+' -q '+'\''+script+'\'')
+            subprocess.call([abc, '-q', script])
             with open(formula_file, 'r') as file_handle:
                 for line in file_handle:
                     if 'assign' in line:
@@ -278,7 +317,7 @@ def create_h(m, k, H, f1, modulename):
 
 
 
-def create_wh(n, m, k, W, H, fname, modulename, output_dir, formula_file):
+def create_wh(n, m, k, W, H, fname, modulename, output_dir, abc, formula_file):
     f1=open(fname+'_approx_k='+str(k)+'.v','w')
     f1.write('module ' +modulename+'(' + v2w_top('pi', n)+', '+ v2w_top('po', m)+');\n')
     f1.write('input '+v2w_top('pi', n)+';\n')
@@ -287,22 +326,24 @@ def create_wh(n, m, k, W, H, fname, modulename, output_dir, formula_file):
     f1.write(modulename+'_w'+str(k)+' DUT1 ('+v2w_top('pi', n)+', '+ v2w_top('k', k)+');\n')
     f1.write(modulename+'_h'+str(k)+' DUT2 ('+v2w_top('k', k)+', '+ v2w_top('po', m)+');\n')
     f1.write('endmodule\n\n')
-    create_w(n, k, W, f1, modulename, formula_file)
+    create_w(n, k, W, f1, modulename, formula_file, abc)
     create_h(m, k, H, f1, modulename)
     f1.close
 
-def approximate(inputfile, k, num_in, num_out, liberty, modulename, app_path, output_dir):
+#def approximate(inputfile, k, num_in, num_out, liberty, modulename, app_path, output_dir):
+def approximate(inputfile, k, worker, i):
     #print('./asso ' + inputfile + '.truth ' +  str(k))
-    asso_path = os.path.join(app_path, 'asso/asso')
-    os.system(asso_path + ' ' + inputfile + '.truth ' +  str(k))
+    modulename = worker.modulename + '_' + str(i)
+    #os.system(info['asso'] + ' ' + inputfile + '.truth ' +  str(k))
+    subprocess.call([worker.path['asso'], inputfile+'.truth', str(k)])
     W = np.loadtxt(inputfile + '.truth_w_' + str(k), dtype=int)
     H = np.loadtxt(inputfile + '.truth_h_' + str(k), dtype=int)
-    formula_file = os.path.join(output_dir, modulename, modulename+'_formula.v')
+    formula_file = os.path.join(worker.output, modulename, modulename+'_formula.v')
     if k == 1:
         W = W.reshape((W.size, 1))
         H = H.reshape((1, H.size))
     print('----- Writing approximate design...')
-    create_wh(num_in, num_out, k, W, H, inputfile, modulename, output_dir, formula_file)
+    create_wh(worker.input_list[i], worker.output_list[i], k, W, H, inputfile, modulename, worker.output, worker.path['abc'], formula_file)
     print('Simulating truth table on approximation design...')
     # os.system('iverilog -o ' + inputfile + '_approx_k=' + str(k) + '.iv ' + inputfile + '_approx_k=' + str(k) + '.v ' + testbench)
     # os.system('vvp ' + inputfile + '_approx_k=' + str(k) + '.iv > ' + inputfile + '_approx_k=' + str(k) + '.truth' )

@@ -1,0 +1,272 @@
+import regex as re
+import sys
+import random
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+import subprocess
+import multiprocessing as mp
+import shutil
+import argparse
+import yaml
+import time
+from utils import assess_HD, gen_truth, evaluate_design, synth_design
+
+def optimization(err_list, area_list):
+
+    # Compute ratio
+    np_area = np.array(area_list)
+    np_err = np.array(err_list)
+    grad = np.true_divide(np_area - 1, np_err)
+    # Solving division by 0 issue
+    grad[np.isnan(grad)] = np.inf
+    # Finding optimum
+    index_min, = np.where(grad == grad.min())
+    area_min_grad = np_area[index_min]
+    return index_min[area_min_grad.argmin()]
+
+
+
+class GreedyWorker():
+    def __init__(self, input_circuit, testbench, library, path):
+        # Check executable
+        assert shutil.which(path['iverilog']), 'Cannot find iverilog'
+        assert shutil.which(path['vvp']), 'Cannot find vvp'
+        assert shutil.which(path['abc']), 'Cannot find abc'
+        assert shutil.which(path['lsoracle']), 'Cannot find lsoracle'
+        assert shutil.which(path['yosys']), 'Cannot find yosys'
+        assert shutil.which(path['asso']), 'Cannot find asso'
+        # Check library file
+        assert os.path.exists(library), 'Cannot find liberty file'
+
+        self.input = input_circuit
+        self.testbench = testbench
+        self.library = library
+        self.path = path
+
+        # Get modulename
+        with open(self.input) as file:
+            line = file.readline()
+            while line:
+                tokens = re.split('[ (]', line)
+                for i in range(len(tokens)):
+                    if tokens[i] == 'module':
+                        self.modulename = tokens[i+1]
+                        break
+                line = file.readline()
+
+
+    def create_output_dir(self, output):
+
+        print('Create output directory...')
+        self.output = output
+
+        if os.path.isdir(self.output):
+            shutil.rmtree(self.output)
+        os.mkdir(self.output)
+
+        os.mkdir(os.path.join(self.output, 'approx_design'))
+        os.mkdir(os.path.join(self.output, 'truthtable'))
+        # Write script
+        self.script = os.path.join(self.output, 'abc.script')
+        with open(self.script, 'w') as file:
+            file.write('strash;fraig;refactor;rewrite -z;scorr;map')
+
+
+    def evaluate_initial(self):
+        print('Simulating truth table on input design...')
+        subprocess.call([self.path['iverilog'], '-o', self.modulename+'.iv', self.input, self.testbench ])
+        output_truth = os.path.join(self.output, self.modulename+'.truth')
+        with open(output_truth, 'w') as f:
+            subprocess.call([self.path['vvp'], self.modulename+'.iv'], stdout=f)
+        os.remove(self.modulename + '.iv')
+
+        print('Synthesizing input design with original partitions...')
+        output_synth = os.path.join(self.output, self.modulename+'_syn')
+        input_area = synth_design(self.input, output_synth, self.library, self.script, self.path['yosys'])
+        print('Original design area ', str(input_area))
+        self.initial_area = input_area
+
+
+    def partitioning(self, num_parts):
+        self.num_parts = num_parts
+
+        # Partitioning circuit
+        print('Partitioning input circuit...')
+        part_dir = os.path.join(self.output, 'partition')
+        lsoracle_command = 'read_verilog ' + self.input + '; ' \
+                'partitioning ' + str(num_parts) + '; ' \
+                'get_all_partitions ' + part_dir
+        log_partition = os.path.join(self.output, 'lsoracle.log')
+        with open(log_partition, 'w') as file_handler:
+            subprocess.call([self.path['lsoracle'], '-c', lsoracle_command], stderr=file_handler, stdout=file_handler)
+      
+        # Generate truth table for each partitions
+        list_num_input = []
+        list_num_output = []
+        for i in range(num_parts):
+            modulename = self.modulename + '_' + str(i)
+            file_path = os.path.join(part_dir, modulename)
+            if not os.path.exists(file_path + '.v'):
+                print('Submodule ' + str(i) + ' is empty')
+                list_num_input.append(-1)
+                list_num_output.append(-1)
+                continue
+
+            # Create testbench for partition
+            print('Create testbench for partition '+str(i))
+            n, m = gen_truth(file_path, modulename)
+            list_num_input.append( n )
+            list_num_output.append( m )
+
+            # Generate truthtable
+            print('Generate truth table for partition '+str(i))
+            part_output_dir = os.path.join(self.output, modulename)
+            os.mkdir(part_output_dir)
+            subprocess.call([self.path['iverilog'], '-o', file_path+'.iv', file_path+'.v', file_path+'_tb.v'])
+            with open( os.path.join(part_output_dir, modulename + '.truth'), 'w') as f:
+                subprocess.call([self.path['vvp'], file_path+'.iv'], stdout=f)
+                os.remove(file_path+'.iv')
+
+        self.input_list = list_num_input
+        self.output_list = list_num_output
+
+    def greedy_opt(self, threshold, parallel):
+        self.threshold = threshold
+        self.parallel = parallel
+
+        print('==================== Starting Approximation by Greedy Search  ====================')
+        error_list = []
+        area_list = []
+        count_iter = 1
+        curr_stream = self.output_list.copy()
+
+        while True:
+
+            if max(curr_stream) == 1:
+                print('All subcircuits have been approximated to degree 1. Exit approximating.')
+                sys.exit(0)
+
+            print('--------------- Iteration ' + str(count_iter) + ' ---------------')
+            before = time.time()
+            next_stream, err, area = self.evaluate_iter(curr_stream, count_iter)
+            after = time.time()
+    
+            if next_stream == False:
+                break
+
+            time_used = after - before
+            print('--------------- Finishing Iteration' + str(count_iter) + '---------------')
+            msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err, 100*area, time_used)
+            print(msg)
+            with open(os.path.join(self.output, 'log'), 'a') as log_file:
+                log_file.write(str(next_stream))
+                log_file.write('\n')
+                log_file.write(msg)
+
+            curr_stream = next_stream
+
+            count_iter += 1
+
+            error_list.append(err)
+            area_list.append(area)
+
+
+    def evaluate_iter(self, curr_k_stream, num_iter):
+    
+        k_lists = []
+
+        # Create a set of candidate k_streams
+        for i in range(len(curr_k_stream)):
+            new_k_stream = list(curr_k_stream)
+            new_k_stream[i] = new_k_stream[i] - 1
+            if new_k_stream[i] > 0:
+                k_lists.append(new_k_stream)
+
+        err_list = []
+        area_list = []
+    
+        # Parallel mode
+        if self.parallel:
+            lock = mp.Lock()
+            pool = mp.Pool(mp.cpu_count())
+            results = [pool.apply_async(evaluate_design,args=(k_lists[i], self, num_iter, i)) for i in range(len(k_lists))]
+            pool.close()
+            pool.join()
+            for result in results:
+                err_list.append(result.get()[0])
+                area_list.append(result.get()[1] / self.initial_area)
+        else:
+        # Sequential mode
+            for i in range(len(k_lists)):
+                # Evaluate each list
+                print('======== Design number ' + str(i))
+                k_stream = k_lists[i]
+                err, area = evaluate_design(k_stream, self, num_iter, i)
+                err_list.append(err)
+                area_list.append(area/self.initial_area)
+
+        if np.min(err_list) > self.threshold:
+            return False, 0, 0
+
+
+        idx = optimization(err_list, area_list)
+
+        return k_lists[idx], err_list[idx], area_list[idx]
+
+
+def print_banner():
+    print('/----------------------------------------------------------------------------\\')
+    print('|                                                                            |')
+    print('|  BLASYS -- Approximate Logic Synthesis Using Boolean Matrix Factorization  |')
+    print('|  Version: 0.2.0                                                            |')
+    print('|                                                                            |')
+    print('|  Copyright (C) 2019  SCALE Lab, Brown University                           |')
+    print('|                                                                            |')
+    print('|  Permission to use, copy, modify, and/or distribute this software for any  |')
+    print('|  purpose with or without fee is hereby granted, provided that the above    |')
+    print('|  copyright notice and this permission notice appear in all copies.         |')
+    print('|                                                                            |')
+    print('|  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES  |')
+    print('|  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF          |')
+    print('|  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR   |')
+    print('|  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES    |')
+    print('|  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN     |')
+    print('|  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   |')
+    print('|  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            |')
+    print('|                                                                            |')
+    print('\\----------------------------------------------------------------------------/')
+
+
+
+######################
+#        MAIN        #
+######################
+
+app_path = os.path.dirname(sys.argv[0])
+
+# Parse command-line args
+parser = argparse.ArgumentParser(description='BLASYS -- Approximate Logic Synthesis Using Boolean Matrix Factorization')
+parser.add_argument('-i', help='Input verilog file', required=True, dest='input')
+parser.add_argument('-tb', help='Testbench verilog file', required=True, dest='testbench')
+parser.add_argument('-n', help='Number of partitions', required=True, type=int, dest='npart')
+parser.add_argument('-o', help='Output directory', default='output', dest='output')
+parser.add_argument('-ts', help='Threshold on error', default=0.9, type=int, dest='threshold')
+parser.add_argument('-lib', help='Liberty file name', default=os.path.join(app_path, 'asap7.lib'), dest='liberty')
+parser.add_argument('--parallel', help='Run the flow in parallel mode if specified', dest='parallel', action='store_true')
+
+args = parser.parse_args()
+
+print_banner()
+
+# Load path to yosys, lsoracle, iverilog, vvp, abc
+with open(os.path.join(app_path, 'params.yml'), 'r') as config_file:
+    config = yaml.safe_load(config_file)
+
+config['asso'] = os.path.join(app_path, 'asso/asso')
+
+worker = GreedyWorker(args.input, args.testbench, args.liberty, config)
+worker.create_output_dir(args.output)
+worker.evaluate_initial()
+worker.partitioning(args.npart)
+worker.greedy_opt(args.threshold, args.parallel)
