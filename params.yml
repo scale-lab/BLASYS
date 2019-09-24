@@ -1,0 +1,13 @@
+
+# LSOracle for partitioning
+lsoracle: 'lstools'
+
+# Synthesis
+yosys: 'yosys'
+
+# Simulation
+iverilog: 'iverilog'
+vvp: 'vvp'
+
+# ABC for synthesis
+abc: 'abc'
