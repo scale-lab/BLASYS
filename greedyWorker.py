@@ -201,7 +201,7 @@ class GreedyWorker():
                 os.remove(file_path+'.iv')
 
 
-    def greedy_opt(self, threshold, parallel):
+    def greedy_opt(self, threshold, parallel, step_size = 1):
         self.threshold = threshold
         self.parallel = parallel
 
@@ -219,7 +219,7 @@ class GreedyWorker():
 
             print('--------------- Iteration ' + str(count_iter) + ' ---------------')
             before = time.time()
-            next_stream, err, area = self.evaluate_iter(curr_stream, count_iter)
+            next_stream, err, area = self.evaluate_iter(curr_stream, count_iter, step_size)
             after = time.time()
     
             if next_stream == False:
@@ -233,6 +233,9 @@ class GreedyWorker():
                 log_file.write(str(next_stream))
                 log_file.write('\n')
                 log_file.write(msg)
+            
+            with open(os.path.join(self.output, 'data'), 'a') as data:
+                data.write('{:.6f},{:.6f},{:.2f}\n'.format(err, area,time_used))
 
             curr_stream = next_stream
 
@@ -240,18 +243,21 @@ class GreedyWorker():
 
             error_list.append(err)
             area_list.append(area)
+            self.plot(error_list, area_list)
 
 
-    def evaluate_iter(self, curr_k_stream, num_iter):
+    def evaluate_iter(self, curr_k_stream, num_iter, step_size):
     
         k_lists = []
 
         # Create a set of candidate k_streams
         for i in range(len(curr_k_stream)):
+            if curr_k_stream[i] == 1:
+                continue
+
             new_k_stream = list(curr_k_stream)
-            new_k_stream[i] = new_k_stream[i] - 1
-            if new_k_stream[i] > 0:
-                k_lists.append(new_k_stream)
+            new_k_stream[i] = max(new_k_stream[i] - step_size, 1)
+            k_lists.append(new_k_stream)
 
         err_list = []
         area_list = []
@@ -282,6 +288,24 @@ class GreedyWorker():
         idx = optimization(err_list, area_list, self.threshold)
 
         return k_lists[idx], err_list[idx], area_list[idx]
+
+    def plot(self, error_list, area_list):
+
+        error_np = np.array(error_list)
+        area_np = np.array( area_list )
+        c = np.random.rand(len(error_list))
+
+        plt.scatter(error_np, area_np, c='r', s=6)
+        plt.plot(error_np, area_np, c='b', linewidth=3)
+        plt.xlim(0,1.0)
+        plt.ylim(0,1.1)
+        plt.ylabel('Area ratio')
+        plt.xlabel('HD Approximation Error')
+        plt.xticks(np.arange(0,1,0.1))
+        plt.yticks(np.arange(0,1.1,0.1))
+        plt.title('Greedy search on ' + self.modulename)
+        plt.savefig(os.path.join(self.output, 'visualization.png'))
+
 
 
 def print_banner():
@@ -338,7 +362,7 @@ def main():
     worker = GreedyWorker(args.input, args.testbench, args.liberty, config)
     worker.create_output_dir(args.output)
     worker.evaluate_initial()
-    worker.partitioning(args.npart)
+    worker.recursive_partitioning(args.npart)
     worker.greedy_opt(args.threshold, args.parallel)
 
 
