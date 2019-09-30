@@ -10,20 +10,40 @@ import shutil
 import argparse
 import yaml
 import time
-from utils import assess_HD, gen_truth, evaluate_design, synth_design
+import ctypes
+from utils import assess_HD, gen_truth, evaluate_design, synth_design, inpout
 
-def optimization(err_list, area_list):
+def optimization(err_list, area_list, threshold):
 
     # Compute ratio
-    np_area = np.array(area_list)
-    np_err = np.array(err_list)
-    grad = np.true_divide(np_area - 1, np_err)
+    #np_area = np.array(area_list)
+    #np_err = np.array(err_list)
+    #grad = np.true_divide(np_area - 1, np_err)
     # Solving division by 0 issue
-    grad[np.isnan(grad)] = np.inf
+    #grad[np.isnan(grad)] = -np.inf
+    #print(grad)
     # Finding optimum
-    index_min, = np.where(grad == grad.min())
-    area_min_grad = np_area[index_min]
-    return index_min[area_min_grad.argmin()]
+    #index_min, = np.where(grad == grad.min())
+    #area_min_grad = np_area[index_min]
+    
+    #return index_min[area_min_grad.argmin()]
+
+    gradient = np.zeros(len(err_list))
+
+    for (idx,(area, err)) in enumerate(zip(area_list, err_list)):
+        if err > threshold:
+            gradient[idx] = np.inf
+        elif err == 0:
+            gradient[idx] = -np.inf
+        else:
+            gradient[idx] = (area - 1) / err
+
+    index_min_grad, = np.where(gradient == gradient.min())
+    area_min_grad = np.array(area_list)[index_min_grad]
+
+    return index_min_grad[area_min_grad.argmin()]
+
+    
 
 
 
@@ -35,7 +55,7 @@ class GreedyWorker():
         assert shutil.which(path['abc']), 'Cannot find abc'
         assert shutil.which(path['lsoracle']), 'Cannot find lsoracle'
         assert shutil.which(path['yosys']), 'Cannot find yosys'
-        assert shutil.which(path['asso']), 'Cannot find asso'
+    
         # Check library file
         assert os.path.exists(library), 'Cannot find liberty file'
 
@@ -89,7 +109,7 @@ class GreedyWorker():
 
 
     def partitioning(self, num_parts):
-        self.num_parts = num_parts
+        #self.num_parts = num_parts
 
         # Partitioning circuit
         print('Partitioning input circuit...')
@@ -100,24 +120,76 @@ class GreedyWorker():
         log_partition = os.path.join(self.output, 'lsoracle.log')
         with open(log_partition, 'w') as file_handler:
             subprocess.call([self.path['lsoracle'], '-c', lsoracle_command], stderr=file_handler, stdout=file_handler)
-      
-        # Generate truth table for each partitions
-        list_num_input = []
-        list_num_output = []
-        for i in range(num_parts):
-            modulename = self.modulename + '_' + str(i)
-            file_path = os.path.join(part_dir, modulename)
-            if not os.path.exists(file_path + '.v'):
-                print('Submodule ' + str(i) + ' is empty')
-                list_num_input.append(-1)
-                list_num_output.append(-1)
+
+        self.modulenames = [self.modulename + '_' + str(i) for i in range(num_parts) \
+                if inpout(os.path.join(part_dir, self.modulename+'_'+str(i)+'.v'))[0] != 0]
+
+        self.truthtable_for_parts()
+
+    def recursive_partitioning(self, num_parts):
+        self.modulenames = []
+
+        print('Partitioning input circuit...')
+        part_dir = os.path.join(self.output, 'partition')
+        lsoracle_command = 'read_verilog ' + self.input + '; ' \
+                'partitioning ' + str(num_parts) + '; ' \
+                'get_all_partitions ' + part_dir
+        
+        log_partition = os.path.join(self.output, 'lsoracle.log')
+        with open(log_partition, 'w') as file_handler:
+            subprocess.call([self.path['lsoracle'], '-c', lsoracle_command], stderr=file_handler, stdout=file_handler)
+
+        partitioned = [self.modulename + '_' + str(i) for i in range(num_parts)]
+
+        toplevel = os.path.join(part_dir, self.modulename+'.v')
+
+        while len(partitioned) > 0:
+            mod = partitioned.pop()
+            mod_path = os.path.join(part_dir, mod+'.v')
+            if not os.path.exists(mod_path):
                 continue
+
+            inp, out = inpout(mod_path)
+            if inp > 16:
+                lsoracle_command = 'read_verilog ' + mod_path + '; ' \
+                        'partitioning ' + str(num_parts) + '; ' \
+                        'get_all_partitions ' + part_dir
+                with open(log_partition, 'a') as file_handler:
+                    subprocess.call([self.path['lsoracle'], '-c', lsoracle_command], stderr=file_handler, stdout=file_handler)
+                partitioned.extend([mod + '_' + str(i) for i in range(num_parts)])
+                
+                with open(toplevel, 'a') as top:
+                    subprocess.call(['cat', mod_path], stdout=top)
+
+                os.remove(mod_path)
+            elif 0 < inp <= 16:
+                self.modulenames.append(mod)
+
+        print('Number of partitions', len(self.modulenames))
+
+
+        self.truthtable_for_parts()
+     
+
+    def truthtable_for_parts(self):
+        # Generate truth table for each partitions
+        self.input_list = []
+        self.output_list = []
+        #for i in range(num_parts):
+            #modulename = self.modulename + '_' + str(i)
+        for i, modulename in enumerate(self.modulenames):
+            file_path = os.path.join(self.output, 'partition', modulename)
+            #if not os.path.exists(file_path + '.v'):
+             #   print('Submodule ' + str(i) + ' is empty')
+              #  self.input_list.append(-1)
+               # self.output_list.append(-1)
+               # continue
 
             # Create testbench for partition
             print('Create testbench for partition '+str(i))
             n, m = gen_truth(file_path, modulename)
-            list_num_input.append( n )
-            list_num_output.append( m )
+            self.input_list.append( n )
+            self.output_list.append( m )
 
             # Generate truthtable
             print('Generate truth table for partition '+str(i))
@@ -128,8 +200,6 @@ class GreedyWorker():
                 subprocess.call([self.path['vvp'], file_path+'.iv'], stdout=f)
                 os.remove(file_path+'.iv')
 
-        self.input_list = list_num_input
-        self.output_list = list_num_output
 
     def greedy_opt(self, threshold, parallel):
         self.threshold = threshold
@@ -188,7 +258,6 @@ class GreedyWorker():
     
         # Parallel mode
         if self.parallel:
-            lock = mp.Lock()
             pool = mp.Pool(mp.cpu_count())
             results = [pool.apply_async(evaluate_design,args=(k_lists[i], self, num_iter, i)) for i in range(len(k_lists))]
             pool.close()
@@ -210,7 +279,7 @@ class GreedyWorker():
             return False, 0, 0
 
 
-        idx = optimization(err_list, area_list)
+        idx = optimization(err_list, area_list, self.threshold)
 
         return k_lists[idx], err_list[idx], area_list[idx]
 
@@ -242,31 +311,36 @@ def print_banner():
 ######################
 #        MAIN        #
 ######################
+def main():
+    app_path = os.path.dirname(os.path.realpath(__file__))
+    
+    # Parse command-line args
+    parser = argparse.ArgumentParser(description='BLASYS -- Approximate Logic Synthesis Using Boolean Matrix Factorization')
+    parser.add_argument('-i', help='Input verilog file', required=True, dest='input')
+    parser.add_argument('-tb', help='Testbench verilog file', required=True, dest='testbench')
+    parser.add_argument('-n', help='Number of partitions', required=True, type=int, dest='npart')
+    parser.add_argument('-o', help='Output directory', default='output', dest='output')
+    parser.add_argument('-ts', help='Threshold on error', default=0.9, type=float, dest='threshold')
+    parser.add_argument('-lib', help='Liberty file name', default=os.path.join(app_path, 'tsmc65.lib'), dest='liberty')
+    parser.add_argument('--parallel', help='Run the flow in parallel mode if specified', dest='parallel', action='store_true')
 
-app_path = os.path.dirname(sys.argv[0])
+    args = parser.parse_args()
 
-# Parse command-line args
-parser = argparse.ArgumentParser(description='BLASYS -- Approximate Logic Synthesis Using Boolean Matrix Factorization')
-parser.add_argument('-i', help='Input verilog file', required=True, dest='input')
-parser.add_argument('-tb', help='Testbench verilog file', required=True, dest='testbench')
-parser.add_argument('-n', help='Number of partitions', required=True, type=int, dest='npart')
-parser.add_argument('-o', help='Output directory', default='output', dest='output')
-parser.add_argument('-ts', help='Threshold on error', default=0.9, type=int, dest='threshold')
-parser.add_argument('-lib', help='Liberty file name', default=os.path.join(app_path, 'asap7.lib'), dest='liberty')
-parser.add_argument('--parallel', help='Run the flow in parallel mode if specified', dest='parallel', action='store_true')
+    print_banner()
 
-args = parser.parse_args()
+    # Load path to yosys, lsoracle, iverilog, vvp, abc
+    with open(os.path.join(app_path, 'params.yml'), 'r') as config_file:
+        config = yaml.safe_load(config_file)
 
-print_banner()
+    #config['asso'] = ctypes.CDLL( os.path.join(app_path, 'asso.so') )
+    config['asso'] = os.path.join(app_path, 'asso.so')
 
-# Load path to yosys, lsoracle, iverilog, vvp, abc
-with open(os.path.join(app_path, 'params.yml'), 'r') as config_file:
-    config = yaml.safe_load(config_file)
+    worker = GreedyWorker(args.input, args.testbench, args.liberty, config)
+    worker.create_output_dir(args.output)
+    worker.evaluate_initial()
+    worker.partitioning(args.npart)
+    worker.greedy_opt(args.threshold, args.parallel)
 
-config['asso'] = os.path.join(app_path, 'asso/asso')
 
-worker = GreedyWorker(args.input, args.testbench, args.liberty, config)
-worker.create_output_dir(args.output)
-worker.evaluate_initial()
-worker.partitioning(args.npart)
-worker.greedy_opt(args.threshold, args.parallel)
+if __name__ == '__main__':
+    main()

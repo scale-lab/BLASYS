@@ -1,37 +1,37 @@
 import regex as re
 import sys
 import random
+import ctypes
 import os
 import numpy as np
 import subprocess
 
 def evaluate_design(k_stream, worker, num_iter, num_design):
-
     print('Evaluating Design:', k_stream)
     verilog_list = [os.path.join(worker.output, 'partition', worker.modulename + '.v')]
 
     # Parse each subcircuit
-    for i in range(worker.num_parts):
+    for i, modulename in enumerate(worker.modulenames):
         approx_degree = k_stream[i]
         # If subcircuit does not exist
         if approx_degree == -1:
             continue
         # If subcircuit is not approximated
         if approx_degree == worker.output_list[i]:
-            part_verilog = os.path.join(worker.output, 'partition', worker.modulename + '_' + str(i) + '.v')
+            part_verilog = os.path.join(worker.output, 'partition', modulename + '.v')
             verilog_list.append(part_verilog)
             continue
         
-        part_verilog = os.path.join(worker.output, worker.modulename + '_' + str(i), worker.modulename + '_' + str(i) + '_approx_k=' + str(approx_degree) + '.v')
+        part_verilog = os.path.join(worker.output, modulename, modulename + '_approx_k=' + str(approx_degree) + '.v')
         # If has not been approximated before
         if not os.path.exists(part_verilog):
             print('----- Approximating part ' + str(i) + ' to degree ' + str(approx_degree))
 
-            directory = os.path.join(worker.output, worker.modulename + '_' + str(i), worker.modulename + '_' + str(i))
+            directory = os.path.join(worker.output, modulename, modulename)
             approximate(directory, approx_degree, worker, i)
         
         verilog_list.append(part_verilog)
-            
+
     truth_dir = os.path.join(worker.output, 'truthtable', 'iter'+str(num_iter)+'design'+str(num_design)+'.truth')
     subprocess.call([worker.path['iverilog'], '-o', truth_dir[:-5]+'iv'] + verilog_list + [worker.testbench])
     with open(truth_dir, 'w') as f:
@@ -88,7 +88,7 @@ def synth_design(input_file, output_file, lib_file, script, yosys):
     return float(area)
 
 def inpout(fname):
-    with open(fname+'.v') as file:
+    with open(fname) as file:
         line = file.readline()
         inp=0
         out=0
@@ -333,9 +333,12 @@ def create_wh(n, m, k, W, H, fname, modulename, output_dir, abc, formula_file):
 #def approximate(inputfile, k, num_in, num_out, liberty, modulename, app_path, output_dir):
 def approximate(inputfile, k, worker, i):
     #print('./asso ' + inputfile + '.truth ' +  str(k))
-    modulename = worker.modulename + '_' + str(i)
+    #modulename = worker.modulename + '_' + str(i)
+    modulename = worker.modulenames[i]
     #os.system(info['asso'] + ' ' + inputfile + '.truth ' +  str(k))
-    subprocess.call([worker.path['asso'], inputfile+'.truth', str(k)])
+    #subprocess.call([worker.path['asso'], inputfile+'.truth', str(k)])
+    asso = ctypes.CDLL(worker.path['asso'])
+    asso.asso( ctypes.c_char_p(bytes(inputfile+'.truth', encoding='ASCII')), ctypes.c_int(k) )
     W = np.loadtxt(inputfile + '.truth_w_' + str(k), dtype=int)
     H = np.loadtxt(inputfile + '.truth_h_' + str(k), dtype=int)
     formula_file = os.path.join(worker.output, modulename, modulename+'_formula.v')
