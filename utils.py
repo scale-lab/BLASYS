@@ -6,7 +6,7 @@ import os
 import numpy as np
 import subprocess
 
-def evaluate_design(k_stream, worker, num_iter, num_design):
+def evaluate_design(k_stream, worker, filename):
     print('Evaluating Design:', k_stream)
     verilog_list = [os.path.join(worker.output, 'partition', worker.modulename + '.v')]
 
@@ -32,7 +32,7 @@ def evaluate_design(k_stream, worker, num_iter, num_design):
         
         verilog_list.append(part_verilog)
 
-    truth_dir = os.path.join(worker.output, 'truthtable', 'iter'+str(num_iter)+'design'+str(num_design)+'.truth')
+    truth_dir = os.path.join(worker.output, 'truthtable', filename+'.truth')
     subprocess.call([worker.path['iverilog'], '-o', truth_dir[:-5]+'iv'] + verilog_list + [worker.testbench])
     with open(truth_dir, 'w') as f:
         subprocess.call([worker.path['vvp'], truth_dir[:-5]+'iv'], stdout=f)
@@ -40,7 +40,7 @@ def evaluate_design(k_stream, worker, num_iter, num_design):
 
     ground_truth = os.path.join(worker.output, worker.modulename + '.truth')
     
-    output_syn = os.path.join(worker.output, 'approx_design', 'iter'+str(num_iter)+'design'+str(num_design)+'_syn')
+    output_syn = os.path.join(worker.output, 'approx_design', filename+'_syn')
     area  = synth_design(' '.join(verilog_list), output_syn, worker.library, worker.script, worker.path['yosys'])
 
     t, h, f = assess_HD(ground_truth, truth_dir)

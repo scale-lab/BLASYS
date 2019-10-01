@@ -265,7 +265,7 @@ class GreedyWorker():
         # Parallel mode
         if self.parallel:
             pool = mp.Pool(mp.cpu_count())
-            results = [pool.apply_async(evaluate_design,args=(k_lists[i], self, num_iter, i)) for i in range(len(k_lists))]
+            results = [pool.apply_async(evaluate_design,args=(k_lists[i], self, 'iter'+str(num_iter)+'design'+str(i) )) for i in range(len(k_lists))]
             pool.close()
             pool.join()
             for result in results:
@@ -277,7 +277,7 @@ class GreedyWorker():
                 # Evaluate each list
                 print('======== Design number ' + str(i))
                 k_stream = k_lists[i]
-                err, area = evaluate_design(k_stream, self, num_iter, i)
+                err, area = evaluate_design(k_stream, self, 'iter'+str(num_iter)+'design'+str(i))
                 err_list.append(err)
                 area_list.append(area/self.initial_area)
 
