@@ -40,7 +40,6 @@ def optimization(err_list, area_list, threshold):
 
     index_min_grad, = np.where(gradient == gradient.min())
     area_min_grad = np.array(area_list)[index_min_grad]
-
     return index_min_grad[area_min_grad.argmin()]
 
     
@@ -87,6 +86,7 @@ class GreedyWorker():
 
         os.mkdir(os.path.join(self.output, 'approx_design'))
         os.mkdir(os.path.join(self.output, 'truthtable'))
+        os.mkdir(os.path.join(self.output, 'result'))
         # Write script
         self.script = os.path.join(self.output, 'abc.script')
         with open(self.script, 'w') as file:
@@ -202,32 +202,40 @@ class GreedyWorker():
 
 
     def greedy_opt(self, threshold, parallel, step_size = 1):
-        self.threshold = threshold
+        self.threshold = threshold + 0.02
         self.parallel = parallel
 
         print('==================== Starting Approximation by Greedy Search  ====================')
         error_list = []
         area_list = []
-        count_iter = 1
+        idx_list = []
+        count_iter = 0
         curr_stream = self.output_list.copy()
+
+        with open(os.path.join(self.output, 'result.txt'), 'w') as f:
+            f.write('Original chip area {:.2f}\n'.format(self.initial_area))
 
         while True:
 
             if max(curr_stream) == 1:
+                it = np.argmin(area_list)
+                source_file = os.path.join(self.output, 'approx_design', 'iter{}design{}_syn.v'.format(it, idx_list[it]))
+                target_file = os.path.join(self.result, 'result', '{}_{}metric.v'.format(self.modulename, round(self.threshold * 100)))
+                shutil.copyfile(source_file, target_file)
+                with open(os.path.join(self.output, 'result.txt'), 'w') as f:
+                    f.write('{}% error metric chip area {:.2f}'.format(self.threshold * 100, area_list[it]))
                 print('All subcircuits have been approximated to degree 1. Exit approximating.')
-                sys.exit(0)
+                return
 
             print('--------------- Iteration ' + str(count_iter) + ' ---------------')
             before = time.time()
-            next_stream, err, area = self.evaluate_iter(curr_stream, count_iter, step_size)
+            next_stream, err, area, idx = self.evaluate_iter(curr_stream, count_iter, step_size)
             after = time.time()
-    
-            if next_stream == False:
-                break
+
 
             time_used = after - before
             print('--------------- Finishing Iteration' + str(count_iter) + '---------------')
-            msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err, 100*area, time_used)
+            msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err, area, time_used)
             print(msg)
             with open(os.path.join(self.output, 'log'), 'a') as log_file:
                 log_file.write(str(next_stream))
@@ -239,10 +247,26 @@ class GreedyWorker():
 
             curr_stream = next_stream
 
+            if err >= self.threshold:
+                a = np.array(area_list)
+                e = np.array(error_list)
+                a[e > self.threshold] = np.inf
+                it = np.argmin(a)
+                source_file = os.path.join(self.output, 'approx_design', 'iter{}design{}_syn.v'.format(it, idx_list[it]))
+                target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(self.threshold * 100)))
+                shutil.copyfile(source_file, target_file)
+                with open(os.path.join(self.output, 'result.txt'), 'w') as f:
+                    f.write('{}% error metric chip area {:.2f}'.format(self.threshold * 100, area_list[it]))
+                print('Reach error threshold. Exit approximation.')
+                return
+
+
+
             count_iter += 1
 
             error_list.append(err)
             area_list.append(area)
+            idx_list.append(idx)
             self.plot(error_list, area_list)
 
 
@@ -270,7 +294,7 @@ class GreedyWorker():
             pool.join()
             for result in results:
                 err_list.append(result.get()[0])
-                area_list.append(result.get()[1] / self.initial_area)
+                area_list.append(result.get()[1])
         else:
         # Sequential mode
             for i in range(len(k_lists)):
@@ -279,15 +303,10 @@ class GreedyWorker():
                 k_stream = k_lists[i]
                 err, area = evaluate_design(k_stream, self, 'iter'+str(num_iter)+'design'+str(i))
                 err_list.append(err)
-                area_list.append(area/self.initial_area)
+                area_list.append(area)
 
-        if np.min(err_list) > self.threshold:
-            return False, 0, 0
-
-
-        idx = optimization(err_list, area_list, self.threshold)
-
-        return k_lists[idx], err_list[idx], area_list[idx]
+        idx = optimization(np.array(err_list), np.array(area_list) / self.initial_area, self.threshold)
+        return k_lists[idx], err_list[idx], area_list[idx], idx
 
     def plot(self, error_list, area_list):
 
@@ -362,7 +381,7 @@ def main():
     worker = GreedyWorker(args.input, args.testbench, args.liberty, config)
     worker.create_output_dir(args.output)
     worker.evaluate_initial()
-    worker.recursive_partitioning(args.npart)
+    worker.partitioning(args.npart)
     worker.greedy_opt(args.threshold, args.parallel)
 
 

@@ -14,8 +14,8 @@ def evaluate_design(k_stream, worker, filename):
     for i, modulename in enumerate(worker.modulenames):
         approx_degree = k_stream[i]
         # If subcircuit does not exist
-        if approx_degree == -1:
-            continue
+        # if approx_degree == -1:
+        #     continue
         # If subcircuit is not approximated
         if approx_degree == worker.output_list[i]:
             part_verilog = os.path.join(worker.output, 'partition', modulename + '.v')
