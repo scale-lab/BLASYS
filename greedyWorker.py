@@ -63,6 +63,12 @@ class GreedyWorker():
         self.library = library
         self.path = path
 
+        self.error_list = []
+        self.area_list = []
+        self.idx_list = []
+        self.iter = 0
+
+
         # Get modulename
         with open(self.input) as file:
             line = file.readline()
@@ -200,74 +206,82 @@ class GreedyWorker():
                 subprocess.call([self.path['vvp'], file_path+'.iv'], stdout=f)
                 os.remove(file_path+'.iv')
 
+        self.curr_stream = self.output_list.copy()
+
 
     def greedy_opt(self, threshold, parallel, step_size = 1):
         self.threshold = threshold + 0.02
         self.parallel = parallel
 
         print('==================== Starting Approximation by Greedy Search  ====================')
-        error_list = []
-        area_list = []
-        idx_list = []
-        count_iter = 0
-        curr_stream = self.output_list.copy()
+        #error_list = []
+        #area_list = []
+        #idx_list = []
+        #count_iter = 0
+        #curr_stream = self.output_list.copy()
 
         with open(os.path.join(self.output, 'result.txt'), 'w') as f:
             f.write('Original chip area {:.2f}\n'.format(self.initial_area))
 
         while True:
-
-            if max(curr_stream) == 1:
-                it = np.argmin(area_list)
-                source_file = os.path.join(self.output, 'approx_design', 'iter{}design{}_syn.v'.format(it, idx_list[it]))
-                target_file = os.path.join(self.result, 'result', '{}_{}metric.v'.format(self.modulename, round(self.threshold * 100)))
-                shutil.copyfile(source_file, target_file)
-                with open(os.path.join(self.output, 'result.txt'), 'w') as f:
-                    f.write('{}% error metric chip area {:.2f}'.format(self.threshold * 100, area_list[it]))
-                print('All subcircuits have been approximated to degree 1. Exit approximating.')
-                return
-
-            print('--------------- Iteration ' + str(count_iter) + ' ---------------')
-            before = time.time()
-            next_stream, err, area, idx = self.evaluate_iter(curr_stream, count_iter, step_size)
-            after = time.time()
+            if self.one_iteration(step_size) == -1:
+                break
 
 
-            time_used = after - before
-            print('--------------- Finishing Iteration' + str(count_iter) + '---------------')
-            msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err, area, time_used)
-            print(msg)
-            with open(os.path.join(self.output, 'log'), 'a') as log_file:
-                log_file.write(str(next_stream))
-                log_file.write('\n')
-                log_file.write(msg)
-            
-            with open(os.path.join(self.output, 'data'), 'a') as data:
-                data.write('{:.6f},{:.6f},{:.2f}\n'.format(err, area,time_used))
+    def one_iteration(self, step_size):
+        if max(self.curr_stream) == 1:
+            it = np.argmin(self.area_list)
+            source_file = os.path.join(self.output, 'approx_design', 'iter{}design{}_syn.v'.format(it, self.idx_list[it]))
+            target_file = os.path.join(self.result, 'result', '{}_{}metric.v'.format(self.modulename, round(self.threshold * 100)))
+            shutil.copyfile(source_file, target_file)
+            with open(os.path.join(self.output, 'result.txt'), 'w') as f:
+                f.write('{}% error metric chip area {:.2f}'.format(self.threshold * 100, self.area_list[it]))
+            print('All subcircuits have been approximated to degree 1. Exit approximating.')
+            return -1
 
-            curr_stream = next_stream
-
-            if err >= self.threshold:
-                a = np.array(area_list)
-                e = np.array(error_list)
-                a[e > self.threshold] = np.inf
-                it = np.argmin(a)
-                source_file = os.path.join(self.output, 'approx_design', 'iter{}design{}_syn.v'.format(it, idx_list[it]))
-                target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(self.threshold * 100)))
-                shutil.copyfile(source_file, target_file)
-                with open(os.path.join(self.output, 'result.txt'), 'w') as f:
-                    f.write('{}% error metric chip area {:.2f}'.format(self.threshold * 100, area_list[it]))
-                print('Reach error threshold. Exit approximation.')
-                return
+        print('--------------- Iteration ' + str(self.iter) + ' ---------------')
+        before = time.time()
+        next_stream, err, area, idx = self.evaluate_iter(self.curr_stream, self.iter, step_size)
+        after = time.time()
 
 
+        time_used = after - before
+        print('--------------- Finishing Iteration' + str(self.iter) + '---------------')
+        msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err, area, time_used)
+        print(msg)
+        with open(os.path.join(self.output, 'log'), 'a') as log_file:
+            log_file.write(str(next_stream))
+            log_file.write('\n')
+            log_file.write(msg)
+        
+        with open(os.path.join(self.output, 'data'), 'a') as data:
+            data.write('{:.6f},{:.6f},{:.2f}\n'.format(err, area,time_used))
 
-            count_iter += 1
+        self.curr_stream = next_stream
 
-            error_list.append(err)
-            area_list.append(area)
-            idx_list.append(idx)
-            self.plot(error_list, area_list)
+        if err >= self.threshold:
+            a = np.array(self.area_list)
+            e = np.array(self.error_list)
+            a[e > self.threshold] = np.inf
+            it = np.argmin(a)
+            source_file = os.path.join(self.output, 'approx_design', 'iter{}design{}_syn.v'.format(it, self.idx_list[it]))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(self.threshold * 100)))
+            shutil.copyfile(source_file, target_file)
+            with open(os.path.join(self.output, 'result.txt'), 'w') as f:
+                f.write('{}% error metric chip area {:.2f}'.format(self.threshold * 100, self.area_list[it]))
+            print('Reach error threshold. Exit approximation.')
+            return -1
+
+
+
+        self.iter += 1
+
+        self.error_list.append(err)
+        self.area_list.append(area)
+        self.idx_list.append(idx)
+        self.plot(self.error_list, self.area_list)
+
+        return 0
 
 
     def evaluate_iter(self, curr_k_stream, num_iter, step_size):
