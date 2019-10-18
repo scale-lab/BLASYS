@@ -90,10 +90,10 @@ def create_testbench(path, modulename, num, f):
     else:
             for j in range(2**n_inputs):
  	            f.write('# 1  pi='+str(n_inputs)+'\'b')
-	            f.write('{0:0>{1}}'.format(bin(j)[2:], n_inputs))
-	            f.write(';\n')
+                    f.write('{0:0>{1}}'.format(bin(j)[2:], n_inputs))
+                    f.write(';\n')
 	            f.write("#1 $display(\"%b\", po);\n")
-                   
+                       
     f.write("end\n")
     f.write("endmodule\n")
 
