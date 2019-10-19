@@ -42,12 +42,10 @@ def optimization(err_list, area_list, threshold):
     area_min_grad = np.array(area_list)[index_min_grad]
     return index_min_grad[area_min_grad.argmin()]
 
-    
-
 
 
 class GreedyWorker():
-    def __init__(self, input_circuit, testbench, library, path):
+    def __init__(self, input_circuit, testbench, library, path, threshold=1.0):
         # Check executable
         assert shutil.which(path['iverilog']), 'Cannot find iverilog'
         assert shutil.which(path['vvp']), 'Cannot find vvp'
@@ -62,6 +60,7 @@ class GreedyWorker():
         self.testbench = testbench
         self.library = library
         self.path = path
+        self.threshold = threshold
 
         self.error_list = []
         self.area_list = []
@@ -158,7 +157,7 @@ class GreedyWorker():
             inp, out = inpout(mod_path)
             if inp > 16:
                 lsoracle_command = 'read_verilog ' + mod_path + '; ' \
-                        'partitioning ' + str(num_parts) + '; ' \
+                        'partitioning 4; ' \
                         'get_all_partitions ' + part_dir
                 with open(log_partition, 'a') as file_handler:
                     subprocess.call([self.path['lsoracle'], '-c', lsoracle_command], stderr=file_handler, stdout=file_handler)
@@ -209,9 +208,7 @@ class GreedyWorker():
         self.curr_stream = self.output_list.copy()
 
 
-    def greedy_opt(self, threshold, parallel, step_size = 1):
-        self.threshold = threshold
-        self.parallel = parallel
+    def greedy_opt(self, parallel, step_size = 1):
 
         print('==================== Starting Approximation by Greedy Search  ====================')
         #error_list = []
@@ -224,11 +221,11 @@ class GreedyWorker():
             f.write('Original chip area {:.2f}\n'.format(self.initial_area))
 
         while True:
-            if self.next_iter(step_size) == -1:
+            if self.next_iter(step_size, parallel) == -1:
                 break
 
 
-    def next_iter(self, step_size):
+    def next_iter(self, step_size, parallel):
         if max(self.curr_stream) == 1:
             it = np.argmin(self.area_list)
             source_file = os.path.join(self.output, 'approx_design', 'iter{}design{}_syn.v'.format(it, self.idx_list[it]))
@@ -241,7 +238,7 @@ class GreedyWorker():
 
         print('--------------- Iteration ' + str(self.iter) + ' ---------------')
         before = time.time()
-        next_stream, err, area, idx = self.evaluate_iter(self.curr_stream, self.iter, step_size)
+        next_stream, err, area, idx = self.evaluate_iter(self.curr_stream, self.iter, step_size, parallel)
         after = time.time()
 
 
@@ -284,7 +281,7 @@ class GreedyWorker():
         return 0
 
 
-    def evaluate_iter(self, curr_k_stream, num_iter, step_size):
+    def evaluate_iter(self, curr_k_stream, num_iter, step_size, parallel):
     
         k_lists = []
 
@@ -301,7 +298,7 @@ class GreedyWorker():
         area_list = []
     
         # Parallel mode
-        if self.parallel:
+        if parallel:
             pool = mp.Pool(mp.cpu_count())
             results = [pool.apply_async(evaluate_design,args=(k_lists[i], self, 'iter'+str(num_iter)+'design'+str(i) )) for i in range(len(k_lists))]
             pool.close()
@@ -392,12 +389,11 @@ def main():
     #config['asso'] = ctypes.CDLL( os.path.join(app_path, 'asso.so') )
     config['asso'] = os.path.join(app_path, 'asso.so')
 
-    worker = GreedyWorker(args.input, args.testbench, args.liberty, config)
+    worker = GreedyWorker(args.input, args.testbench, args.liberty, config, args.threshold)
     worker.create_output_dir(args.output)
     worker.evaluate_initial()
     worker.partitioning(args.npart)
-    worker.greedy_opt(args.threshold, args.parallel)
-
+    worker.greedy_opt(args.parallel)
 
 if __name__ == '__main__':
     main()

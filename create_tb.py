@@ -83,16 +83,16 @@ def create_testbench(path, modulename, num, f):
 	            while i <= n_inputs:
 		            n=random.randint(0, 1)
 		            i+=1
-		            f.write(n)
+		            f.write(str(n))
 	            f.write(';\n')
 	            f.write("#1 $display(\"%b\", po);\n")
 	            j+=1
     else:
             for j in range(2**n_inputs):
  	            f.write('# 1  pi='+str(n_inputs)+'\'b')
-                    f.write('{0:0>{1}}'.format(bin(j)[2:], n_inputs))
-                    f.write(';\n')
-	            f.write("#1 $display(\"%b\", po);\n")
+ 	            f.write('{0:0>{1}}'.format(str(bin(j))[2:], n_inputs))
+ 	            f.write(';\n')
+ 	            f.write("#1 $display(\"%b\", po);\n")
                        
     f.write("end\n")
     f.write("endmodule\n")
