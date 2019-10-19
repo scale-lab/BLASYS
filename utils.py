@@ -40,7 +40,7 @@ def evaluate_design(k_stream, worker, filename):
 
     ground_truth = os.path.join(worker.output, worker.modulename + '.truth')
     
-    output_syn = os.path.join(worker.output, 'approx_design', filename+'_syn')
+    output_syn = os.path.join(worker.output, 'approx_design', filename)
     area  = synth_design(' '.join(verilog_list), output_syn, worker.library, worker.script, worker.path['yosys'])
 
     t, h, f = assess_HD(ground_truth, truth_dir)
@@ -75,8 +75,8 @@ def assess_HD(original_path, approximate_path):
 
 def synth_design(input_file, output_file, lib_file, script, yosys):
     yosys_command = 'read_verilog ' + input_file + '; ' \
-            + 'synth -flatten; opt; opt_clean -purge; techmap; abc -liberty '+lib_file \
-            + ' -script ' + script + '; stat -liberty '+lib_file + '; write_verilog -noattr ' +output_file + '.v;\n '
+            + 'synth -flatten; opt; opt_clean -purge; techmap; write_verilog -noattr ' +output_file + '.v; abc -liberty '+lib_file \
+            + ' -script ' + script + '; stat -liberty '+lib_file + '; write_verilog -noattr ' +output_file + '_syn.v;\n '
 
     area = 0
     line=subprocess.call(yosys+" -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True)

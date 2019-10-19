@@ -108,7 +108,7 @@ class GreedyWorker():
         os.remove(self.modulename + '.iv')
 
         print('Synthesizing input design with original partitions...')
-        output_synth = os.path.join(self.output, self.modulename+'_syn')
+        output_synth = os.path.join(self.output, self.modulename)
         input_area = synth_design(self.input, output_synth, self.library, self.script, self.path['yosys'])
         print('Original design area ', str(input_area))
         self.initial_area = input_area
@@ -128,7 +128,7 @@ class GreedyWorker():
             subprocess.call([self.path['lsoracle'], '-c', lsoracle_command], stderr=file_handler, stdout=file_handler)
 
         self.modulenames = [self.modulename + '_' + str(i) for i in range(num_parts) \
-                if inpout(os.path.join(part_dir, self.modulename+'_'+str(i)+'.v'))[0] != 0]
+                if os.path.exists(os.path.join(part_dir, self.modulename+'_'+str(i)+'.v'))]
 
         self.truthtable_for_parts()
 
