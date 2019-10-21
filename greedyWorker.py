@@ -328,6 +328,7 @@ class GreedyWorker():
         result = k_lists[idx]
         if err_list.count(0) > 1:
             for i,e in enumerate(err_list):
+                print(i, e)
                 if e == 0:
                     result[changed[i]] = k_lists[i][changed[i]]
             

@@ -68,7 +68,7 @@ def recursive_partitioning(inp_file, out_dir, modulename, path):
             os.remove(mod_path)
         else:
             modulenames.append(mod)
-            suggest_part.append(min(50, num_cell // 20))
+            suggest_part.append(min(30, num_cell // 20 + 1))
 
     print('Number of partitions', len(modulenames))
 
