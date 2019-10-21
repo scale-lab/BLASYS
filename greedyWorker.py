@@ -268,8 +268,10 @@ class GreedyWorker():
                 f.write('{}% error metric chip area {:.2f}\n'.format(round(self.threshold * 100), self.area_list[it]))
             print('Reach error threshold. Exit approximation.')
             return -1
-
-
+        
+        source_file = os.path.join(self.output, 'approx_design', 'iter{}design{}.v'.format(self.iter, idx))
+        target_file = os.path.join(self.output, 'result', 'iter{}.v'.format(self.iter))
+        shutil.copyfile(source_file, target_file)
 
         self.iter += 1
 
@@ -284,6 +286,8 @@ class GreedyWorker():
     def evaluate_iter(self, curr_k_stream, num_iter, step_size, parallel):
     
         k_lists = []
+        count = 0
+        changed = {}
 
         # Create a set of candidate k_streams
         for i in range(len(curr_k_stream)):
@@ -293,6 +297,9 @@ class GreedyWorker():
             new_k_stream = list(curr_k_stream)
             new_k_stream[i] = max(new_k_stream[i] - step_size, 1)
             k_lists.append(new_k_stream)
+
+            changed[count] = i
+            count += 1
 
         err_list = []
         area_list = []
@@ -316,7 +323,14 @@ class GreedyWorker():
                 err_list.append(err)
                 area_list.append(area)
 
+
         idx = optimization(np.array(err_list), np.array(area_list) / self.initial_area, self.threshold+0.02)
+        result = k_lists[idx]
+        if err_list.count(0) > 1:
+            for i,e in enumerate(err_list):
+                if e == 0:
+                    result[changed[i]] = k_lists[i][changed[i]]
+            
         return k_lists[idx], err_list[idx], area_list[idx], idx
 
     def plot(self, error_list, area_list):
@@ -392,8 +406,10 @@ def main():
     worker = GreedyWorker(args.input, args.testbench, args.liberty, config, args.threshold)
     worker.create_output_dir(args.output)
     worker.evaluate_initial()
-    worker.partitioning(args.npart)
-    worker.greedy_opt(args.parallel)
+    worker.recursive_partitioning(args.npart)
+    #worker.greedy_opt(args.parallel)
+    for i in range(10):
+        worker.next_iter(3,args.parallel)
 
 if __name__ == '__main__':
     main()

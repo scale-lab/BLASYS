@@ -1,9 +1,15 @@
 from create_tb import create_testbench
-from greedyWorker import GreedyWorker, print_banner
-from utils import *
+from greedyWorker import GreedyWorker, print_banner, optimization
+from utils import assess_HD, synth_design
 import os
 import argparse
+import multiprocessing as mp
+import numpy as np
+import subprocess
 import yaml
+import sys
+import regex as re
+import shutil
 
 def number_of_cell(input_file, yosys):
     yosys_command = 'read_verilog ' + input_file + '; ' \
@@ -22,6 +28,7 @@ def number_of_cell(input_file, yosys):
 
 def recursive_partitioning(inp_file, out_dir, modulename, path):
     modulenames = []
+    suggest_part = []
 
     print('Partitioning input circuit...')
     part_dir = os.path.join(out_dir, 'partition')
@@ -61,12 +68,29 @@ def recursive_partitioning(inp_file, out_dir, modulename, path):
             os.remove(mod_path)
         else:
             modulenames.append(mod)
+            suggest_part.append(min(50, num_cell // 20))
 
     print('Number of partitions', len(modulenames))
 
-    return modulenames, toplevel
+    return modulenames, suggest_part, toplevel
 
 
+def evaluate_design(verilog_list, toplevel, testbench, ground_truth, output, filename, path):
+
+    input_list = verilog_list + [toplevel]
+
+    truth_dir = os.path.join(output, 'truthtable', filename+'.truth')
+    subprocess.call([path['iverilog'], '-o', truth_dir[:-5]+'iv', testbench] + input_list)
+    with open(truth_dir, 'w') as f:
+        subprocess.call([path['vvp'], truth_dir[:-5]+'iv'], stdout=f)
+    os.remove(truth_dir[:-5] + 'iv')
+    
+    output_syn = os.path.join(output, 'approx_design', filename)
+    area  = synth_design(' '.join(input_list), output_syn, path['liberty'], path['script'], path['yosys'])
+
+    t, h, f = assess_HD(ground_truth, truth_dir)
+    print('Simulation error: ' + str(f) + '\tCircuit area: ' + str(area))
+    return f, area
 
 
 
@@ -94,8 +118,21 @@ def main():
     with open(os.path.join(app_path, 'params.yml'), 'r') as config_file:
         config = yaml.safe_load(config_file)
 
-    #config['asso'] = ctypes.CDLL( os.path.join(app_path, 'asso.so') )
+    # Create output dir
+    print('Generate file directory ...')
+    if os.path.isdir(args.output):
+        shutil.rmtree(args.output)
+    os.mkdir(args.output)
+    os.mkdir(os.path.join(args.output, 'approx_design'))
+    os.mkdir(os.path.join(args.output, 'truthtable'))
+    os.mkdir(os.path.join(args.output, 'result'))
+    
     config['asso'] = os.path.join(app_path, 'asso.so')
+    # Append liberty and script
+    config['liberty'] = args.liberty
+    config['script'] = os.path.join(args.output, 'abc.script')
+    with open(config['script'], 'w') as f:
+        f.write('strash;fraig;refactor;rewrite -z;scorr;map')
 
     # Get modulename
     with open(args.input) as file:
@@ -108,10 +145,21 @@ def main():
                     break
             line = file.readline()
 
-    # Create output dir
-    os.mkdir(args.output)
+    # Generate ground truth table
+    print('Generate truthtable for input verilog ...')
+    ground_truth = os.path.join(args.output, modulename+'.truth')
+    subprocess.call([config['iverilog'], '-o', ground_truth[:-5]+'iv', args.input, args.testbench])
+    with open(ground_truth, 'w') as f:
+        subprocess.call([config['vvp'], ground_truth[:-5]+'iv'], stdout=f)
+    os.remove(ground_truth[:-5] + 'iv')
+    
+    print('Synthesizing input design with original partitions...')
+    output_synth = os.path.join(args.output, modulename)
+    input_area = synth_design(args.input, output_synth, args.liberty, config['script'], config['yosys'])
+    print('Original design area ', str(input_area))
+    initial_area = input_area
 
-    modulenames, toplevel = recursive_partitioning(args.input, args.output, modulename, config)
+    modulenames, suggest_part, toplevel = recursive_partitioning(args.input, args.output, modulename, config)
 
     for i in modulenames:
         module_file = os.path.join(args.output, 'partition', i)
@@ -124,12 +172,147 @@ def main():
 
     worker_list = []
 
-    for inp, tb, out in zip(file_list, tb_list, output_list):
+    for inp, tb, out, p in zip(file_list, tb_list, output_list, suggest_part):
         worker = GreedyWorker(inp, tb, args.liberty, config)
         worker.create_output_dir(out)
         worker.evaluate_initial()
-        worker.recursive_partitioning(30)
+        worker.recursive_partitioning(p)
         worker_list.append(worker)
+    
+    err_summary = []
+    area_summary = []
+    curr_iter_list = [-1 for i in modulenames]
+    max_iter_list = [-1 for i in modulenames]
+    curr_file_list = file_list.copy()
+    it = 0
+
+
+    m5 = True
+    m10 = True
+    m15 = True
+    m20 = True
+
+
+
+    while 1:
+        err_list = []
+        area_list = []
+
+        candidate_list = []
+        candidate_iter_num = []
+
+        for i,(w,d) in enumerate(zip(worker_list, output_list)):
+            if max(w.curr_stream) == 1:
+                curr_iter_list[i] = -1
+            else:
+                i_list = curr_iter_list.copy()
+                i_list[i] += 1
+                candidate_iter_num.append(i_list)
+                if i_list[i] > max_iter_list[i]:
+                    w.next_iter(3, args.parallel)
+                    max_iter_list[i] += 1
+                k_list = curr_file_list.copy()
+                k_list[i] = os.path.join(d, 'result', 'iter{}.v'.format(i_list[i]))
+                candidate_list.append(k_list)
+        
+
+        if len(candidate_list) == 0:
+            a = np.array(area_summary)
+            i = np.argmin(a)
+            source_file = os.path.join(args.output, 'result', 'iter{}.v'.format(i))
+            target_file = os.path.join(args.output, '{}_{}metric.v'.format(modulename, 'rest'))
+            shutil.copyfile(source_file, target_file)
+            with open(os.path.join(args.output, 'result.txt'), 'a') as f:
+                f.write('{}% error metric chip area {:.2f}\n'.format('REST', area_summary[i]))
+
+            sys.exit(0)
+
+
+
+
+
+
+        pool = mp.Pool(mp.cpu_count())
+        results = [pool.apply_async(evaluate_design,args=(candidate_list[i], toplevel, args.testbench, ground_truth, args.output, 'iter'+str(it)+'design'+str(i), config )) for i in range(len(candidate_list))]
+        pool.close()
+        pool.join()
+        for result in results:
+            err_list.append(result.get()[0])
+            area_list.append(result.get()[1])
+
+        idx = optimization(np.array(err_list), np.array(area_list) / initial_area , 1)
+        err_summary.append(err_list[idx])
+        area_summary.append(area_list[idx])
+        shutil.copyfile(os.path.join(args.output, 'approx_design', 'iter{}design{}_syn.v'.format(it, idx)), os.path.join(args.output, 'result', 'iter{}.v'.format(it)))
+
+        curr_file_list = candidate_list[idx]
+        curr_iter_list = candidate_iter_num[idx]
+
+        with open(os.path.join(args.output, 'data'), 'a') as data:
+            data.write('{:.6f},{:.6f}\n'.format(err_list[idx], area_list[idx]))
+            data.flush()
+
+
+
+        if err_list[idx] >= 0.05+0.02 and m5:
+            m5 = False
+            a = np.array(area_summary)
+            e = np.array(err_summary)
+            a[e > 0.05] = np.inf
+            i = np.argmin(a)
+            source_file = os.path.join(args.output, 'result', 'iter{}.v'.format(i))
+            target_file = os.path.join(args.output, '{}_{}metric.v'.format(modulename, 5))
+            shutil.copyfile(source_file, target_file)
+            with open(os.path.join(args.output, 'result.txt'), 'w') as f:
+                f.write('{}% error metric chip area {:.2f}\n'.format(5, area_summary[i]))
+                f.flush()
+
+
+        if err_list[idx] >= 0.10+0.02 and m10:
+            m10 = False
+            a = np.array(area_summary)
+            e = np.array(err_summary)
+            a[e > 0.10] = np.inf
+            i = np.argmin(a)
+            source_file = os.path.join(args.output, 'result', 'iter{}.v'.format(i))
+            target_file = os.path.join(args.output, '{}_{}metric.v'.format(modulename, 10))
+            shutil.copyfile(source_file, target_file)
+            with open(os.path.join(args.output, 'result.txt'), 'a') as f:
+                f.write('{}% error metric chip area {:.2f}\n'.format(10, area_summary[i]))
+                f.flush()
+
+
+        if err_list[idx] >= 0.15+0.02 and m15:
+            m15 = False
+            a = np.array(area_summary)
+            e = np.array(err_summary)
+            a[e > 0.15] = np.inf
+            i = np.argmin(a)
+            source_file = os.path.join(args.output, 'result', 'iter{}.v'.format(i))
+            target_file = os.path.join(args.output, '{}_{}metric.v'.format(modulename, 15))
+            shutil.copyfile(source_file, target_file)
+            with open(os.path.join(args.output, 'result.txt'), 'a') as f:
+                f.write('{}% error metric chip area {:.2f}\n'.format(15, area_summary[i]))
+                f.flush()
+
+
+
+        if err_list[idx] >= 0.20+0.02 and m20:
+            m20 = False
+            a = np.array(area_summary)
+            e = np.array(err_summary)
+            a[e > 0.20] = np.inf
+            i = np.argmin(a)
+            source_file = os.path.join(args.output, 'result', 'iter{}.v'.format(i))
+            target_file = os.path.join(args.output, '{}_{}metric.v'.format(modulename, 20))
+            shutil.copyfile(source_file, target_file)
+            with open(os.path.join(args.output, 'result.txt'), 'a') as f:
+                f.write('{}% error metric chip area {:.2f}\n'.format(20, area_summary[i]))
+                f.flush()
+
+            sys.exit(0)
+
+        it += 1
 
 
 
