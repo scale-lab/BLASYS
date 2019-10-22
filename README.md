@@ -3,7 +3,9 @@ BLASYS toolchain reads an input circuit in Verilog format and approximates with 
 
 ## System Requirement
 **Operating systems**: Windows, Mac OS, Linux, Unix
+
 **Memory requirement**: 
+
 **Interpreter**: Python 3.6+. Be sure to install  ``numpy`` package with command 
 ```
 pip3 install numpy
@@ -16,9 +18,9 @@ Be sure to install following tools before running BLASYS toolchain.
 3. **Icarus Verilog**: Simulation and HD error estimation. (http://iverilog.icarus.com)
 4. **LSOracle**: Partitioning. (https://github.com/LNIS-Projects/LSOracle)
 
-![Flow](https://github.com/scale-lab/BLASYS/blob/master/doc/flow.png?raw=true)
-
 **NOTE:** After installing tools above, you should either **add them into environment path of your system**, or **put the path to excutable into** ``params.yml``.
+
+![Flow](https://github.com/scale-lab/BLASYS/blob/master/doc/flow.png?raw=true)
 
 ## Usage
 1. Install all packages listed in previous section.
