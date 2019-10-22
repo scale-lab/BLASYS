@@ -1,6 +1,5 @@
 import regex as re
 import sys
-import random
 import ctypes
 import os
 import numpy as np

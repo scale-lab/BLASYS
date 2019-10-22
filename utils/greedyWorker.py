@@ -7,8 +7,6 @@ import matplotlib.pyplot as plt
 import subprocess
 import multiprocessing as mp
 import shutil
-import argparse
-import yaml
 import time
 import ctypes
 from utils import assess_HD, gen_truth, evaluate_design, synth_design, inpout
@@ -373,43 +371,3 @@ def print_banner():
     print('|  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            |')
     print('|                                                                            |')
     print('\\----------------------------------------------------------------------------/')
-
-
-
-######################
-#        MAIN        #
-######################
-def main():
-    app_path = os.path.dirname(os.path.realpath(__file__))
-    
-    # Parse command-line args
-    parser = argparse.ArgumentParser(description='BLASYS -- Approximate Logic Synthesis Using Boolean Matrix Factorization')
-    parser.add_argument('-i', help='Input verilog file', required=True, dest='input')
-    parser.add_argument('-tb', help='Testbench verilog file', required=True, dest='testbench')
-    parser.add_argument('-n', help='Number of partitions', required=True, type=int, dest='npart')
-    parser.add_argument('-o', help='Output directory', default='output', dest='output')
-    parser.add_argument('-ts', help='Threshold on error', default=0.9, type=float, dest='threshold')
-    parser.add_argument('-lib', help='Liberty file name', default=os.path.join(app_path, 'tsmc65.lib'), dest='liberty')
-    parser.add_argument('--parallel', help='Run the flow in parallel mode if specified', dest='parallel', action='store_true')
-
-    args = parser.parse_args()
-
-    print_banner()
-
-    # Load path to yosys, lsoracle, iverilog, vvp, abc
-    with open(os.path.join(app_path, 'params.yml'), 'r') as config_file:
-        config = yaml.safe_load(config_file)
-
-    #config['asso'] = ctypes.CDLL( os.path.join(app_path, 'asso.so') )
-    config['asso'] = os.path.join(app_path, 'asso', 'asso.so')
-
-    worker = GreedyWorker(args.input, args.testbench, args.liberty, config, args.threshold)
-    worker.create_output_dir(args.output)
-    worker.evaluate_initial()
-    worker.recursive_partitioning(args.npart)
-    #worker.greedy_opt(args.parallel)
-    for i in range(10):
-        worker.next_iter(3,args.parallel)
-
-if __name__ == '__main__':
-    main()

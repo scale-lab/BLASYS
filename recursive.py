@@ -1,6 +1,6 @@
-from create_tb import create_testbench
-from greedyWorker import GreedyWorker, print_banner, optimization
-from utils import assess_HD, synth_design
+from utils.create_tb import create_testbench
+from utils.greedyWorker import GreedyWorker, print_banner, optimization
+from utils.utils import assess_HD, synth_design
 import os
 import argparse
 import multiprocessing as mp
