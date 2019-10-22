@@ -115,7 +115,7 @@ def main():
     print_banner()
 
     # Load path to yosys, lsoracle, iverilog, vvp, abc
-    with open(os.path.join(app_path, 'params.yml'), 'r') as config_file:
+    with open(os.path.join(app_path, 'config', 'params.yml'), 'r') as config_file:
         config = yaml.safe_load(config_file)
 
     # Create output dir
@@ -127,6 +127,7 @@ def main():
     os.mkdir(os.path.join(args.output, 'truthtable'))
     os.mkdir(os.path.join(args.output, 'result'))
     
+    config['part_config'] = os.path.join(app_path, 'config', 'test.ini')
     config['asso'] = os.path.join(app_path, 'asso', 'asso.so')
     # Append liberty and script
     config['liberty'] = args.liberty

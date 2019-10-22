@@ -1,6 +1,6 @@
 
 # LSOracle for partitioning
-lsoracle: 'lstools'
+lsoracle: '/home/jingxiao/new_lsoracle/LSOracle/build/core/lsoracle'
 
 # Synthesis
 yosys: 'yosys'

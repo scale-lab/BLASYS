@@ -9,7 +9,7 @@ import multiprocessing as mp
 import shutil
 import time
 import ctypes
-from utils import assess_HD, gen_truth, evaluate_design, synth_design, inpout
+from .utils import assess_HD, gen_truth, evaluate_design, synth_design, inpout
 
 def optimization(err_list, area_list, threshold):
 
@@ -118,7 +118,7 @@ class GreedyWorker():
         print('Partitioning input circuit...')
         part_dir = os.path.join(self.output, 'partition')
         lsoracle_command = 'read_verilog ' + self.input + '; ' \
-                'partitioning ' + str(num_parts) + '; ' \
+                'partitioning ' + str(num_parts) + ' -c '+ self.path['part_config'] +'; ' \
                 'get_all_partitions ' + part_dir
         log_partition = os.path.join(self.output, 'lsoracle.log')
         with open(log_partition, 'w') as file_handler:
@@ -135,7 +135,7 @@ class GreedyWorker():
         print('Partitioning input circuit...')
         part_dir = os.path.join(self.output, 'partition')
         lsoracle_command = 'read_verilog ' + self.input + '; ' \
-                'partitioning ' + str(num_parts) + '; ' \
+                'partitioning ' + str(num_parts) + ' -c '+ self.path['part_config'] +'; ' \
                 'get_all_partitions ' + part_dir
         
         log_partition = os.path.join(self.output, 'lsoracle.log')
@@ -155,7 +155,7 @@ class GreedyWorker():
             inp, out = inpout(mod_path)
             if inp > 16:
                 lsoracle_command = 'read_verilog ' + mod_path + '; ' \
-                        'partitioning 4; ' \
+                        'partitioning 4 -c ' + self.path['part_config'] + '; ' \
                         'get_all_partitions ' + part_dir
                 with open(log_partition, 'a') as file_handler:
                     subprocess.call([self.path['lsoracle'], '-c', lsoracle_command], stderr=file_handler, stdout=file_handler)

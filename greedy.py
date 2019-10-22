@@ -27,10 +27,10 @@ def main():
     print_banner()
 
     # Load path to yosys, lsoracle, iverilog, vvp, abc
-    with open(os.path.join(app_path, 'params.yml'), 'r') as config_file:
+    with open(os.path.join(app_path, 'config', 'params.yml'), 'r') as config_file:
         config = yaml.safe_load(config_file)
 
-    #config['asso'] = ctypes.CDLL( os.path.join(app_path, 'asso.so') )
+    config['part_config'] = os.path.join(app_path, 'config', 'test.ini')
     config['asso'] = os.path.join(app_path, 'asso', 'asso.so')
 
     worker = GreedyWorker(args.input, args.testbench, args.liberty, config, args.threshold)
