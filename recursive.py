@@ -56,7 +56,7 @@ def recursive_partitioning(inp_file, out_dir, modulename, path):
         if num_cell > 2000:
             num_part = num_cell // 2000 + 1
             lsoracle_command = 'read_verilog ' + mod_path + '; ' \
-                    'partitioning ' + str(num_part) + '; ' \
+                    'partitioning ' + str(num_part) + ' -c '+ path['part_config'] +'; ' \
                     'get_all_partitions ' + part_dir
             with open(log_partition, 'a') as file_handler:
                 subprocess.call([path['lsoracle'], '-c', lsoracle_command], stderr=file_handler, stdout=file_handler)
