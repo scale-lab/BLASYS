@@ -127,7 +127,7 @@ def main():
     os.mkdir(os.path.join(args.output, 'truthtable'))
     os.mkdir(os.path.join(args.output, 'result'))
     
-    config['asso'] = os.path.join(app_path, 'asso.so')
+    config['asso'] = os.path.join(app_path, 'asso', 'asso.so')
     # Append liberty and script
     config['liberty'] = args.liberty
     config['script'] = os.path.join(args.output, 'abc.script')

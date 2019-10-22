@@ -328,7 +328,6 @@ class GreedyWorker():
         result = k_lists[idx]
         if err_list.count(0) > 1:
             for i,e in enumerate(err_list):
-                print(i, e)
                 if e == 0:
                     result[changed[i]] = k_lists[i][changed[i]]
             
@@ -402,7 +401,7 @@ def main():
         config = yaml.safe_load(config_file)
 
     #config['asso'] = ctypes.CDLL( os.path.join(app_path, 'asso.so') )
-    config['asso'] = os.path.join(app_path, 'asso.so')
+    config['asso'] = os.path.join(app_path, 'asso', 'asso.so')
 
     worker = GreedyWorker(args.input, args.testbench, args.liberty, config, args.threshold)
     worker.create_output_dir(args.output)
