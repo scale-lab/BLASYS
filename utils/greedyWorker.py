@@ -242,7 +242,7 @@ class GreedyWorker():
 
         time_used = after - before
         print('--------------- Finishing Iteration' + str(self.iter) + '---------------')
-        msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err, area, time_used)
+        msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.2f}\tTime used: {:.6f} sec\n'.format(100*err, area, time_used)
         print(msg)
         with open(os.path.join(self.output, 'log'), 'a') as log_file:
             log_file.write(str(next_stream))

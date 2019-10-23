@@ -110,10 +110,11 @@ def main():
     # Parse command-line args
     parser = argparse.ArgumentParser(description='BLASYS -- Approximate Logic Synthesis Using Boolean Matrix Factorization')
     parser.add_argument('-i', help='Input verilog file', required=True, dest='input')
-    parser.add_argument('-tb', help='Testbench verilog file', required=True, dest='testbench')
+    parser.add_argument('-tb', '--testbench', help='Testbench verilog file', required=True, dest='testbench')
     parser.add_argument('-o', help='Output directory', default='output', dest='output')
-    parser.add_argument('-ts', help='Threshold on error', default=0.9, type=float, dest='threshold')
-    parser.add_argument('-lib', help='Liberty file name', default=os.path.join(app_path, 'tsmc65.lib'), dest='liberty')
+    parser.add_argument('-ts', '--threshold', help='Threshold on error', default=0.9, type=float, dest='threshold')
+    parser.add_argument('-lib', '--liberty', help='Liberty file name', required=True, dest='liberty')
+    parser.add_argument('-ss', '--stepsize', help='Step size in optimization process', default=1, type=int, dest='stepsize')
     parser.add_argument('--parallel', help='Run the flow in parallel mode if specified', dest='parallel', action='store_true')
 
     args = parser.parse_args()
@@ -213,7 +214,7 @@ def main():
                 i_list[i] += 1
                 candidate_iter_num.append(i_list)
                 if i_list[i] > max_iter_list[i]:
-                    w.next_iter(3, args.parallel)
+                    w.next_iter(args.stepsize, args.parallel)
                     max_iter_list[i] += 1
                 k_list = curr_file_list.copy()
                 k_list[i] = os.path.join(d, 'approx_design', 'iter{}.v'.format(i_list[i]))
@@ -231,15 +232,21 @@ def main():
 
             sys.exit(0)
 
-        pool = mp.Pool(mp.cpu_count())
-        results = [pool.apply_async(evaluate_design,args=(candidate_list[i] + [toplevel], args.testbench, ground_truth, args.output, 'iter'+str(it)+'design'+str(i), config, args.liberty )) for i in range(len(candidate_list))]
-        pool.close()
-        pool.join()
-        for result in results:
-            err_list.append(result.get()[0])
-            area_list.append(result.get()[1])
+        if args.parallel:
+            pool = mp.Pool(mp.cpu_count())
+            results = [pool.apply_async(evaluate_design,args=(candidate_list[i] + [toplevel], args.testbench, ground_truth, args.output, 'iter'+str(it)+'design'+str(i), config, args.liberty )) for i in range(len(candidate_list))]
+            pool.close()
+            pool.join()
+            for result in results:
+                err_list.append(result.get()[0])
+                area_list.append(result.get()[1])
+        else:
+            for i,l in enumerate(candidate_list):
+                err, area = evaluate_design(l+[toplevel], args.testbench, ground_truth, args.output, 'iter'+str(it)+'design'+str(i), config, args.liberty)
+                err_list.append(err)
+                area_list.append(area)
 
-        idx = optimization(np.array(err_list), np.array(area_list) / initial_area , args.threshold)
+        idx = optimization(np.array(err_list), np.array(area_list) / initial_area , args.threshold + 0.01)
         err_summary.append(err_list[idx])
         area_summary.append(area_list[idx])
         shutil.copyfile(os.path.join(args.output, 'approx_design', 'iter{}design{}_syn.v'.format(it, idx)), os.path.join(args.output, 'approx_design', 'iter{}.v'.format(it)))
