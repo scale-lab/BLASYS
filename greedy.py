@@ -37,9 +37,7 @@ def main():
     worker.create_output_dir(args.output)
     worker.evaluate_initial()
     worker.recursive_partitioning(args.npart)
-    #worker.greedy_opt(args.parallel)
-    for i in range(10):
-        worker.next_iter(3,args.parallel)
+    worker.greedy_opt(args.parallel)
 
 if __name__ == '__main__':
     main()

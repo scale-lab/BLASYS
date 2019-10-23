@@ -215,7 +215,7 @@ class GreedyWorker():
         #count_iter = 0
         #curr_stream = self.output_list.copy()
 
-        with open(os.path.join(self.output, 'result.txt'), 'w') as f:
+        with open(os.path.join(self.output, 'result', 'result.txt'), 'w') as f:
             f.write('Original chip area {:.2f}\n'.format(self.initial_area))
 
         while True:
@@ -229,7 +229,7 @@ class GreedyWorker():
             source_file = os.path.join(self.output, 'approx_design', 'iter{}design{}_syn.v'.format(it, self.idx_list[it]))
             target_file = os.path.join(self.result, 'result', '{}_{}metric.v'.format(self.modulename, round(self.threshold * 100)))
             shutil.copyfile(source_file, target_file)
-            with open(os.path.join(self.output, 'result.txt'), 'a') as f:
+            with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
                 f.write('{}% error metric chip area {:.2f}\n'.format(round(self.threshold * 100), self.area_list[it]))
             print('All subcircuits have been approximated to degree 1. Exit approximating.')
             return -1
@@ -254,7 +254,7 @@ class GreedyWorker():
 
         self.curr_stream = next_stream
 
-        if err >= self.threshold+0.02:
+        if err >= self.threshold+0.01:
             a = np.array(self.area_list)
             e = np.array(self.error_list)
             a[e > self.threshold] = np.inf
@@ -262,13 +262,13 @@ class GreedyWorker():
             source_file = os.path.join(self.output, 'approx_design', 'iter{}design{}_syn.v'.format(it, self.idx_list[it]))
             target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(self.threshold * 100)))
             shutil.copyfile(source_file, target_file)
-            with open(os.path.join(self.output, 'result.txt'), 'a') as f:
+            with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
                 f.write('{}% error metric chip area {:.2f}\n'.format(round(self.threshold * 100), self.area_list[it]))
             print('Reach error threshold. Exit approximation.')
             return -1
         
         source_file = os.path.join(self.output, 'approx_design', 'iter{}design{}.v'.format(self.iter, idx))
-        target_file = os.path.join(self.output, 'result', 'iter{}.v'.format(self.iter))
+        target_file = os.path.join(self.output, 'approx_design', 'iter{}.v'.format(self.iter))
         shutil.copyfile(source_file, target_file)
 
         self.iter += 1
@@ -322,7 +322,7 @@ class GreedyWorker():
                 area_list.append(area)
 
 
-        idx = optimization(np.array(err_list), np.array(area_list) / self.initial_area, self.threshold+0.02)
+        idx = optimization(np.array(err_list), np.array(area_list) / self.initial_area, self.threshold+0.01)
         result = k_lists[idx]
         if err_list.count(0) > 1:
             for i,e in enumerate(err_list):
