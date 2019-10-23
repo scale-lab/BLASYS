@@ -40,7 +40,7 @@ def recursive_partitioning(inp_file, out_dir, modulename, path):
     part_dir = os.path.join(out_dir, 'partition')
     num_parts = number_of_cell(inp_file, path['yosys']) // 2000 + 1
     lsoracle_command = 'read_verilog ' + inp_file + '; ' \
-            'partitioning ' + str(num_parts) + '; ' \
+            'partitioning ' + str(num_parts) + ' -c '+ path['part_config'] +'; ' \
             'get_all_partitions ' + part_dir
     
     log_partition = os.path.join(out_dir, 'lsoracle.log')
@@ -121,15 +121,6 @@ def main():
 
     print_banner()
 
-    # Load path to yosys, lsoracle, iverilog, vvp, abc
-    with open(os.path.join(app_path, 'config', 'params.yml'), 'r') as config_file:
-        config = yaml.safe_load(config_file)
-    
-    config['part_config'] = os.path.join(app_path, 'config', 'test.ini')
-    config['asso'] = os.path.join(app_path, 'asso', 'asso.so')
-    config['script'] = os.path.join(args.output, 'abc.script')
-    with open(config['script'], 'w') as f:
-        f.write('strash;fraig;refactor;rewrite -z;scorr;map')
 
     # Get modulename
     with open(args.input) as file:
@@ -151,6 +142,17 @@ def main():
     os.mkdir(os.path.join(args.output, 'truthtable'))
     os.mkdir(os.path.join(args.output, 'result'))
     
+    # Load path to yosys, lsoracle, iverilog, vvp, abc
+    with open(os.path.join(app_path, 'config', 'params.yml'), 'r') as config_file:
+        config = yaml.safe_load(config_file)
+    
+    config['part_config'] = os.path.join(app_path, 'config', 'test.ini')
+    config['asso'] = os.path.join(app_path, 'asso', 'asso.so')
+    config['script'] = os.path.join(args.output, 'abc.script')
+    print(config['script'])
+    with open(config['script'], 'w') as f:
+        f.write('strash;fraig;refactor;rewrite -z;scorr;map')   
+
     # Generate ground truth table
     print('Generate truthtable for input verilog ...')
     ground_truth = os.path.join(args.output, modulename+'.truth')
@@ -212,13 +214,17 @@ def main():
             else:
                 i_list = curr_iter_list.copy()
                 i_list[i] += 1
-                candidate_iter_num.append(i_list)
                 if i_list[i] > max_iter_list[i]:
                     w.next_iter(args.stepsize, args.parallel)
                     max_iter_list[i] += 1
-                k_list = curr_file_list.copy()
-                k_list[i] = os.path.join(d, 'approx_design', 'iter{}.v'.format(i_list[i]))
-                candidate_list.append(k_list)
+
+                for idx in range(5):
+                    objective = os.path.join(d, 'approx_design', 'iter{}_{}.v'.format(i_list[i], idx))
+                    if os.path.exists(objective):
+                        k_list = curr_file_list.copy()
+                        k_list[i] = objective
+                        candidate_iter_num.append(i_list)
+                        candidate_list.append(k_list)
         
 
         if len(candidate_list) == 0:
@@ -246,7 +252,8 @@ def main():
                 err_list.append(err)
                 area_list.append(area)
 
-        idx = optimization(np.array(err_list), np.array(area_list) / initial_area , args.threshold + 0.01)
+        rank = optimization(np.array(err_list), np.array(area_list) / initial_area , args.threshold + 0.01)
+        idx = rank[0]
         err_summary.append(err_list[idx])
         area_summary.append(area_list[idx])
         shutil.copyfile(os.path.join(args.output, 'approx_design', 'iter{}design{}_syn.v'.format(it, idx)), os.path.join(args.output, 'approx_design', 'iter{}.v'.format(it)))
@@ -254,7 +261,7 @@ def main():
         curr_file_list = candidate_list[idx]
         curr_iter_list = candidate_iter_num[idx]
 
-        with open(os.path.join(args.output, 'data'), 'a') as data:
+        with open(os.path.join(args.output, 'data.csv'), 'a') as data:
             data.write('{:.6f},{:.6f}\n'.format(err_list[idx], area_list[idx]))
             data.flush()
 

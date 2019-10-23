@@ -39,7 +39,7 @@ def evaluate_design(k_stream, worker, filename):
 
     ground_truth = os.path.join(worker.output, worker.modulename + '.truth')
     
-    output_syn = os.path.join(worker.output, 'approx_design', filename)
+    output_syn = os.path.join(worker.output, 'tmp', filename)
     area  = synth_design(' '.join(verilog_list), output_syn, worker.library, worker.script, worker.path['yosys'])
 
     t, h, f = assess_HD(ground_truth, truth_dir)

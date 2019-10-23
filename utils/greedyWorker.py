@@ -12,20 +12,6 @@ import ctypes
 from .utils import assess_HD, gen_truth, evaluate_design, synth_design, inpout
 
 def optimization(err_list, area_list, threshold):
-
-    # Compute ratio
-    #np_area = np.array(area_list)
-    #np_err = np.array(err_list)
-    #grad = np.true_divide(np_area - 1, np_err)
-    # Solving division by 0 issue
-    #grad[np.isnan(grad)] = -np.inf
-    #print(grad)
-    # Finding optimum
-    #index_min, = np.where(grad == grad.min())
-    #area_min_grad = np_area[index_min]
-    
-    #return index_min[area_min_grad.argmin()]
-
     gradient = np.zeros(len(err_list))
 
     for (idx,(area, err)) in enumerate(zip(area_list, err_list)):
@@ -36,10 +22,11 @@ def optimization(err_list, area_list, threshold):
         else:
             gradient[idx] = (area - 1) / err
 
-    index_min_grad, = np.where(gradient == gradient.min())
-    area_min_grad = np.array(area_list)[index_min_grad]
-    return index_min_grad[area_min_grad.argmin()]
+    rank1 = np.argsort(area_list, kind='stable')
+    rank2 = np.argsort(gradient[rank1], kind='stable')
+    rank3 = rank1[rank2]
 
+    return rank3
 
 
 class GreedyWorker():
@@ -62,7 +49,6 @@ class GreedyWorker():
 
         self.error_list = []
         self.area_list = []
-        self.idx_list = []
         self.iter = 0
 
 
@@ -88,6 +74,7 @@ class GreedyWorker():
         os.mkdir(self.output)
 
         os.mkdir(os.path.join(self.output, 'approx_design'))
+        os.mkdir(os.path.join(self.output, 'tmp'))
         os.mkdir(os.path.join(self.output, 'truthtable'))
         os.mkdir(os.path.join(self.output, 'result'))
         # Write script
@@ -209,12 +196,6 @@ class GreedyWorker():
     def greedy_opt(self, parallel, step_size = 1):
 
         print('==================== Starting Approximation by Greedy Search  ====================')
-        #error_list = []
-        #area_list = []
-        #idx_list = []
-        #count_iter = 0
-        #curr_stream = self.output_list.copy()
-
         with open(os.path.join(self.output, 'result', 'result.txt'), 'w') as f:
             f.write('Original chip area {:.2f}\n'.format(self.initial_area))
 
@@ -226,7 +207,7 @@ class GreedyWorker():
     def next_iter(self, step_size, parallel):
         if max(self.curr_stream) == 1:
             it = np.argmin(self.area_list)
-            source_file = os.path.join(self.output, 'approx_design', 'iter{}design{}_syn.v'.format(it, self.idx_list[it]))
+            source_file = os.path.join(self.output, 'approx_design', 'iter{}_0_syn.v'.format(it))
             target_file = os.path.join(self.result, 'result', '{}_{}metric.v'.format(self.modulename, round(self.threshold * 100)))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
@@ -236,7 +217,7 @@ class GreedyWorker():
 
         print('--------------- Iteration ' + str(self.iter) + ' ---------------')
         before = time.time()
-        next_stream, err, area, idx = self.evaluate_iter(self.curr_stream, self.iter, step_size, parallel)
+        next_stream, err, area, rank = self.evaluate_iter(self.curr_stream, self.iter, step_size, parallel)
         after = time.time()
 
 
@@ -249,8 +230,18 @@ class GreedyWorker():
             log_file.write('\n')
             log_file.write(msg)
         
-        with open(os.path.join(self.output, 'data'), 'a') as data:
+        with open(os.path.join(self.output, 'data.csv'), 'a') as data:
             data.write('{:.6f},{:.6f},{:.2f}\n'.format(err, area,time_used))
+
+        # Moving approximate result to approx_design
+        for i,r in enumerate(rank):
+            source_file = os.path.join(self.output, 'tmp', 'iter{}design{}_syn.v'.format(self.iter, r))
+            target_file = os.path.join(self.output, 'approx_design', 'iter{}_{}_syn.v'.format(self.iter, i))
+            shutil.move(source_file, target_file)
+
+            source_file = os.path.join(self.output, 'tmp', 'iter{}design{}.v'.format(self.iter, r))
+            target_file = os.path.join(self.output, 'approx_design', 'iter{}_{}.v'.format(self.iter, i))
+            shutil.move(source_file, target_file)
 
         self.curr_stream = next_stream
 
@@ -259,7 +250,7 @@ class GreedyWorker():
             e = np.array(self.error_list)
             a[e > self.threshold] = np.inf
             it = np.argmin(a)
-            source_file = os.path.join(self.output, 'approx_design', 'iter{}design{}_syn.v'.format(it, self.idx_list[it]))
+            source_file = os.path.join(self.output, 'approx_design', 'iter{}_0_syn.v'.format(it))
             target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(self.threshold * 100)))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
@@ -267,15 +258,14 @@ class GreedyWorker():
             print('Reach error threshold. Exit approximation.')
             return -1
         
-        source_file = os.path.join(self.output, 'approx_design', 'iter{}design{}.v'.format(self.iter, idx))
-        target_file = os.path.join(self.output, 'approx_design', 'iter{}.v'.format(self.iter))
-        shutil.copyfile(source_file, target_file)
+        # source_file = os.path.join(self.output, 'tmp', 'iter{}design{}.v'.format(self.iter, idx))
+        # target_file = os.path.join(self.output, 'approx_design', 'iter{}.v'.format(self.iter))
+        # shutil.copyfile(source_file, target_file)
 
         self.iter += 1
 
         self.error_list.append(err)
         self.area_list.append(area)
-        self.idx_list.append(idx)
         self.plot(self.error_list, self.area_list)
 
         return 0
@@ -322,14 +312,14 @@ class GreedyWorker():
                 area_list.append(area)
 
 
-        idx = optimization(np.array(err_list), np.array(area_list) / self.initial_area, self.threshold+0.01)
-        result = k_lists[idx]
+        rank = optimization(np.array(err_list), np.array(area_list) / self.initial_area, self.threshold+0.01)
+        result = k_lists[rank[0]]
         if err_list.count(0) > 1:
             for i,e in enumerate(err_list):
                 if e == 0:
                     result[changed[i]] = k_lists[i][changed[i]]
             
-        return k_lists[idx], err_list[idx], area_list[idx], idx
+        return k_lists[rank[0]], err_list[rank[0]], area_list[rank[0]], rank
 
     def plot(self, error_list, area_list):
 
