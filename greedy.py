@@ -32,7 +32,6 @@ def main():
         config = yaml.safe_load(config_file)
 
     config['part_config'] = os.path.join(app_path, 'config', 'test.ini')
-    config['asso'] = os.path.join(app_path, 'asso', 'asso.so')
 
     worker = GreedyWorker(args.input, args.testbench, args.liberty, config, args.threshold)
     worker.create_output_dir(args.output)

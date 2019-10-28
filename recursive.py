@@ -147,7 +147,6 @@ def main():
         config = yaml.safe_load(config_file)
     
     config['part_config'] = os.path.join(app_path, 'config', 'test.ini')
-    config['asso'] = os.path.join(app_path, 'asso', 'asso.so')
     config['script'] = os.path.join(args.output, 'abc.script')
     print(config['script'])
     with open(config['script'], 'w') as f:

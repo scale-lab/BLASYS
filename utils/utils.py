@@ -1,9 +1,9 @@
 import regex as re
 import sys
-import ctypes
 import os
 import numpy as np
 import subprocess
+from .asso import asso
 
 def evaluate_design(k_stream, worker, filename):
     print('Evaluating Design:', k_stream)
@@ -329,15 +329,13 @@ def create_wh(n, m, k, W, H, fname, modulename, output_dir, abc, formula_file):
     create_h(m, k, H, f1, modulename)
     f1.close
 
-#def approximate(inputfile, k, num_in, num_out, liberty, modulename, app_path, output_dir):
 def approximate(inputfile, k, worker, i):
     #print('./asso ' + inputfile + '.truth ' +  str(k))
     #modulename = worker.modulename + '_' + str(i)
     modulename = worker.modulenames[i]
     #os.system(info['asso'] + ' ' + inputfile + '.truth ' +  str(k))
     #subprocess.call([worker.path['asso'], inputfile+'.truth', str(k)])
-    asso = ctypes.CDLL(worker.path['asso'])
-    asso.asso( ctypes.c_char_p(bytes(inputfile+'.truth', encoding='ASCII')), ctypes.c_int(k) )
+    asso( inputfile+'.truth', k )
     W = np.loadtxt(inputfile + '.truth_w_' + str(k), dtype=int)
     H = np.loadtxt(inputfile + '.truth_h_' + str(k), dtype=int)
     formula_file = os.path.join(worker.output, modulename, modulename+'_formula.v')
