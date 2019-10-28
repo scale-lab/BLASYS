@@ -15,6 +15,6 @@
 typedef unsigned int mwSize;
 
 unsigned long int sab(matrix A, matrix B, matrix C, int n, int m, int k, char *mode);
-int blasys_main(char* filename, int k);
+int asso(char* filename, int k);
 
 #endif

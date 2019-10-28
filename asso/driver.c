@@ -3,10 +3,10 @@
 //#define DEBUG
 
 /* The Main function */
-int main(int arg, char *argv[])
+int asso(char *filename, int k)
 {
-    char *filename;	
-    int	k;
+    // char *filename;	
+    // int	k;
     mwSize n, m, t_length, b_length;
     int i, ti, bi, bestBonusCovered, bestPenaltyOvercovered;
     unsigned long int error, bestError;
@@ -28,8 +28,8 @@ int main(int arg, char *argv[])
 
     /* allocate memory and fill the matrix*/
     FILE *f;
-    filename=argv[1];
-    k=atoi(argv[2]);
+    // filename=argv[1];
+    // k=atoi(argv[2]);
     f = fopen(filename, "r");
     if(f==NULL){
         printf("Could not fine the input file...\n");
