@@ -1,0 +1,7 @@
+# Compiled Python file
+__pycache__/
+*$py.class
+
+# C extension
+*.so
+*.o
