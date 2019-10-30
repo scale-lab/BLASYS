@@ -96,7 +96,9 @@ class GreedyWorker():
         input_area = synth_design(self.input, output_synth, self.library, self.script, self.path['yosys'])
         print('Original design area ', str(input_area))
         self.initial_area = input_area
-
+        with open(os.path.join(self.output, 'data.csv'), 'w') as data:
+            data.write('HD Error,Chip area,Time used\n')
+            data.write('{:.6f},{:.6f},{}\n'.format(0, self.initial_area,'Original'))
 
     def partitioning(self, num_parts):
         #self.num_parts = num_parts
@@ -205,6 +207,8 @@ class GreedyWorker():
 
 
     def next_iter(self, step_size, parallel):
+        print('Current stream of factorization degree:', ', '.join(map(str, self.curr_stream)))
+        
         if max(self.curr_stream) == 1:
             it = np.argmin(self.area_list)
             source_file = os.path.join(self.output, 'approx_design', 'iter{}_0_syn.v'.format(it))
@@ -223,7 +227,9 @@ class GreedyWorker():
 
         time_used = after - before
         print('--------------- Finishing Iteration' + str(self.iter) + '---------------')
-        msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.2f}\tTime used: {:.6f} sec\n'.format(100*err, area, time_used)
+        part_idx = list(np.nonzero(np.subtract(next_stream, self.curr_stream)))
+        print('Partition', *part_idx, 'being approximated')
+        msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err, 100 * area / self.initial_area, time_used)
         print(msg)
         with open(os.path.join(self.output, 'log'), 'a') as log_file:
             log_file.write(str(next_stream))
@@ -295,7 +301,7 @@ class GreedyWorker():
         # Parallel mode
         if parallel:
             pool = mp.Pool(mp.cpu_count())
-            results = [pool.apply_async(evaluate_design,args=(k_lists[i], self, 'iter'+str(num_iter)+'design'+str(i) )) for i in range(len(k_lists))]
+            results = [pool.apply_async(evaluate_design,args=(k_lists[i], self, 'iter'+str(num_iter)+'design'+str(i), False )) for i in range(len(k_lists))]
             pool.close()
             pool.join()
             for result in results:

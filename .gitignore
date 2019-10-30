@@ -5,3 +5,11 @@ __pycache__/
 # C extension
 *.so
 *.o
+
+# Liberty file
+*.lib
+
+# Partitioning file
+hypergraph.txt
+
+

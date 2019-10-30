@@ -5,8 +5,9 @@ import numpy as np
 import subprocess
 from .asso import asso
 
-def evaluate_design(k_stream, worker, filename):
-    print('Evaluating Design:', k_stream)
+def evaluate_design(k_stream, worker, filename, display=True):
+    if display:
+        print('Evaluating Design:', k_stream)
     verilog_list = [os.path.join(worker.output, 'partition', worker.modulename + '.v')]
 
     # Parse each subcircuit
@@ -43,7 +44,7 @@ def evaluate_design(k_stream, worker, filename):
     area  = synth_design(' '.join(verilog_list), output_syn, worker.library, worker.script, worker.path['yosys'])
 
     t, h, f = assess_HD(ground_truth, truth_dir)
-    print('Simulation error: ' + str(f) + '\tCircuit area: ' + str(area))
+    print('Simulation error: {:.6f}\tCircuit area: {:.6f}'.format(f, area))
     return f, area
 
 
@@ -342,9 +343,9 @@ def approximate(inputfile, k, worker, i):
     if k == 1:
         W = W.reshape((W.size, 1))
         H = H.reshape((1, H.size))
-    print('----- Writing approximate design...')
+    # print('----- Writing approximate design...')
     create_wh(worker.input_list[i], worker.output_list[i], k, W, H, inputfile, modulename, worker.output, worker.path['abc'], formula_file)
-    print('Simulating truth table on approximation design...')
+    # print('Simulating truth table on approximation design...')
     # os.system('iverilog -o ' + inputfile + '_approx_k=' + str(k) + '.iv ' + inputfile + '_approx_k=' + str(k) + '.v ' + testbench)
     # os.system('vvp ' + inputfile + '_approx_k=' + str(k) + '.iv > ' + inputfile + '_approx_k=' + str(k) + '.truth' )
     # synth_design_app(inputfile + '_approx_k=' + str(k) + '.v', inputfile + '_approx_k=' + str(k), liberty)
