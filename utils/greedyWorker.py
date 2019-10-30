@@ -212,7 +212,7 @@ class GreedyWorker():
         if max(self.curr_stream) == 1:
             it = np.argmin(self.area_list)
             source_file = os.path.join(self.output, 'approx_design', 'iter{}_0_syn.v'.format(it))
-            target_file = os.path.join(self.result, 'result', '{}_{}metric.v'.format(self.modulename, round(self.threshold * 100)))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(self.threshold * 100)))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
                 f.write('{}% error metric chip area {:.2f}\n'.format(round(self.threshold * 100), self.area_list[it]))
