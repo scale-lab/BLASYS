@@ -1,6 +1,6 @@
 from utils.create_tb import create_testbench
 from utils.greedyWorker import GreedyWorker, print_banner, optimization
-from utils.utils import assess_HD, synth_design
+from utils.utils import assess_HD, synth_design, number_of_cell
 import os
 import argparse
 import multiprocessing as mp
@@ -11,22 +11,6 @@ import sys
 import regex as re
 import shutil
 
-def number_of_cell(input_file, yosys):
-    '''
-    Get number of yosys standard cells of input circuit
-    '''
-    yosys_command = 'read_verilog ' + input_file + '; ' \
-            + 'synth -flatten; opt; opt_clean -purge; techmap; stat;\n'
-    num_cell = 0
-    output_file = input_file[:-2] + '_syn.log'
-    line=subprocess.call(yosys+" -p \'"+ yosys_command+"\' > "+ output_file, shell=True)
-    with open(output_file, 'r') as file_handle:
-        for line in file_handle:
-            if 'Number of cells:' in line:
-                num_cell = line.split()[-1]
-                break
-    os.remove(output_file)
-    return int(num_cell)
 
 def recursive_partitioning(inp_file, out_dir, modulename, path):
     '''
@@ -34,7 +18,6 @@ def recursive_partitioning(inp_file, out_dir, modulename, path):
     '''
 
     modulenames = []
-    suggest_part = []
 
     print('Partitioning input circuit...')
     part_dir = os.path.join(out_dir, 'partition')
@@ -74,11 +57,10 @@ def recursive_partitioning(inp_file, out_dir, modulename, path):
             os.remove(mod_path)
         else:
             modulenames.append(mod)
-            suggest_part.append(min(30, num_cell // 20 + 1))
 
     print('Number of partitions', len(modulenames))
 
-    return modulenames, suggest_part, toplevel
+    return modulenames, toplevel
 
 
 def evaluate_design(input_list, testbench, ground_truth, output, filename, path, liberty):
@@ -171,7 +153,7 @@ def main():
         f.flush()
 
     # Partition into subcircuit with < 2000 cells
-    modulenames, suggest_part, toplevel = recursive_partitioning(args.input, args.output, modulename, config)
+    modulenames, toplevel = recursive_partitioning(args.input, args.output, modulename, config)
 
     print('Generate testbench for each partition ...')
     for i in modulenames:
@@ -186,11 +168,11 @@ def main():
     worker_list = []
 
     # Initialize greedyWorker for each subcircuit
-    for inp, tb, out, p in zip(file_list, tb_list, output_list, suggest_part):
+    for inp, tb, out in zip(file_list, tb_list, output_list):
         worker = GreedyWorker(inp, tb, args.liberty, config)
         worker.create_output_dir(out)
         worker.evaluate_initial()
-        worker.recursive_partitioning(p)
+        worker.recursive_partitioning()
         worker_list.append(worker)
     
     err_summary = []

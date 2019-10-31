@@ -343,9 +343,26 @@ def approximate(inputfile, k, worker, i):
     if k == 1:
         W = W.reshape((W.size, 1))
         H = H.reshape((1, H.size))
-    # print('----- Writing approximate design...')
+
     create_wh(worker.input_list[i], worker.output_list[i], k, W, H, inputfile, modulename, worker.output, worker.path['abc'], formula_file)
-    # print('Simulating truth table on approximation design...')
-    # os.system('iverilog -o ' + inputfile + '_approx_k=' + str(k) + '.iv ' + inputfile + '_approx_k=' + str(k) + '.v ' + testbench)
-    # os.system('vvp ' + inputfile + '_approx_k=' + str(k) + '.iv > ' + inputfile + '_approx_k=' + str(k) + '.truth' )
-    # synth_design_app(inputfile + '_approx_k=' + str(k) + '.v', inputfile + '_approx_k=' + str(k), liberty)
+
+
+
+def number_of_cell(input_file, yosys):
+    '''
+    Get number of yosys standard cells of input circuit
+    '''
+    yosys_command = 'read_verilog ' + input_file + '; ' \
+            + 'synth -flatten; opt; opt_clean -purge; techmap; stat;\n'
+    num_cell = 0
+    output_file = input_file[:-2] + '_syn.log'
+    line=subprocess.call(yosys+" -p \'"+ yosys_command+"\' > "+ output_file, shell=True)
+    with open(output_file, 'r') as file_handle:
+        for line in file_handle:
+            if 'Number of cells:' in line:
+                num_cell = line.split()[-1]
+                break
+    os.remove(output_file)
+    return int(num_cell)
+
+

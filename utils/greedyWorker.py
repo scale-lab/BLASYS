@@ -9,7 +9,7 @@ import multiprocessing as mp
 import shutil
 import time
 import ctypes
-from .utils import assess_HD, gen_truth, evaluate_design, synth_design, inpout
+from .utils import assess_HD, gen_truth, evaluate_design, synth_design, inpout, number_of_cell
 
 def optimization(err_list, area_list, threshold):
     gradient = np.zeros(len(err_list))
@@ -118,8 +118,11 @@ class GreedyWorker():
 
         self.truthtable_for_parts()
 
-    def recursive_partitioning(self, num_parts):
+    def recursive_partitioning(self, num_parts=None):
         self.modulenames = []
+
+        if num_parts is None:
+            num_parts = number_of_cell(self.input, self.path['yosys']) // 40 + 1
 
         print('Partitioning input circuit...')
         part_dir = os.path.join(self.output, 'partition')
