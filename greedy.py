@@ -33,14 +33,14 @@ def main():
 
     config['part_config'] = os.path.join(app_path, 'config', 'test.ini')
 
-    worker = GreedyWorker(args.input, args.testbench, args.liberty, config, args.threshold)
+    worker = GreedyWorker(args.input, args.testbench, args.liberty, config)
     worker.create_output_dir(args.output)
     worker.evaluate_initial()
     if args.npart is None:
         worker.recursive_partitioning()
     else:
         worker.recursive_partitioning(args.npart)
-    worker.greedy_opt(args.parallel, args.stepsize)
+    worker.greedy_opt(args.parallel, args.stepsize, args.threshold)
 
 if __name__ == '__main__':
     main()

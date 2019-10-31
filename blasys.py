@@ -119,25 +119,41 @@ class Blasys(Cmd):
             print('[Error] No output folder. Please first create output folder by command create_dir.')
             return
         # Parse arguments
-        if not args.isdigit():
-            print('[Error] Please specify an integer.')
+        if not ( args.strip() == '' or args.isdigit()):
+            print('[Error] Invalid arguments.')
+            self.help_partitioning()
             return           
-
-        
+      
         self.optimizer.evaluate_initial()
-        self.optimizer.recursive_partitioning(int(args))
+        if args.strip() == '':
+            self.optimizer.recursive_partitioning()
+        else:
+            self.optimizer.recursive_partitioning(int(args))
 
 
     def help_partitioning(self):
-        print('[Usage] partitioning NUMBER_OF_PARTITIONS')
+        print('[Usage] partitioning [NUMBER_OF_PARTITIONS]')
+        print('Either specify an interger as number of partitions, or leave it empty.')
 
     
     def do_greedy(self, args):
-        pass      
+        args_list = args.split()
+        if '-p' in args_list:
+            parallel = True
+            args_list.remove('-p')
+        else:
+            parallel = False
+
+        if len(args_list) > 1 or not args_list[0].isdigit():
+            print('[Error] Invalid arguments.')
+            self.help_greedy()
+            return
+        
+        step_size = 
         
 
     def help_greedy(self):
-        print('greedy')
+        print('greedy [STEP_SIZE] [-p]')
 
 
 

@@ -30,7 +30,7 @@ def optimization(err_list, area_list, threshold):
 
 
 class GreedyWorker():
-    def __init__(self, input_circuit, testbench, library, path, threshold=1.0):
+    def __init__(self, input_circuit, testbench, library, path):
         # Check executable
         assert shutil.which(path['iverilog']), 'Cannot find iverilog'
         assert shutil.which(path['vvp']), 'Cannot find vvp'
@@ -45,7 +45,6 @@ class GreedyWorker():
         self.testbench = testbench
         self.library = library
         self.path = path
-        self.threshold = threshold
 
         self.error_list = []
         self.area_list = []
@@ -198,33 +197,33 @@ class GreedyWorker():
         self.curr_stream = self.output_list.copy()
 
 
-    def greedy_opt(self, parallel, step_size = 1):
+    def greedy_opt(self, parallel, step_size = 1, threshold=1.0):
 
         print('==================== Starting Approximation by Greedy Search  ====================')
         with open(os.path.join(self.output, 'result', 'result.txt'), 'w') as f:
             f.write('Original chip area {:.2f}\n'.format(self.initial_area))
 
         while True:
-            if self.next_iter(step_size, parallel) == -1:
+            if self.next_iter(parallel, step_size, threshold) == -1:
                 break
 
 
-    def next_iter(self, step_size, parallel):
+    def next_iter(self, parallel, step_size, threshold=1.0):
         print('Current stream of factorization degree:', ', '.join(map(str, self.curr_stream)))
         
         if max(self.curr_stream) == 1:
             it = np.argmin(self.area_list)
             source_file = os.path.join(self.output, 'approx_design', 'iter{}_0_syn.v'.format(it))
-            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(self.threshold * 100)))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(threshold * 100)))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
-                f.write('{}% error metric chip area {:.2f}\n'.format(round(self.threshold * 100), self.area_list[it]))
+                f.write('{}% error metric chip area {:.2f}\n'.format(round(threshold * 100), self.area_list[it]))
             print('All subcircuits have been approximated to degree 1. Exit approximating.')
             return -1
 
         print('--------------- Iteration ' + str(self.iter) + ' ---------------')
         before = time.time()
-        next_stream, err, area, rank = self.evaluate_iter(self.curr_stream, self.iter, step_size, parallel)
+        next_stream, err, area, rank = self.evaluate_iter(self.curr_stream, self.iter, step_size, parallel, threshold)
         after = time.time()
 
 
@@ -254,16 +253,16 @@ class GreedyWorker():
 
         self.curr_stream = next_stream
 
-        if err >= self.threshold+0.01:
+        if err >= threshold+0.01:
             a = np.array(self.area_list)
             e = np.array(self.error_list)
-            a[e > self.threshold] = np.inf
+            a[e > threshold] = np.inf
             it = np.argmin(a)
             source_file = os.path.join(self.output, 'approx_design', 'iter{}_0_syn.v'.format(it))
-            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(self.threshold * 100)))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(threshold * 100)))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
-                f.write('{}% error metric chip area {:.2f}\n'.format(round(self.threshold * 100), self.area_list[it]))
+                f.write('{}% error metric chip area {:.2f}\n'.format(round(threshold * 100), self.area_list[it]))
             print('Reach error threshold. Exit approximation.')
             return -1
         
@@ -280,7 +279,7 @@ class GreedyWorker():
         return 0
 
 
-    def evaluate_iter(self, curr_k_stream, num_iter, step_size, parallel):
+    def evaluate_iter(self, curr_k_stream, num_iter, step_size, parallel, threshold):
     
         k_lists = []
         count = 0
@@ -321,7 +320,7 @@ class GreedyWorker():
                 area_list.append(area)
 
 
-        rank = optimization(np.array(err_list), np.array(area_list) / self.initial_area, self.threshold+0.01)
+        rank = optimization(np.array(err_list), np.array(area_list) / self.initial_area, threshold+0.01)
         result = k_lists[rank[0]]
         if err_list.count(0) > 1:
             for i,e in enumerate(err_list):

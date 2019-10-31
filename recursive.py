@@ -196,7 +196,7 @@ def main():
                 i_list = curr_iter_list.copy()
                 i_list[i] += 1
                 if i_list[i] > max_iter_list[i]:
-                    w.next_iter(args.stepsize, args.parallel)
+                    w.next_iter(args.parallel, args.stepsize)
                     max_iter_list[i] += 1
 
                 for idx in range(5):
