@@ -2,7 +2,8 @@ import regex as re
 import sys
 import random
 
-def create_testbench(path, modulename, num, f):
+def create_testbench(path, num, f):
+    modulename = None
     with open(path) as file:
 	    line = file.readline()
 	    inp=0
@@ -12,7 +13,7 @@ def create_testbench(path, modulename, num, f):
 	    while line:
 		    line.strip()
 		    tokens=re.split('[ ,;\n]', line)
-		    for t in tokens:			
+		    for i, t in enumerate(tokens):			
 			    t.strip()
 			    if t != "":
 				    if inp == 1 and t != 'output':
@@ -26,8 +27,14 @@ def create_testbench(path, modulename, num, f):
 					    inp=0
 				    elif t == 'wire':
 					    out=0
+				    if tokens[i] == 'module' and modulename is None:
+				            modulename = tokens[i+1]
 		    line=file.readline()
 	    file.close()
+    if modulename is None:
+        print('Fail to parse input verilog. Exit.')
+        exit(0)
+
     f.write("module "+modulename+"_tb;\n")
     f.write('reg ['+str(n_inputs-1)+':0] pi;\n')
     f.write('wire ['+str(n_outputs-1)+':0] po;\n')

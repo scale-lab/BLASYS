@@ -177,7 +177,7 @@ def main():
     for i in modulenames:
         module_file = os.path.join(args.output, 'partition', i)
         with open(module_file + '_tb.v', 'w') as f:
-            create_testbench(module_file+'.v', i, 5000, f)
+            create_testbench(module_file+'.v', 5000, f)
 
     file_list = [os.path.join(args.output, 'partition', i+'.v') for i in modulenames]
     tb_list = [os.path.join(args.output, 'partition', i+'_tb.v') for i in modulenames]
