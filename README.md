@@ -1,14 +1,17 @@
 # BLASYS: Approximate Logic Synthesis Using Boolean Matrix Factorization
-BLASYS toolchain reads an input circuit in Verilog format and approximates with boolean matrix factorization (BMF). The logistic is to generate truthtable for input circuit, perform BMF on truthtable, and synthesize it back to output circuit. Due to the exponential growth of truthtable, we follow a greedy design-space exploration scheme based on each subcircuit. To make the optimization process efficient on even larger circuit, we also develop an additional script to first partition into subcircuits in proper size (based on number of cells), and then do greedy exploration within each part respectively.
+
+## Introduction
+BLASYS toolchain reads in an input circuit in Verilog format and approximates with boolean matrix factorization (BMF). The logistic is to generate truthtable for input circuit, perform BMF on truthtable, and synthesize it back to output circuit. Due to the exponential growth of truthtable, we follow a greedy design-space exploration scheme based on each subcircuit. To make the optimization process efficient on even larger circuit, we also develop an additional script to first partition into subcircuits in proper size (based on number of cells), and then do greedy exploration within each part respectively.
+
+![Flow](https://github.com/scale-lab/BLASYS/blob/master/doc/BMF.png?raw=true)
 
 ## System Requirement
 **Operating systems**: Mac OS, Linux, Unix
 
-**Memory requirement**: 
-
-**Interpreter**: Python 3.6+. Be sure to install  ``numpy`` package with command 
+**Interpreter**: Python 3.6+. Be sure to install package ``numpy`` and ``matplotlib`` with command 
 ```
 pip3 install numpy
+pip3 install matplotlib
 ```
 
 ## Software Dependency
@@ -23,7 +26,7 @@ Be sure to install following tools before running BLASYS toolchain.
 ![Flow](https://github.com/scale-lab/BLASYS/blob/master/doc/flow.png?raw=true)
 
 ## Usage
-1. Install all packages as previous section suggests. Put paths of executable files into ``params.yml``.
+#### Install
 
 2. For circuits of small-medium size, ``greedy.py`` is recommended, which performs greedy design-space exploration. The command-line arguments are
 ```
