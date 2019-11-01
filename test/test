@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# ctrl.v; partitioning in 5; threshold 0.02; sequential mode
+python3 ../greedy.py -i ctrl.v -tb ctrl_tb.v -lib ${1} -o output/ctrl1 -ts 0.02 -n 5
+
+# ctrl.v; not specify partition number; threshold 0.03; parallel mode
+python3 ../greedy.py -i ctrl.v -tb ctrl_tb.v -lib ${1} -o output/ctrl2 -ts 0.03 --parallel
+
+# ctrl.v; not specify partition number; threshold 0.03; step size 2; parallel mode
+python3 ../greedy.py -i ctrl.v -tb ctrl_tb.v -lib ${1} -o output/ctrl3 -ts 0.03 -ss 2 --parallel
+
+# adder.v; not specify partition number; threshold 0.02; parallel mode
+python3 ../greedy.py -i adder.v -tb adder_tb.v -lib ${1} -o output/adder -ts 0.2 --parallel
+
+# max.v; partitioning in 50; threshold 0.015; step_size 2; parallel mode
+python3 ../greedy.py -i max.v -tb max_tb.v -lib ${1} -o output/max -n 50 -ts 0.015 -ss 2 --parallel
+
+# sin.v; two-level partitioning; threshold 0.015; step_size 5; parallel mode
+python3 ../recursive.py -i sin.v -tb sin_tb.v -lib ${1} -o output/sin -ts 0.015 -ss 5 --parallel
+
