@@ -26,7 +26,7 @@ Be sure to install following tools before running BLASYS toolchain.
 ![Flow](https://github.com/scale-lab/BLASYS/blob/master/doc/flow.png?raw=true)
 
 ## Usage
-#### Installation
+### Installation
 Enter following command in terminal to clone and build BLASYS tool-chain.
 ```
 git clone https://github.com/scale-lab/BLASYS
@@ -35,7 +35,7 @@ make
 ```
 Before running BLASYS for first time, please open ``config/params.yml`` and enter path to executable files for all tools in previous section. If you have added them into your system environment, you may just enter the command name.
 
-#### Script for Greedy Design-Space Exploration
+### Script for Greedy Design-Space Exploration
 For circuits of small-medium size, ``greedy.py`` is recommended, which performs greedy design-space exploration. The command-line arguments are
 ```
 python3 [path to BLASYS folder]/greedy.py \
@@ -50,7 +50,7 @@ python3 [path to BLASYS folder]/greedy.py \
 ```
 First three arguments (input / testbench / liberty file) are mandatory. BLASYS takes a recursive partitioning scheme based on number of standard cells. Thus, number of partitions is optional. Default output folder is ``output``. Default step-size is 1. If no threshold ``-ts`` is specified, BLASYS will keep running until all partitions reach factorization degree 1. The last flag ``--parallel`` indicates parallel mode. If specified, BLASYS will run in parallel with all available cores in your machine.
 
-#### Script for Two-Level Partitioning
+### Script for Two-Level Partitioning
 For larger circuit, you may find that simulation process takes too much time. in this case, there is another script ``recursive.py``, which will first partition large circuit into proper size, and then do BLASYS on each sub-circuit. The usage is
 ```
 python3 [path to BLASYS folder]/recursive.py \
@@ -65,7 +65,7 @@ python3 [path to BLASYS folder]/recursive.py \
 ```
 Definitions of command-line arguments are same as previous section.
 
-#### Command-Line Interface
+### Command-Line Interface
 1. We also provided an interactive command-line tool option, which is ``blasys.py``. This interface is just a simple version right now and still under development. To launch it, type following command in terminal
 ````
 python3 [path to BLASYS folder]/blasys.py
