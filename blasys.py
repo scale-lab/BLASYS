@@ -1,16 +1,24 @@
 from cmd import Cmd
 import os
 import yaml
+import regex as re
 import shutil
 from utils.greedyWorker import GreedyWorker, print_banner
 from utils.create_tb import create_testbench
 
 class Blasys(Cmd):
     prompt = 'blasys> '
-    liberty = None
-    optimizer = None
-    input_file = None
-    output = None
+
+
+    def __init__(self):
+        super().__init__()
+        self.liberty = None
+        self.optimizer = None
+        self.input_file = None
+        self.output = None
+        self.partitioned = False
+        self.initialized = False
+        self.testbench = None
     
     def do_exit(self, args):
         print('Bye.')
@@ -37,37 +45,6 @@ class Blasys(Cmd):
     def help_read_liberty(self):
         print('[Usage] read_liberty PATH_OF_LIBERTY')
 
-
-
-    def do_create_dir(self, args):
-        if self.input_file is None:
-            print('[Error] Please first specify input verilog by command read_verilog.')
-            return
-
-        # Check existence of output directory
-        print('Create output folder', args)
-        if os.path.isdir(args):
-            a = input('Output path already exists. Delete current directory? (Y/N)')
-            if a.lower() == 'n':
-                print('To change output folder, please run command output_dir.')
-                return
-            if a.lower() != 'y':
-                print('[Error] Sorry I don\'t understand. Please try again.\n')
-                return
-            else:
-                shutil.rmtree(args)
-       
-        self.optimizer.create_output_dir(args)
-
-        self.output = args
-        print('Successfully create output folder', args)
-
-
-    def help_create_dir(self):
-        print('[Usage] output_dir OUTPUT_DIRECTORY')
-
-
-
     def do_read_verilog(self, args):
         if self.liberty is None:
             print('[Error] No liberty file loaded. Please load liberty file by command read_liberty.')
@@ -90,11 +67,7 @@ class Blasys(Cmd):
             if not os.path.exists(args_list[2]) or os.path.isdir(args_list[2]):
                 print('[error] cannot find testbench file', args_list[2])
                 return
-            testbench_file = args_list[2]
-        else:
-            testbench_file = 'tb.v'
-            with open(testbench_file, 'w') as f:
-                create_testbench(input_file, 5000, f)
+            self.testbench = args_list[2]
 
         # Load path to executable
         app_path = os.path.dirname(os.path.realpath(__file__))
@@ -102,7 +75,7 @@ class Blasys(Cmd):
             config = yaml.safe_load(config_file)
         config['part_config'] = os.path.join(app_path, 'config', 'test.ini')
 
-        self.optimizer = GreedyWorker(input_file, testbench_file, self.liberty, config)
+        self.optimizer = GreedyWorker(input_file, self.testbench, self.liberty, config)
         self.input_file = input_file
         print('Successfully loaded input file and created optimizer.\n')
 
@@ -111,32 +84,72 @@ class Blasys(Cmd):
 
 
     def do_partitioning(self, args):
+        if self.partitioned:
+            print('[Error] Ciruit already partitioned.\n')
+            return
+
         if self.input_file is None:
             print('[Error] No input file. Please first specify an input verilog file.\n')
             return
 
-        if self.output is None:
-            print('[Error] No output folder. Please first create output folder by command create_dir.')
-            return
-        # Parse arguments
-        if not ( args.strip() == '' or args.isdigit()):
-            print('[Error] Invalid arguments.')
+        args_list = args.split()
+        if '-n' in args_list:
+            idx = args_list.index('-n')
+            if idx == len(args_list) - 1:
+                print('[Error] Please put number of partitions.')
+                self.help_partitioning()
+                return
+
+            if not args_list[idx+1].isdigit():
+                print('[Error] Please put an integer as number of partitions.')
+                self.help_partitioning()
+                return
+
+            # Get threshold
+            num_part = int(args_list[idx+1])
+            args_list.pop(idx)
+            args_list.pop(idx)
+        else:
+            num_part = None
+        if len(args_list) == 0 or args_list[0] == '':
+            print('[Error] Please enter output folder name.')
             self.help_partitioning()
-            return           
-      
-        self.optimizer.evaluate_initial()
-        if args.strip() == '':
+            return
+
+        print('Create output folder', args_list[0])
+        if os.path.isdir(args_list[0]):
+            a = input('Output path already exists. Delete current directory? (Y/N)')
+            if a.lower() == 'n':
+                print('To change output folder, please run command output_dir.')
+                return
+            if a.lower() != 'y':
+                print('[Error] Sorry I don\'t understand. Please try again.\n')
+                return
+            else:
+                shutil.rmtree(args_list[0])
+       
+        self.optimizer.create_output_dir(args_list[0])
+        self.output = args_list[0]        
+            
+        if num_part is None:
             self.optimizer.recursive_partitioning()
         else:
-            self.optimizer.recursive_partitioning(int(args))
+            self.optimizer.recursive_partitioning(num_part)
+
+        self.partitioned = True
+        print('\n')
 
 
     def help_partitioning(self):
-        print('[Usage] partitioning [NUMBER_OF_PARTITIONS]')
-        print('Either specify an interger as number of partitions, or leave it empty.')
+        print('[Usage] partitioning OUTPUT_DIR [-n NUMBER_OF_PARTITIONS]')
+        print('First argument is the output folder. Number of partition is optional.')
 
     
     def do_greedy(self, args):
+        if not self.partitioned:
+            print('[Error] Circuit has not been partitioned yet.')
+            return
+
         args_list = args.split()
         if '-p' in args_list:
             parallel = True
@@ -144,16 +157,193 @@ class Blasys(Cmd):
         else:
             parallel = False
 
-        if len(args_list) > 1 or not args_list[0].isdigit():
-            print('[Error] Invalid arguments.')
-            self.help_greedy()
-            return
-        
-        step_size = 
-        
+        if '-t' in args_list:
+            idx = args_list.index('-t')
+            if idx == len(args_list) - 1:
+                print('[Error] Please put float-point threshold.')
+                self.help_greedy()
+                return
+
+            if not args_list[idx+1].replace('.', '', 1).isdigit():
+                print('[Error] Please put float-point threshold.')
+                self.help_greedy()
+                return
+
+            # Get threshold
+            threshold = float(args_list[idx+1])
+            args_list.pop(idx)
+            args_list.pop(idx)
+        else:
+            threshold = 1.0
+
+        if '-s' in args_list:
+            idx = args_list.index('-s')
+            if idx == len(args_list) - 1:
+                print('[Error] Please put integer as step size.')
+                self.help_greedy()
+                return
+
+            if not args_list[idx+1].isdigit():
+                print('[Error] Please put integer as step size.')
+                self.help_greedy()
+                return
+
+            # Get threshold
+            stepsize = int(args_list[idx+1])
+            args_list.pop(idx)
+            args_list.pop(idx)
+        else:
+            stepsize = 1
+        # Initialize if not
+        if not self.initialized:
+            self.evaluate_initial()
+            self.initialized = True
+
+        # Call greedy_opt
+        self.optimizer.greedy_opt(parallel, stepsize, threshold)
+
 
     def help_greedy(self):
-        print('greedy [STEP_SIZE] [-p]')
+        print('greedy [-t THRESHOLD] [-s STEP_SIZE] [-p]')
+
+    def do_run_iter(self, args):
+        if not self.partitioned:
+            print('[Error] Circuit has not been partitioned yet.')
+            return
+
+        args_list = args.split()
+        if '-p' in args_list:
+            parallel = True
+            args_list.remove('-p')
+        else:
+            parallel = False
+
+        if '-t' in args_list:
+            idx = args_list.index('-t')
+            if idx == len(args_list) - 1:
+                print('[Error] Please put float-point threshold.')
+                self.help_greedy()
+                return
+
+            if not args_list[idx+1].replace('.', '', 1).isdigit():
+                print('[Error] Please put float-point threshold.')
+                self.help_greedy()
+                return
+
+            # Get threshold
+            threshold = float(args_list[idx+1])
+            args_list.pop(idx)
+            args_list.pop(idx)
+        else:
+            threshold = 1.0
+
+        if '-s' in args_list:
+            idx = args_list.index('-s')
+            if idx == len(args_list) - 1:
+                print('[Error] Please put integer as step size.')
+                self.help_greedy()
+                return
+
+            if not args_list[idx+1].isdigit():
+                print('[Error] Please put integer as step size.')
+                self.help_greedy()
+                return
+
+            # Get threshold
+            stepsize = int(args_list[idx+1])
+            args_list.pop(idx)
+            args_list.pop(idx)
+        else:
+            stepsize = 1
+
+        if '-i' in args_list:
+            idx = args_list.index('-i')
+            if idx == len(args_list) - 1:
+                print('[Error] Please put integer as number of iteration.')
+                self.help_run_iter()
+                return
+
+            if not args_list[idx+1].isdigit():
+                print('[Error] Please put integer as number of iteration.')
+                self.help_run_iter()
+                return
+
+            # Get threshold
+            iteration = int(args_list[idx+1])
+            args_list.pop(idx)
+            args_list.pop(idx)
+        else:
+            iteration = 1
+
+        # Initialize if not
+        if not self.initialized:
+            self.evaluate_initial()
+            self.initialized = True
+        # Call greedy_opt
+        for i in range(iteration):
+            if self.optimizer.next_iter(parallel, stepsize, threshold) == -1:
+                print('You have either reached error threshold or all partitions reached factorization degree 1.')
+                return
+
+    def help_run_iter(self):
+        print('[Usage] run_iter [-i NUMBER_ITERATION] [-t THRESHOLD] [-s STEPSIZE] [-p]')
+
+    def do_clear(self, args):
+        a = input('Are you sure to clear?\nDoing this will clear ALL approximate work done in this session. (Y/N)')
+        if a.lower() == 'n':
+            return
+        if a.lower() != 'y':
+            print('[Error] Sorry I don\'t understand. Please try again.\n')
+            return
+        self.optimizer = None
+        self.input_file = None
+        self.output = None
+        self.partitioned = False
+        self.initialized = False
+        self.testbench = None
+
+    def help_clear(self):
+        print('[Usage] Clear ALL approximate work done in this session. Be careful to use it.')
+
+    def do_display_result(self, args):
+        if not self.initialized:
+            print('[Error] No approximate results founded.\n')
+            return
+        error_list = []
+        area_list = []
+        with open(os.path.join(self.output,'data.csv')) as data:
+            line = data.readline()
+            line = data.readline().rstrip('\n')
+            while line:
+                tokens = re.split(',',line)
+                err = float(tokens[0])
+                area = float(tokens[1])
+                error_list.append(err)
+                area_list.append(area)
+                line = data.readline().rstrip('\n')
+        
+        print('{:<12}{:<12}{:<12}\n'.format('Iteration', 'HD Error', 'Chip area'))
+        for i, ( e, a ) in enumerate(zip(error_list, area_list)):
+            if i == 0:
+                it = 'Original'
+            else:
+                it = i - 1
+            print('{:<12}{:<12.2f}{:<.2f}\n'.format(it,e,a))
+
+    def help_display_result(self):
+        print('Show approximate result.')
+
+
+
+    def evaluate_initial(self):
+        if self.testbench is None:
+            testbench_file = os.path.join(self.output, 'tb.v')
+            with open(testbench_file, 'w') as f:
+                create_testbench(self.input_file, 5000, f)
+            self.optimizer.testbench = testbench_file
+
+        self.optimizer.evaluate_initial()
+
 
 
 
