@@ -3,7 +3,6 @@
 ## Introduction
 BLASYS toolchain reads in an input circuit in Verilog format and approximates with boolean matrix factorization (BMF). The logistic is to generate truthtable for input circuit, perform BMF on truthtable, and synthesize it back to output circuit. Due to the exponential growth of truthtable, we follow a greedy design-space exploration scheme based on each subcircuit. To make the optimization process efficient on even larger circuit, we also develop an additional script to first partition into subcircuits in proper size (based on number of cells), and then do greedy exploration within each part respectively.
 
-![Flow](https://github.com/scale-lab/BLASYS/blob/master/doc/BMF.png?raw=true)
 
 ## System Requirement
 **Operating systems**: Mac OS, Linux, Unix
@@ -92,7 +91,18 @@ run_iter [-i NUMBER_OF_ITERATION] [-t THRESHOLD] [-s STEP_SIZE] [-p]
 ```
 6. To have a brief view of results, type command ``display_result``. To clear previous approximate work in this session, type command ``clear``.
 
+### Test samples
+In ``test`` folder, we provide several benchmarks together with test benches to test functionality. You may run BLASYS with previous instructions. Or locate into ``test`` folder and run the shell script we prepared for you by entering
+```
+./test [PATH_TO_LIBERTY]
+```
+
 ## Result
 All error-area information is stored in file ``data.csv`` under the output folder. Each line corresponds to the best result of each iteration, where first column is HD error, second column is chip area, and third column is time used for this iteration (timing information is only available for ``greedy.py``).
 
 If an error threshold is specified, BLASYS will output the smallest circuit under threshold. In folder ``[output folder]/result``,  there is an approximated synthesized verilog file, together with ``result.txt`` which stores area information.
+
+## References
+1. Ma, J., Hashemi, S. and Reda S., "Approximate Logic Synthesis Using BLASYS", Article No.5, Workshop on Open-Source EDA Technology (WOSET), 2019.
+2. Hashemi, S., Tann, H. and Reda, S., 2019. Approximate Logic Synthesis Using Boolean Matrix Factorization. In Approximate Circuits (pp. 141-154). Springer, Cham.
+3. Hashemi, S., Tann, H. and Reda, S., 2018, June. BLASYS: approximate logic synthesis using boolean matrix factorization. In Proceedings of the 55th Annual Design Automation Conference (p. 55). ACM.
