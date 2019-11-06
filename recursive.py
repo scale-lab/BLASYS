@@ -21,7 +21,7 @@ def recursive_partitioning(inp_file, out_dir, modulename, path):
 
     print('Partitioning input circuit...')
     part_dir = os.path.join(out_dir, 'partition')
-    num_parts = number_of_cell(inp_file, path['yosys']) // 2000 + 1
+    num_parts = number_of_cell(inp_file, path['yosys']) // 1500 + 1
     lsoracle_command = 'read_verilog ' + inp_file + '; ' \
             'partitioning ' + str(num_parts) + ' -c '+ path['part_config'] +'; ' \
             'get_all_partitions ' + part_dir
@@ -189,6 +189,9 @@ def main():
         candidate_list = []
         candidate_iter_num = []
 
+        changed = {}
+        count = 0
+
         for i,(w,d) in enumerate(zip(worker_list, output_list)):
             if max(w.curr_stream) == 1:
                 curr_iter_list[i] = -1
@@ -196,16 +199,16 @@ def main():
                 i_list = curr_iter_list.copy()
                 i_list[i] += 1
                 if i_list[i] > max_iter_list[i]:
-                    w.next_iter(args.parallel, args.stepsize)
+                    w.next_iter(args.parallel, args.stepsize, least_error=True)
                     max_iter_list[i] += 1
 
-                for idx in range(5):
-                    objective = os.path.join(d, 'approx_design', 'iter{}_{}.v'.format(i_list[i], idx))
-                    if os.path.exists(objective):
-                        k_list = curr_file_list.copy()
-                        k_list[i] = objective
-                        candidate_iter_num.append(i_list)
-                        candidate_list.append(k_list)
+                objective = os.path.join(d, 'approx_design', 'iter{}.v'.format(i_list[i]))
+                k_list = curr_file_list.copy()
+                k_list[i] = objective
+                candidate_iter_num.append(i_list)
+                candidate_list.append(k_list)
+                changed[count] = i
+                count += 1
         
 
         if len(candidate_list) == 0:
@@ -241,6 +244,11 @@ def main():
 
         curr_file_list = candidate_list[idx]
         curr_iter_list = candidate_iter_num[idx]
+
+        for i,e in enumerate(err_list):
+            if e < 0.0005:
+                curr_file_list[changed[i]] = candidate_list[i][changed[i]]
+                curr_iter_list[changed[i]] = candidate_iter_num[i][changed[i]]
 
         with open(os.path.join(args.output, 'data.csv'), 'a') as data:
             data.write('{:.6f},{:.6f}\n'.format(err_list[idx], area_list[idx]))
