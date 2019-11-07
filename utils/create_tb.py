@@ -12,7 +12,7 @@ def create_testbench(path, num, f):
 	    n_outputs=0
 	    while line:
 		    line.strip()
-		    tokens=re.split('[ ,;\n]', line)
+		    tokens=re.split('[ (,;\n]', line)
 		    for i, t in enumerate(tokens):			
 			    t.strip()
 			    if t != "":
