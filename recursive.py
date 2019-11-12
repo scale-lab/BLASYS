@@ -175,8 +175,8 @@ def main():
         worker.recursive_partitioning()
         worker_list.append(worker)
     
-    err_summary = []
-    area_summary = []
+    err_summary = [0.0]
+    area_summary = [initial_area]
     curr_iter_list = [-1 for i in modulenames]
     max_iter_list = [-1 for i in modulenames]
     curr_file_list = file_list
@@ -246,7 +246,7 @@ def main():
         curr_iter_list = candidate_iter_num[idx]
 
         for i,e in enumerate(err_list):
-            if e < 0.0005:
+            if e <= err_summary[-2] and area_list[i] <= area_summary[-2]:
                 curr_file_list[changed[i]] = candidate_list[i][changed[i]]
                 curr_iter_list[changed[i]] = candidate_iter_num[i][changed[i]]
 

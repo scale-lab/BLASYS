@@ -53,7 +53,7 @@ class GreedyWorker():
         self.library = library
         self.path = path
 
-        self.error_list = []
+        self.error_list = [0.0]
         self.area_list = []
         self.iter = 0
 
@@ -102,6 +102,7 @@ class GreedyWorker():
         input_area = synth_design(self.input, output_synth, self.library, self.script, self.path['yosys'])
         print('Original design area ', str(input_area))
         self.initial_area = input_area
+        self.area_list.append(self.initial_area)
         with open(os.path.join(self.output, 'data.csv'), 'w') as data:
             data.write('HD Error,Chip area,Time used\n')
             data.write('{:.6f},{:.6f},{}\n'.format(0, self.initial_area,'Original'))
@@ -336,7 +337,7 @@ class GreedyWorker():
         result = k_lists[rank[0]]
 
         for i,e in enumerate(err_list):
-            if e < 0.0005:
+            if e <= self.error_list[-1] and area_list[i] <= self.area_list[-1]:
                 result[changed[i]] = k_lists[i][changed[i]]
             
         return result, err_list[rank[0]], area_list[rank[0]], rank
