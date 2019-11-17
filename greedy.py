@@ -1,4 +1,5 @@
-from utils.greedyWorker import print_banner, GreedyWorker
+from utils.greedyWorker import GreedyWorker
+from utils.banner import print_banner
 import yaml
 import argparse
 import os

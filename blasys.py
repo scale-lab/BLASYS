@@ -3,7 +3,8 @@ import os
 import yaml
 import regex as re
 import shutil
-from utils.greedyWorker import GreedyWorker, print_banner
+from utils.banner import print_banner
+from utils.greedyWorker import GreedyWorker
 from utils.create_tb import create_testbench
 
 class Blasys(Cmd):

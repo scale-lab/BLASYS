@@ -1,5 +1,6 @@
 from utils.create_tb import create_testbench
-from utils.greedyWorker import GreedyWorker, print_banner, optimization
+from utils.greedyWorker import GreedyWorker, optimization
+from utils.banner import print_banner
 from utils.utils import assess_HD, synth_design, number_of_cell
 import os
 import argparse

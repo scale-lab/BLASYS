@@ -13,9 +13,7 @@ def evaluate_design(k_stream, worker, filename, display=True):
     # Parse each subcircuit
     for i, modulename in enumerate(worker.modulenames):
         approx_degree = k_stream[i]
-        # If subcircuit does not exist
-        # if approx_degree == -1:
-        #     continue
+
         # If subcircuit is not approximated
         if approx_degree == worker.output_list[i]:
             part_verilog = os.path.join(worker.output, 'partition', modulename + '.v')
@@ -212,11 +210,7 @@ def  gen_truth(fname, modulename):
 
 
 def v2w_top(signal,  n):
-    #s=''
-    #for i in range(n-1, 0, -1):
-    #    s = s+signal+str(i)+', '
-    #s=s+signal+'0'
-    #return s
+
 
     digit_len = len(str(n))
     s=''
@@ -264,32 +258,7 @@ def create_w(n, k, W, f1, modulename, formula_file, abc):
             formula='0;\n'
  #       print(formula)
         f1.write(formula)
-        '''
-        constant=1
-        not_first=0
-        for j in range(2 ** n):
-            if W[j,i] == 1:
-                constant = 0
-                if (not_first):
-                    f1.write(' | ')
-                not_first=1
-                str1=bin(j).replace("0b", "")
-                str2="0"*(n-len(str1))
-                num=str2+str1
-                if (num[len(num)-1] == '1'):
-                    f1.write('(in0')
-                else:
-                    f1.write('(~in0')
-                for ii in range(2, len(num)+1):
-                    if num[len(num)-ii] == '1':
-                        f1.write(' & in'+str(ii-1))
-                    else:
-                        f1.write(' & ~in'+str(ii-1))
-                f1.write(')')
-        if constant == 1:
-            f1.write('0')
-        f1.write(';\n')  
-'''
+
     f1.write('endmodule\n\n')
 
 def create_h(m, k, H, f1, modulename):
@@ -331,11 +300,9 @@ def create_wh(n, m, k, W, H, fname, modulename, output_dir, abc, formula_file):
     f1.close
 
 def approximate(inputfile, k, worker, i):
-    #print('./asso ' + inputfile + '.truth ' +  str(k))
-    #modulename = worker.modulename + '_' + str(i)
+
     modulename = worker.modulenames[i]
-    #os.system(info['asso'] + ' ' + inputfile + '.truth ' +  str(k))
-    #subprocess.call([worker.path['asso'], inputfile+'.truth', str(k)])
+
     asso( inputfile+'.truth', k )
     W = np.loadtxt(inputfile + '.truth_w_' + str(k), dtype=int)
     H = np.loadtxt(inputfile + '.truth_h_' + str(k), dtype=int)
