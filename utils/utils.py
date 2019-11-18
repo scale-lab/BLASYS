@@ -4,6 +4,7 @@ import os
 import numpy as np
 import subprocess
 from .asso import asso
+from .metric import Hamming_Distance, Weighted_HD
 
 def evaluate_design(k_stream, worker, filename, display=True):
     if display:
@@ -41,7 +42,7 @@ def evaluate_design(k_stream, worker, filename, display=True):
     output_syn = os.path.join(worker.output, 'tmp', filename)
     area  = synth_design(' '.join(verilog_list), output_syn, worker.library, worker.script, worker.path['yosys'])
 
-    t, h, f = assess_HD(ground_truth, truth_dir)
+    f = assess_HD(ground_truth, truth_dir)
     print('Simulation error: {:.6f}\tCircuit area: {:.6f}'.format(f, area))
     return f, area
 
@@ -53,23 +54,25 @@ def assess_HD(original_path, approximate_path):
     with open(approximate_path, 'r') as fa:
         app_line_list = fa.readlines()
     
-    org_size = len(org_line_list)
-    app_size = len(app_line_list)
+    org = [list(i[:-1]) for i in org_line_list]
+    app = [list(i[:-1]) for i in app_line_list]
 
-    if org_size != app_size:
+    if len(org_line_list) != len(app_line_list):
         print('ERROR! sizes of input files are not equal! Aborting...')
         return -1
 
-    HD=0
-    total=0
-    for n in range(org_size):
-        l1=org_line_list[n]
-        l2=app_line_list[n]
-        for k in range(len(l1)):
-            total+=1
-            if l1[k] != l2[k]:
-                HD+=1
-    return [total, HD, HD/total]
+    return Weighted_HD(org, app)
+
+    #HD=0
+    #total=0
+    #for n in range(org_size):
+    #    l1=org_line_list[n]
+    #    l2=app_line_list[n]
+    #    for k in range(len(l1)):
+    #        total+=1
+    #        if l1[k] != l2[k]:
+    #            HD+=1
+    #return [total, HD, HD/total]
 
 def synth_design(input_file, output_file, lib_file, script, yosys):
     yosys_command = 'read_verilog ' + input_file + '; ' \
