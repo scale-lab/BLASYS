@@ -9,7 +9,7 @@ import multiprocessing as mp
 import shutil
 import time
 import ctypes
-from .utils import assess_HD, gen_truth, evaluate_design, synth_design, inpout, number_of_cell
+from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell
 from .optimizer import optimization, least_error_opt
 
 
@@ -182,18 +182,18 @@ class GreedyWorker():
         self.curr_stream = self.output_list.copy()
 
 
-    def greedy_opt(self, parallel, step_size = 1, threshold=1.0):
+    def greedy_opt(self, parallel, step_size = 1, threshold=1.0, use_weight=False):
 
         print('==================== Starting Approximation by Greedy Search  ====================')
         with open(os.path.join(self.output, 'result', 'result.txt'), 'w') as f:
             f.write('Original chip area {:.2f}\n'.format(self.initial_area))
 
         while True:
-            if self.next_iter(parallel, step_size, threshold) == -1:
+            if self.next_iter(parallel, step_size, threshold, use_weight=use_weight) == -1:
                 break
 
 
-    def next_iter(self, parallel, step_size, threshold=1.0, least_error=False):
+    def next_iter(self, parallel, step_size, threshold=1.0, least_error=False, use_weight=False):
         print('Current stream of factorization degree:', ', '.join(map(str, self.curr_stream)))
         
         if max(self.curr_stream) == 1:
@@ -208,7 +208,7 @@ class GreedyWorker():
 
         print('--------------- Iteration ' + str(self.iter) + ' ---------------')
         before = time.time()
-        next_stream, err, area, rank = self.evaluate_iter(self.curr_stream, self.iter, step_size, parallel, threshold, least_error)
+        next_stream, err, area, rank = self.evaluate_iter(self.curr_stream, self.iter, step_size, parallel, threshold, least_error, use_weight)
         after = time.time()
 
 
@@ -267,7 +267,7 @@ class GreedyWorker():
         return 0
 
 
-    def evaluate_iter(self, curr_k_stream, num_iter, step_size, parallel, threshold, least_error):
+    def evaluate_iter(self, curr_k_stream, num_iter, step_size, parallel, threshold, least_error, use_weight):
     
         k_lists = []
         count = 0
@@ -291,7 +291,7 @@ class GreedyWorker():
         # Parallel mode
         if parallel:
             pool = mp.Pool(mp.cpu_count())
-            results = [pool.apply_async(evaluate_design,args=(k_lists[i], self, 'iter'+str(num_iter)+'design'+str(i), False )) for i in range(len(k_lists))]
+            results = [pool.apply_async(evaluate_design,args=(k_lists[i], self, 'iter'+str(num_iter)+'design'+str(i), False, use_weight )) for i in range(len(k_lists))]
             pool.close()
             pool.join()
             for result in results:
@@ -310,7 +310,7 @@ class GreedyWorker():
         if least_error:
             rank = least_error_opt(np.array(err_list), np.array(area_list) / self.initial_area, threshold+0.01)
         else:
-            rank = optimization(np.array(err_list), np.array(area_list) / self.initial_area, threshold+0.01)
+            rank = optimization(np.array(err_list), np.array(area_list), self.initial_area, self.error_list[-1], self.area_list[-1], threshold+0.01)
         result = k_lists[rank[0]]
 
         for i,e in enumerate(err_list):

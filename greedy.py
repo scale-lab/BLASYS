@@ -23,6 +23,7 @@ def main():
     parser.add_argument('-lib', '--liberty', help='Liberty file name', required=True, dest='liberty')
     parser.add_argument('-ss', '--stepsize', help='Step size of optimization process', default=1, type=int, dest='stepsize')
     parser.add_argument('--parallel', help='Run the flow in parallel mode if specified', dest='parallel', action='store_true')
+    parser.add_argument('--weight', help='Use weight in error metric', dest='use_weight', action='store_true')
 
     args = parser.parse_args()
 
@@ -41,7 +42,10 @@ def main():
         worker.recursive_partitioning()
     else:
         worker.recursive_partitioning(args.npart)
-    worker.greedy_opt(args.parallel, args.stepsize, args.threshold)
+
+
+    worker.greedy_opt(args.parallel, args.stepsize, args.threshold, use_weight=args.use_weight)
+
 
 if __name__ == '__main__':
     main()
