@@ -308,4 +308,111 @@ def number_of_cell(input_file, yosys):
     os.remove(output_file)
     return int(num_cell)
 
+def write_aiger(input_file, yosys, output_file, map_file):
+    '''
+    Convert verilog to aig file
+    '''
+    yosys_command = 'read_verilog ' + input_file + '; aigmap; write_aiger -vmap '\
+            + map_file + ' ' + output_file + ';'
+    # subprocess.call(yosys+" -p \'"+yosys_command+"\'")
+    subprocess.call([yosys, '-p', yosys_command], stdout=subprocess.DEVNULL)
+    # Parse map file and return dict
+    input_map = {}
+    output_map = {}
+    with open(map_file) as f:
+        line = f.readline()
+        while line:
+            tokens = line.split()
+            if tokens[0] == 'input':
+                input_map[int(tokens[1])] = tokens[3]
+            if tokens[0] == 'output':
+                output_map[int(tokens[1])] = tokens[3]
 
+            line = f.readline()
+
+    org_input_map, org_output_map = inpout_map(input_file)
+
+    return {i: org_input_map[input_map[i]] for i in range(len(input_map))}, \
+            {i: org_output_map[output_map[i]] for i in range(len(output_map))}
+
+
+
+def inpout_map(fname):
+    input_map = {}
+    output_map = {}
+    with open(fname) as file:
+        line = file.readline()
+        inp=0
+        out=0
+        n_inp = 0
+        n_out = 0
+        while line:
+            line.strip()
+            tokens=re.split('[ ,;\n]', line)
+            for t in tokens:
+                t.strip()
+                if t != "":
+                    if inp == 1 and t != 'output':
+                        input_map[t.strip('\\')] = n_inp
+                        n_inp += 1
+                    if out == 1 and t != 'wire' and t != 'assign':
+                        output_map[t.strip('\\')] = n_out
+                        n_out += 1
+                    if t == 'input':
+                        inp=1
+                    elif t == 'output':
+                        out=1
+                        inp=0
+                    elif t == 'wire' or t == 'assign':
+                        out=0
+            line=file.readline()
+
+    return input_map, output_map
+
+def get_delay(sta, script, liberty, input_file, modulename, output_file):
+    with open(script, 'w') as f:
+        f.write('read_liberty {}\nread_verilog {}\nlink_design {}\n'.format(liberty, input_file, modulename))
+        f.write('create_clock -name clk -period 1\n')
+        f.write('set_input_delay -clock clk 0 [all_inputs]\n')
+        f.write('set_output_delay -clock clk 0 [all_outputs]\n')
+        f.write('report_checks\n')
+        f.write('exit')
+
+    with open(output_file, 'w') as f:
+        subprocess.call([sta, '-f', script],stdout=f)
+
+    with open(output_file) as f:
+        line = f.readline()
+        while line:
+            tokens = line.split()
+            if len(tokens) >= 4 and tokens[1] == 'data' and tokens[2] == 'arrival' and tokens[3] == 'time':
+                delay = float(tokens[0]) + 0.005
+                break
+            line = f.readline()
+
+    return delay
+
+
+def get_power(sta, script, liberty, input_file, modulename, output_file, delay):
+    with open(script, 'w') as f:
+        f.write('read_liberty {}\nread_verilog {}\nlink_design {}\n'.format(liberty, input_file, modulename))
+        f.write('create_clock -name clk -period {}\n'.format(delay))
+        f.write('set_input_delay -clock clk 0 [all_inputs]\n')
+        f.write('set_output_delay -clock clk 0 [all_outputs]\n')
+        f.write('report_checks\n')
+        f.write('report_power\n')
+        f.write('exit')
+
+    with open(output_file, 'w') as f:
+        subprocess.call([sta, '-f', script], stdout=f)
+
+    with open(output_file) as f:
+        line = f.readline()
+        while line:
+            tokens = line.split()
+            if len(tokens) >= 6 and tokens[0] == 'Total':
+                power = float(tokens[4])
+                break
+            line = f.readline()
+
+    return power

@@ -35,9 +35,10 @@ def main():
 
     config['part_config'] = os.path.join(app_path, 'config', 'test.ini')
 
-    worker = GreedyWorker(args.input, args.testbench, args.liberty, config)
+    worker = GreedyWorker(args.input, args.liberty, config, None)
     worker.create_output_dir(args.output)
     worker.evaluate_initial()
+    worker.convert2aig()
     if args.npart is None:
         worker.recursive_partitioning()
     else:

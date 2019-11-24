@@ -39,46 +39,13 @@ def create_testbench(path, num, f):
     f.write('reg ['+str(n_inputs-1)+':0] pi;\n')
     f.write('wire ['+str(n_outputs-1)+':0] po;\n')
     f.write(modulename+' dut(')
-    with open(path) as file:
-	    line = file.readline()
-	    inp=0
-	    out=0
-	    first=1
-	    i=0
-	    while line:
-		    line.strip()
-		    tokens=re.split('[ ,;\n]', line)
-		    for t in tokens:			
-			    t.strip()
-			    if t != "":
-				    if inp == 1 and t != 'output':
-					    if first==0:
-						    #print(', '+t, end='')
-						    f.write(', pi['+str(i)+']')
-					    else:
-						    first=0
-						    f.write('pi['+str(i)+']')
-					    i=i+1
-				    if out == 1 and t != 'wire':
-					    if first == 0:
-						    #print(', '+t, end='')
-						    f.write(', po['+str(i)+']')
-					    else:
-						    first=0
-						    f.write(', po['+str(i)+']')
-					    i+=1
-				    if t == 'input':
-					    inp=1
-				    elif t == 'output':
-					    i=0
-					    first=1
-					    out=1
-					    inp=0
-				    elif t == 'wire':
-					    f.write(');\n')
-					    out=0
-		    line=file.readline()
-	    file.close()
+
+    f.write('pi[0]')
+    for i in range(1, n_inputs):
+        f.write(', pi[{}]'.format(i))
+    for i in range(n_outputs):
+        f.write(', po[{}]'.format(i))
+    f.write(');\n')
 
     f.write("initial\n")
     f.write("begin\n")

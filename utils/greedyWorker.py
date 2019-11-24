@@ -9,18 +9,20 @@ import multiprocessing as mp
 import shutil
 import time
 import ctypes
-from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell
+from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell, write_aiger, get_delay, get_power
 from .optimizer import optimization, least_error_opt
+from .create_tb import create_testbench
 
 
 class GreedyWorker():
-    def __init__(self, input_circuit, testbench, library, path):
+    def __init__(self, input_circuit, library, path, testbench=None):
         # Check executable
         assert shutil.which(path['iverilog']), 'Cannot find iverilog'
         assert shutil.which(path['vvp']), 'Cannot find vvp'
         assert shutil.which(path['abc']), 'Cannot find abc'
         assert shutil.which(path['lsoracle']), 'Cannot find lsoracle'
         assert shutil.which(path['yosys']), 'Cannot find yosys'
+        assert shutil.which(path['OpenSTA']), 'Cannot find OpenSTA'
     
         # Check library file
         assert os.path.exists(library), 'Cannot find liberty file'
@@ -65,10 +67,40 @@ class GreedyWorker():
         with open(self.script, 'w') as file:
             file.write('strash;fraig;refactor;rewrite -z;scorr;map')
 
+    def convert2aig(self):
+        print('Parsing input verilog into aig format ...')
+        self.aig = os.path.join(self.output, self.modulename + '.aig')
+        mapping = os.path.join(self.output, self.modulename + '.map')
+        inp_map, out_map = write_aiger(self.input, self.path['yosys'], self.aig, mapping)
+        self.testbench = os.path.join(self.output, self.modulename+'_aig_tb.v')
+        with open(self.testbench_v) as f:
+            bench = f.readlines()
+        with open(self.testbench, 'w') as f:
+            for i, content in enumerate(bench):
+                if i != 3:
+                    f.write(content)
+                else:
+                    f.write(self.modulename+' dut(')
+
+                    f.write('pi[{}]'.format(inp_map[0]))
+                    for i in range(1, len(inp_map)):
+                        f.write(', pi[{}]'.format(inp_map[i]))
+                    for i in range(len(out_map)):
+                        f.write(', po[{}]'.format(out_map[i]))
+                    f.write(');\n')
+
+
+
+
 
     def evaluate_initial(self):
+        if self.testbench is None:
+            self.testbench_v = os.path.join(self.output, self.modulename+'_tb.v')
+            with open(self.testbench_v, 'w') as f:
+                create_testbench(self.input, 10000, f)
+        #self.testbench = self.testbench_v
         print('Simulating truth table on input design...')
-        subprocess.call([self.path['iverilog'], '-o', self.modulename+'.iv', self.input, self.testbench ])
+        subprocess.call([self.path['iverilog'], '-o', self.modulename+'.iv', self.input, self.testbench_v ])
         output_truth = os.path.join(self.output, self.modulename+'.truth')
         with open(output_truth, 'w') as f:
             subprocess.call([self.path['vvp'], self.modulename+'.iv'], stdout=f)
@@ -90,7 +122,7 @@ class GreedyWorker():
         # Partitioning circuit
         print('Partitioning input circuit...')
         part_dir = os.path.join(self.output, 'partition')
-        lsoracle_command = 'read_verilog ' + self.input + '; ' \
+        lsoracle_command = 'read_aig ' + self.aig + '; ' \
                 'partitioning ' + str(num_parts) + ' -c '+ self.path['part_config'] +'; ' \
                 'get_all_partitions ' + part_dir
         log_partition = os.path.join(self.output, 'lsoracle.log')
@@ -110,7 +142,7 @@ class GreedyWorker():
 
         print('Partitioning input circuit...')
         part_dir = os.path.join(self.output, 'partition')
-        lsoracle_command = 'read_verilog ' + self.input + '; ' \
+        lsoracle_command = 'read_aig ' + self.aig + '; ' \
                 'partitioning ' + str(num_parts) + ' -c '+ self.path['part_config'] +'; ' \
                 'get_all_partitions ' + part_dir
         
@@ -184,25 +216,37 @@ class GreedyWorker():
 
     def greedy_opt(self, parallel, step_size = 1, threshold=1.0, use_weight=False):
 
-        print('==================== Starting Approximation by Greedy Search  ====================')
-        with open(os.path.join(self.output, 'result', 'result.txt'), 'w') as f:
-            f.write('Original chip area {:.2f}\n'.format(self.initial_area))
-
         while True:
             if self.next_iter(parallel, step_size, threshold, use_weight=use_weight) == -1:
                 break
 
 
     def next_iter(self, parallel, step_size, threshold=1.0, least_error=False, use_weight=False):
+
+        if self.iter == 0:
+            print('==================== Starting Approximation by Greedy Search  ====================')
+            with open(os.path.join(self.output, 'result', 'result.txt'), 'w') as f:
+                sta_script = os.path.join(self.output, 'sta.script')
+                sta_output = os.path.join(self.output, 'sta.out')
+                synth_input = os.path.join(self.output, self.modulename+'_syn.v')
+                self.delay = get_delay(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output)
+                power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay) * 1e6
+                f.write('Original chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(self.initial_area, self.delay, power))
+
+
         print('Current stream of factorization degree:', ', '.join(map(str, self.curr_stream)))
         
         if max(self.curr_stream) == 1:
             it = np.argmin(self.area_list)
-            source_file = os.path.join(self.output, 'approx_design', 'iter{}.v'.format(it))
+            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
             target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(threshold * 100)))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
-                f.write('{}% error metric chip area {:.2f}\n'.format(round(threshold * 100), self.area_list[it]))
+                sta_script = os.path.join(self.output, 'sta.script')
+                sta_output = os.path.join(self.output, 'sta.out')
+                app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
+                power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
+                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(round(threshold * 100), self.area_list[it], app_delay, power))
             print('All subcircuits have been approximated to degree 1. Exit approximating.')
             return -1
 
@@ -239,6 +283,10 @@ class GreedyWorker():
         source_file = os.path.join(self.output, 'tmp', 'iter{}design{}.v'.format(self.iter, rank[0]))
         target_file = os.path.join(self.output, 'approx_design', 'iter{}.v'.format(self.iter))
         shutil.copyfile(source_file, target_file)
+
+        source_file = os.path.join(self.output, 'tmp', 'iter{}design{}_syn.v'.format(self.iter, rank[0]))
+        target_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(self.iter))
+        shutil.copyfile(source_file, target_file)
         self.curr_stream = next_stream
 
         if err >= threshold+0.01:
@@ -246,11 +294,16 @@ class GreedyWorker():
             e = np.array(self.error_list)
             a[e > threshold] = np.inf
             it = np.argmin(a)
-            source_file = os.path.join(self.output, 'approx_design', 'iter{}.v'.format(it))
+            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
             target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(threshold * 100)))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
-                f.write('{}% error metric chip area {:.2f}\n'.format(round(threshold * 100), self.area_list[it]))
+                sta_script = os.path.join(self.output, 'sta.script')
+                sta_output = os.path.join(self.output, 'sta.out')
+                app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
+                power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
+                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(round(threshold * 100), self.area_list[it], app_delay, power))
+
             print('Reach error threshold. Exit approximation.')
             return -1
         

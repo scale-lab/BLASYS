@@ -11,3 +11,6 @@ vvp: 'vvp'
 
 # ABC for synthesis
 abc: 'abc'
+
+# OpenSTA for delay and power analysis
+OpenSTA: 'sta'

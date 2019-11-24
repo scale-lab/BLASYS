@@ -1,6 +1,6 @@
 import numpy as np
 
-def optimization_1(err_list, area_list, initial, prev_err, prev_area, threshold):
+def optimization(err_list, area_list, initial, prev_err, prev_area, threshold):
     gradient = np.zeros(len(err_list))
 
     for (idx,(area, err)) in enumerate(zip(area_list, err_list)):
@@ -28,7 +28,7 @@ def least_error_opt(err_list, area_list, threshold):
 
     return rank3
 
-def optimization(err_list, area_list, initial, prev_err, prev_area, threshold):
+def optimization_1(err_list, area_list, initial, prev_err, prev_area, threshold):
     gradient = np.zeros(len(err_list))    
     
     if err_list.min() <= prev_err + 0.02:
@@ -36,7 +36,8 @@ def optimization(err_list, area_list, initial, prev_err, prev_area, threshold):
             if err > prev_err + 0.02 or err > threshold:
                 gradient[idx] = np.inf
             elif area > prev_area:
-                gradient[idx] = np.sqrt((area-prev_area)**2 + (err-prev_err)**2)
+                #gradient[idx] = np.sqrt((area-prev_area)**2 + (err-prev_err)**2)
+                gradient[idx] = (area/prev_area - 1) ** 2 / (err - prev_err)
             elif err <= prev_err:
                 gradient[idx] = -np.inf
             #elif err <= prev_err + 0.02:
