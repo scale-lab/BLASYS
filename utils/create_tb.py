@@ -49,7 +49,7 @@ def create_testbench(path, num, f):
 
     f.write("initial\n")
     f.write("begin\n")
-    if n_inputs >= 15:
+    if n_inputs >= 17:
             j=1
             while j <= int(num):
 	            f.write('# 1  pi='+str(n_inputs)+'\'b')

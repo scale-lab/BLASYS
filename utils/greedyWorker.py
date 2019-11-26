@@ -9,9 +9,10 @@ import multiprocessing as mp
 import shutil
 import time
 import ctypes
-from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell, write_aiger, get_delay, get_power
+from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell, write_aiger, get_delay, get_power, approximate
 from .optimizer import optimization, least_error_opt
 from .create_tb import create_testbench
+from .metric import distance
 
 
 class GreedyWorker():
@@ -49,6 +50,7 @@ class GreedyWorker():
                 line = file.readline()
 
 
+
     def create_output_dir(self, output):
 
         print('Create output directory...')
@@ -65,7 +67,13 @@ class GreedyWorker():
         # Write script
         self.script = os.path.join(self.output, 'abc.script')
         with open(self.script, 'w') as file:
-            file.write('strash;fraig;refactor;rewrite -z;scorr;map')
+            #file.write('strash;fraig;refactor;rewrite -z;scorr;map') 
+            #file.write('bdd;collapse;strash;map')
+            #file.write('bdd;collapse;order;map')
+            file.write('strash;fraig')
+            for i in range(30):
+                file.write(';rewrite;refactor;resub;balance')
+            file.write(';map')
 
     def convert2aig(self):
         print('Parsing input verilog into aig format ...')
@@ -88,6 +96,26 @@ class GreedyWorker():
                     for i in range(len(out_map)):
                         f.write(', po[{}]'.format(out_map[i]))
                     f.write(');\n')
+
+    def blasys(self, use_weight=False):
+        inp, out = inpout(self.input)
+        self.input_list = [inp]
+        self.output_list = [out]
+        self.modulenames = [self.modulename]
+        os.mkdir(os.path.join(self.output, self.modulename))
+        truth_dir = os.path.join(self.output, self.modulename)
+        
+        f = open(os.path.join(self.output, 'data.csv'), 'a')
+        for k in range(out-1, 1,-1):
+            # Approximate
+            approximate(truth_dir, k, self, 0)
+            in_file = os.path.join(self.output, self.modulename+'_approx_k='+str(k)+'.v')
+            out_file = os.path.join(self.output, self.modulename, self.modulename+'_approx_k='+str(k))
+            gen_truth = os.path.join(self.output, self.modulename+'.truth_wh_'+str(k))
+            area = synth_design(in_file, out_file, self.library, self.script, self.path['yosys'])
+            err = distance(truth_dir+'.truth', gen_truth, use_weight)
+            print('Factorization level {}, Area {}, Error {}\n'.format(k, area, err))
+            f.write('{:.6f},{:.6f},Level{}'.format(err, area, k))
 
 
 
@@ -115,6 +143,8 @@ class GreedyWorker():
         with open(os.path.join(self.output, 'data.csv'), 'w') as data:
             data.write('HD Error,Chip area,Time used\n')
             data.write('{:.6f},{:.6f},{}\n'.format(0, self.initial_area,'Original'))
+
+        return inpout(self.input)
 
     def partitioning(self, num_parts):
         #self.num_parts = num_parts

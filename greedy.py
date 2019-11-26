@@ -37,15 +37,18 @@ def main():
 
     worker = GreedyWorker(args.input, args.liberty, config, None)
     worker.create_output_dir(args.output)
-    worker.evaluate_initial()
-    worker.convert2aig()
-    if args.npart is None:
-        worker.recursive_partitioning()
+    pis, pos = worker.evaluate_initial()
+    if pis > 16:
+        worker.convert2aig()
+        if args.npart is None:
+            worker.recursive_partitioning()
+        else:
+            worker.recursive_partitioning(args.npart)
+
+
+        worker.greedy_opt(args.parallel, args.stepsize, args.threshold, use_weight=args.use_weight)
     else:
-        worker.recursive_partitioning(args.npart)
-
-
-    worker.greedy_opt(args.parallel, args.stepsize, args.threshold, use_weight=args.use_weight)
+        worker.blasys(args.use_weight)
 
 
 if __name__ == '__main__':
