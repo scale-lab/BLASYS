@@ -103,7 +103,7 @@ class GreedyWorker():
         inp, out = inpout(self.input)
         if inp > 16:
             print('Too many input to directly factorize. Please use partitioning mode.')
-            sys.exit(1)
+            return 1
         self.input_list = [inp]
         self.output_list = [out]
         self.modulenames = [self.modulename]
