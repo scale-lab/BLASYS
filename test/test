@@ -6,14 +6,14 @@ if ! [ -e "$1" ]; then
 fi
 
 
-# ctrl.v; partitioning in 5; threshold 0.02; sequential mode
-python3 ../greedy.py -i ctrl.v -lib ${1} -o ctrl1_output -ts 0.02 -n 5
+# c1355.v; partitioning in 5; threshold 0.02; sequential mode; parallel mode
+python3 ../greedy.py -i c1355.v -lib ${1} -o c1355_1_output -ts 0.02 -n 5 --parallel
 
-# ctrl.v; not specify partition number; threshold 0.03; parallel mode
-python3 ../greedy.py -i ctrl.v -tb 10000 -lib ${1} -o ctrl2_output -ts 0.03 --parallel
+# c1355.v; not specify partition number; threshold 0.03; parallel mode
+python3 ../greedy.py -i c1355.v -tb 10000 -lib ${1} -o c1355_2_output -ts 0.03 --parallel
 
-# ctrl.v; not specify partition number; threshold 0.03; step size 2; parallel mode
-python3 ../greedy.py -i ctrl.v -lib ${1} -o ctrl3_output -ts 0.03 -ss 2 --parallel
+# c2670.v; not specify partition number; threshold 0.03; step size 2; parallel mode
+python3 ../greedy.py -i c2670.v -lib ${1} -o c2670_output -ts 0.03 -ss 2 --parallel
 
 # adder.v; not specify partition number; threshold 0.02; parallel mode
 python3 ../greedy.py -i adder.v -tb 5000 -lib ${1} -o adder_output -ts 0.2 --parallel

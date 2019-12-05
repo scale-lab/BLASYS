@@ -257,10 +257,6 @@ class GreedyWorker():
 
 
     def greedy_opt(self, parallel, step_size = 1, threshold=1.0, use_weight=False):
-        self.fiv = False
-        self.ten = False
-        self.fif = False
-        self.twe = False
         while True:
             if self.next_iter(parallel, step_size, threshold, use_weight=use_weight) == -1:
                 break
@@ -334,73 +330,21 @@ class GreedyWorker():
         shutil.copyfile(source_file, target_file)
         self.curr_stream = next_stream
 
-        if err >= 0.05+0.01 and not self.fiv:
-            self.fiv = True
+
+        if err >= threshold+0.01:
             a = np.array(self.area_list)
             e = np.array(self.error_list)
-            a[e > 0.05] = np.inf
+            a[e > threshold] = np.inf
             it = np.argmin(a)
             source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
-            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 5))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, int(threshold*100)))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
                 sta_script = os.path.join(self.output, 'sta.script')
                 sta_output = os.path.join(self.output, 'sta.out')
                 app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
                 power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
-                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(5, self.area_list[it], app_delay, power))
-
-        if err >= 0.10+0.01 and not self.ten:
-            self.ten = True
-            a = np.array(self.area_list)
-            e = np.array(self.error_list)
-            a[e > 0.1] = np.inf
-            it = np.argmin(a)
-            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
-            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 10))
-            shutil.copyfile(source_file, target_file)
-            with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
-                sta_script = os.path.join(self.output, 'sta.script')
-                sta_output = os.path.join(self.output, 'sta.out')
-                app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
-                power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
-                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(10, self.area_list[it], app_delay, power))
-
-        if err >= 0.15+0.01 and not self.fif:
-            self.fif = True
-            a = np.array(self.area_list)
-            e = np.array(self.error_list)
-            a[e > 0.15] = np.inf
-            it = np.argmin(a)
-            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
-            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 15))
-            shutil.copyfile(source_file, target_file)
-            with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
-                sta_script = os.path.join(self.output, 'sta.script')
-                sta_output = os.path.join(self.output, 'sta.out')
-                app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
-                power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
-                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(15, self.area_list[it], app_delay, power))
-
-
-        if err >= 0.20+0.01 and not self.twe:
-            self.twe = True
-            a = np.array(self.area_list)
-            e = np.array(self.error_list)
-            a[e > 0.2] = np.inf
-            it = np.argmin(a)
-            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
-            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 20))
-            shutil.copyfile(source_file, target_file)
-            with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
-                sta_script = os.path.join(self.output, 'sta.script')
-                sta_output = os.path.join(self.output, 'sta.out')
-                app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
-                power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
-                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(20, self.area_list[it], app_delay, power))
-
-
-
+                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(int(threshold*100), self.area_list[it], app_delay, power))
 
             print('Reach error threshold. Exit approximation.')
             return -1

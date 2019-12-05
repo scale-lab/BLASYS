@@ -39,7 +39,7 @@ def main():
     worker = GreedyWorker(args.input, args.liberty, config, None)
     worker.create_output_dir(args.output)
     pis, pos = worker.evaluate_initial(args.testbench)
-    if args.single is None:
+    if args.single is not True:
         worker.convert2aig()
         if args.npart is None:
             worker.recursive_partitioning()
