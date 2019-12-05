@@ -70,10 +70,12 @@ class GreedyWorker():
             #file.write('strash;fraig;refactor;rewrite -z;scorr;map') 
             #file.write('bdd;collapse;strash;map')
             #file.write('bdd;collapse;order;map')
-            file.write('strash;fraig')
-            for i in range(30):
-                file.write(';rewrite;refactor;resub;balance')
-            file.write(';map')
+            #file.write('strash;fraig')
+            #for i in range(30):
+                #file.write(';rewrite;refactor;resub;balance')
+            #file.write(';map')
+            file.write('strash;ifraig;dc2;fraig;rewrite;refactor;resub;rewrite;refactor;resub;rewrite;rewrite -z;rewrite -z;rewrite -z;')
+            file.write('balance;refactor -z;refactor -N 11;resub -K 10;resub -K 12;resub -K 14;resub -K 16;refactor;balance;map -a')
 
     def convert2aig(self):
         print('Parsing input verilog into aig format ...')
@@ -99,6 +101,9 @@ class GreedyWorker():
 
     def blasys(self, use_weight=False):
         inp, out = inpout(self.input)
+        if inp > 16:
+            print('Too many input to directly factorize. Please use partitioning mode.')
+            sys.exit(1)
         self.input_list = [inp]
         self.output_list = [out]
         self.modulenames = [self.modulename]
@@ -106,7 +111,9 @@ class GreedyWorker():
         truth_dir = os.path.join(self.output, self.modulename)
         
         f = open(os.path.join(self.output, 'data.csv'), 'a')
-        for k in range(out-1, 1,-1):
+        err_list = []
+        area_list = []
+        for k in range(out-1, 0,-1):
             # Approximate
             approximate(truth_dir, k, self, 0)
             in_file = os.path.join(self.output, self.modulename+'_approx_k='+str(k)+'.v')
@@ -114,18 +121,23 @@ class GreedyWorker():
             gen_truth = os.path.join(self.output, self.modulename+'.truth_wh_'+str(k))
             area = synth_design(in_file, out_file, self.library, self.script, self.path['yosys'])
             err = distance(truth_dir+'.truth', gen_truth, use_weight)
+            err_list.append(err)
+            area_list.append(area/self.initial_area)
             print('Factorization level {}, Area {}, Error {}\n'.format(k, area, err))
             f.write('{:.6f},{:.6f},Level{}'.format(err, area, k))
 
+        self.plot(err_list, area_list)
 
 
 
 
-    def evaluate_initial(self):
+
+    def evaluate_initial(self, tb_size=10000):
         if self.testbench is None:
             self.testbench_v = os.path.join(self.output, self.modulename+'_tb.v')
             with open(self.testbench_v, 'w') as f:
-                create_testbench(self.input, 10000, f)
+                create_testbench(self.input, tb_size, f)
+
         #self.testbench = self.testbench_v
         print('Simulating truth table on input design...')
         subprocess.call([self.path['iverilog'], '-o', self.modulename+'.iv', self.input, self.testbench_v ])
@@ -245,7 +257,10 @@ class GreedyWorker():
 
 
     def greedy_opt(self, parallel, step_size = 1, threshold=1.0, use_weight=False):
-
+        self.fiv = False
+        self.ten = False
+        self.fif = False
+        self.twe = False
         while True:
             if self.next_iter(parallel, step_size, threshold, use_weight=use_weight) == -1:
                 break
@@ -269,14 +284,14 @@ class GreedyWorker():
         if max(self.curr_stream) == 1:
             it = np.argmin(self.area_list)
             source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
-            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(threshold * 100)))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 'REST'))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
                 sta_script = os.path.join(self.output, 'sta.script')
                 sta_output = os.path.join(self.output, 'sta.out')
                 app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
                 power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
-                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(round(threshold * 100), self.area_list[it], app_delay, power))
+                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format('REST', self.area_list[it], app_delay, power))
             print('All subcircuits have been approximated to degree 1. Exit approximating.')
             return -1
 
@@ -319,20 +334,73 @@ class GreedyWorker():
         shutil.copyfile(source_file, target_file)
         self.curr_stream = next_stream
 
-        if err >= threshold+0.01:
+        if err >= 0.05+0.01 and not self.fiv:
+            self.fiv = True
             a = np.array(self.area_list)
             e = np.array(self.error_list)
-            a[e > threshold] = np.inf
+            a[e > 0.05] = np.inf
             it = np.argmin(a)
             source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
-            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(threshold * 100)))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 5))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
                 sta_script = os.path.join(self.output, 'sta.script')
                 sta_output = os.path.join(self.output, 'sta.out')
                 app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
                 power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
-                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(round(threshold * 100), self.area_list[it], app_delay, power))
+                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(5, self.area_list[it], app_delay, power))
+
+        if err >= 0.10+0.01 and not self.ten:
+            self.ten = True
+            a = np.array(self.area_list)
+            e = np.array(self.error_list)
+            a[e > 0.1] = np.inf
+            it = np.argmin(a)
+            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 10))
+            shutil.copyfile(source_file, target_file)
+            with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
+                sta_script = os.path.join(self.output, 'sta.script')
+                sta_output = os.path.join(self.output, 'sta.out')
+                app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
+                power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
+                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(10, self.area_list[it], app_delay, power))
+
+        if err >= 0.15+0.01 and not self.fif:
+            self.fif = True
+            a = np.array(self.area_list)
+            e = np.array(self.error_list)
+            a[e > 0.15] = np.inf
+            it = np.argmin(a)
+            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 15))
+            shutil.copyfile(source_file, target_file)
+            with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
+                sta_script = os.path.join(self.output, 'sta.script')
+                sta_output = os.path.join(self.output, 'sta.out')
+                app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
+                power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
+                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(15, self.area_list[it], app_delay, power))
+
+
+        if err >= 0.20+0.01 and not self.twe:
+            self.twe = True
+            a = np.array(self.area_list)
+            e = np.array(self.error_list)
+            a[e > 0.2] = np.inf
+            it = np.argmin(a)
+            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 20))
+            shutil.copyfile(source_file, target_file)
+            with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
+                sta_script = os.path.join(self.output, 'sta.script')
+                sta_output = os.path.join(self.output, 'sta.out')
+                app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
+                power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
+                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(20, self.area_list[it], app_delay, power))
+
+
+
 
             print('Reach error threshold. Exit approximation.')
             return -1
@@ -410,12 +478,12 @@ class GreedyWorker():
 
         plt.scatter(error_np, area_np, c='r', s=6)
         plt.plot(error_np, area_np, c='b', linewidth=3)
-        plt.xlim(0,1.0)
-        plt.ylim(0,1.1)
+        #plt.xlim(0,1.0)
+        #plt.ylim(0,1.1)
         plt.ylabel('Area ratio')
         plt.xlabel('HD Approximation Error')
-        plt.xticks(np.arange(0,1,0.1))
-        plt.yticks(np.arange(0,1.1,0.1))
+        #plt.xticks(np.arange(0,1,0.1))
+        #plt.yticks(np.arange(0,1.1,0.1))
         plt.title('Greedy search on ' + self.modulename)
         plt.savefig(os.path.join(self.output, 'visualization.png'))
 
