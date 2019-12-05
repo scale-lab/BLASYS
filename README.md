@@ -29,9 +29,10 @@ BLASYS tool reads in a verilog file, and converts to AIG representation for part
 ```
 module input ( pi0, pi1, pi2, ..., pin, po0, po1, po2, ..., pon );
 input pi0, pi1, pi2, ..., pin ;
-output pin, po0, po1, po2, ..., pon;
+output pin, po0, po1, po2, ..., pon ;
 wire ... ;
 ...
+endmodule
 ```
 The exact variable name does not matter. But you have to make sure that both input pins and output pins are flattened.
 
