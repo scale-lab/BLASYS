@@ -349,12 +349,17 @@ class Blasys(Cmd):
         if self.input_file is None:
             print('[Error] No input file. Please first specify an input verilog file.\n')
             return
-
-        self.optimizer.blasys()
+        args_list = args.split()
+        if '-w' in args_list:
+            weight = True
+        else:
+            weight = False
+        self.optimizer.blasys(False)
 
 
 
     def help_blasys(self):
+        print('[Usage] blasys [-w]')
         print('Run BMF on truthtable WITHOUT partitioning')
 
 
