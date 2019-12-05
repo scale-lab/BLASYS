@@ -78,7 +78,7 @@ def evaluate_design(input_list, testbench, ground_truth, output, filename, path,
     output_syn = os.path.join(output, 'approx_design', filename)
     area  = synth_design(' '.join(input_list), output_syn, liberty, path['script'], path['yosys'])
 
-    t, h, f = assess_HD(ground_truth, truth_dir)
+    f = assess_HD(ground_truth, truth_dir)
     print('Simulation error: ' + str(f) + '\tCircuit area: ' + str(area))
     return f, area
 

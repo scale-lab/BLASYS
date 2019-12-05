@@ -9,41 +9,21 @@ import multiprocessing as mp
 import shutil
 import time
 import ctypes
-from .utils import assess_HD, gen_truth, evaluate_design, synth_design, inpout, number_of_cell
-
-def optimization(err_list, area_list, threshold):
-    gradient = np.zeros(len(err_list))
-
-    for (idx,(area, err)) in enumerate(zip(area_list, err_list)):
-        if err > threshold:
-            gradient[idx] = np.inf
-        elif err == 0:
-            gradient[idx] = -np.inf
-        else:
-            gradient[idx] = (area - 1) / err
-
-    rank1 = np.argsort(area_list, kind='stable')
-    rank2 = np.argsort(gradient[rank1], kind='stable')
-    rank3 = rank1[rank2]
-
-    return rank3
-
-def least_error_opt(err_list, area_list, threshold):
-    rank1 = np.argsort(area_list, kind='stable')
-    rank2 = np.argsort(err_list[rank1], kind='stable')
-    rank3 = rank1[rank2]
-
-    return rank3
+from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell, write_aiger, get_delay, get_power, approximate
+from .optimizer import optimization, least_error_opt
+from .create_tb import create_testbench
+from .metric import distance
 
 
 class GreedyWorker():
-    def __init__(self, input_circuit, testbench, library, path):
+    def __init__(self, input_circuit, library, path, testbench=None):
         # Check executable
         assert shutil.which(path['iverilog']), 'Cannot find iverilog'
         assert shutil.which(path['vvp']), 'Cannot find vvp'
         assert shutil.which(path['abc']), 'Cannot find abc'
         assert shutil.which(path['lsoracle']), 'Cannot find lsoracle'
         assert shutil.which(path['yosys']), 'Cannot find yosys'
+        assert shutil.which(path['OpenSTA']), 'Cannot find OpenSTA'
     
         # Check library file
         assert os.path.exists(library), 'Cannot find liberty file'
@@ -70,6 +50,7 @@ class GreedyWorker():
                 line = file.readline()
 
 
+
     def create_output_dir(self, output):
 
         print('Create output directory...')
@@ -86,12 +67,80 @@ class GreedyWorker():
         # Write script
         self.script = os.path.join(self.output, 'abc.script')
         with open(self.script, 'w') as file:
-            file.write('strash;fraig;refactor;rewrite -z;scorr;map')
+            #file.write('strash;fraig;refactor;rewrite -z;scorr;map') 
+            #file.write('bdd;collapse;strash;map')
+            #file.write('bdd;collapse;order;map')
+            #file.write('strash;fraig')
+            #for i in range(30):
+                #file.write(';rewrite;refactor;resub;balance')
+            #file.write(';map')
+            file.write('strash;ifraig;dc2;fraig;rewrite;refactor;resub;rewrite;refactor;resub;rewrite;rewrite -z;rewrite -z;rewrite -z;')
+            file.write('balance;refactor -z;refactor -N 11;resub -K 10;resub -K 12;resub -K 14;resub -K 16;refactor;balance;map -a')
+
+    def convert2aig(self):
+        print('Parsing input verilog into aig format ...')
+        self.aig = os.path.join(self.output, self.modulename + '.aig')
+        mapping = os.path.join(self.output, self.modulename + '.map')
+        inp_map, out_map = write_aiger(self.input, self.path['yosys'], self.aig, mapping)
+        self.testbench = os.path.join(self.output, self.modulename+'_aig_tb.v')
+        with open(self.testbench_v) as f:
+            bench = f.readlines()
+        with open(self.testbench, 'w') as f:
+            for i, content in enumerate(bench):
+                if i != 3:
+                    f.write(content)
+                else:
+                    f.write(self.modulename+' dut(')
+
+                    f.write('pi[{}]'.format(inp_map[0]))
+                    for i in range(1, len(inp_map)):
+                        f.write(', pi[{}]'.format(inp_map[i]))
+                    for i in range(len(out_map)):
+                        f.write(', po[{}]'.format(out_map[i]))
+                    f.write(');\n')
+
+    def blasys(self, use_weight=False):
+        inp, out = inpout(self.input)
+        if inp > 16:
+            print('Too many input to directly factorize. Please use partitioning mode.')
+            return 1
+        self.input_list = [inp]
+        self.output_list = [out]
+        self.modulenames = [self.modulename]
+        os.mkdir(os.path.join(self.output, self.modulename))
+        truth_dir = os.path.join(self.output, self.modulename)
+        
+        f = open(os.path.join(self.output, 'data.csv'), 'a')
+        err_list = []
+        area_list = []
+        for k in range(out-1, 0,-1):
+            # Approximate
+            approximate(truth_dir, k, self, 0)
+            in_file = os.path.join(self.output, self.modulename+'_approx_k='+str(k)+'.v')
+            out_file = os.path.join(self.output, self.modulename, self.modulename+'_approx_k='+str(k))
+            gen_truth = os.path.join(self.output, self.modulename+'.truth_wh_'+str(k))
+            area = synth_design(in_file, out_file, self.library, self.script, self.path['yosys'])
+            err = distance(truth_dir+'.truth', gen_truth, use_weight)
+            err_list.append(err)
+            area_list.append(area/self.initial_area)
+            print('Factorization level {}, Area {}, Error {}\n'.format(k, area, err))
+            f.write('{:.6f},{:.6f},Level{}'.format(err, area, k))
+
+        self.plot(err_list, area_list)
 
 
-    def evaluate_initial(self):
+
+
+
+    def evaluate_initial(self, tb_size=10000):
+        if self.testbench is None:
+            self.testbench_v = os.path.join(self.output, self.modulename+'_tb.v')
+            with open(self.testbench_v, 'w') as f:
+                create_testbench(self.input, tb_size, f)
+
+        #self.testbench = self.testbench_v
         print('Simulating truth table on input design...')
-        subprocess.call([self.path['iverilog'], '-o', self.modulename+'.iv', self.input, self.testbench ])
+        subprocess.call([self.path['iverilog'], '-o', self.modulename+'.iv', self.input, self.testbench_v ])
         output_truth = os.path.join(self.output, self.modulename+'.truth')
         with open(output_truth, 'w') as f:
             subprocess.call([self.path['vvp'], self.modulename+'.iv'], stdout=f)
@@ -107,13 +156,15 @@ class GreedyWorker():
             data.write('HD Error,Chip area,Time used\n')
             data.write('{:.6f},{:.6f},{}\n'.format(0, self.initial_area,'Original'))
 
+        return inpout(self.input)
+
     def partitioning(self, num_parts):
         #self.num_parts = num_parts
 
         # Partitioning circuit
         print('Partitioning input circuit...')
         part_dir = os.path.join(self.output, 'partition')
-        lsoracle_command = 'read_verilog ' + self.input + '; ' \
+        lsoracle_command = 'read_aig ' + self.aig + '; ' \
                 'partitioning ' + str(num_parts) + ' -c '+ self.path['part_config'] +'; ' \
                 'get_all_partitions ' + part_dir
         log_partition = os.path.join(self.output, 'lsoracle.log')
@@ -133,7 +184,7 @@ class GreedyWorker():
 
         print('Partitioning input circuit...')
         part_dir = os.path.join(self.output, 'partition')
-        lsoracle_command = 'read_verilog ' + self.input + '; ' \
+        lsoracle_command = 'read_aig ' + self.aig + '; ' \
                 'partitioning ' + str(num_parts) + ' -c '+ self.path['part_config'] +'; ' \
                 'get_all_partitions ' + part_dir
         
@@ -205,33 +256,48 @@ class GreedyWorker():
         self.curr_stream = self.output_list.copy()
 
 
-    def greedy_opt(self, parallel, step_size = 1, threshold=1.0):
-
-        print('==================== Starting Approximation by Greedy Search  ====================')
-        with open(os.path.join(self.output, 'result', 'result.txt'), 'w') as f:
-            f.write('Original chip area {:.2f}\n'.format(self.initial_area))
-
+    def greedy_opt(self, parallel, step_size = 1, threshold=1.0, use_weight=False):
+        self.fiv = False
+        self.ten = False
+        self.fif = False
+        self.twe = False
         while True:
-            if self.next_iter(parallel, step_size, threshold) == -1:
+            if self.next_iter(parallel, step_size, threshold, use_weight=use_weight) == -1:
                 break
 
 
-    def next_iter(self, parallel, step_size, threshold=1.0, least_error=False):
+    def next_iter(self, parallel, step_size, threshold=1.0, least_error=False, use_weight=False):
+
+        if self.iter == 0:
+            print('==================== Starting Approximation by Greedy Search  ====================')
+            with open(os.path.join(self.output, 'result', 'result.txt'), 'w') as f:
+                sta_script = os.path.join(self.output, 'sta.script')
+                sta_output = os.path.join(self.output, 'sta.out')
+                synth_input = os.path.join(self.output, self.modulename+'_syn.v')
+                self.delay = get_delay(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output)
+                power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay) * 1e6
+                f.write('Original chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(self.initial_area, self.delay, power))
+
+
         print('Current stream of factorization degree:', ', '.join(map(str, self.curr_stream)))
         
         if max(self.curr_stream) == 1:
             it = np.argmin(self.area_list)
-            source_file = os.path.join(self.output, 'approx_design', 'iter{}.v'.format(it))
-            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(threshold * 100)))
+            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 'REST'))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
-                f.write('{}% error metric chip area {:.2f}\n'.format(round(threshold * 100), self.area_list[it]))
+                sta_script = os.path.join(self.output, 'sta.script')
+                sta_output = os.path.join(self.output, 'sta.out')
+                app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
+                power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
+                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format('REST', self.area_list[it], app_delay, power))
             print('All subcircuits have been approximated to degree 1. Exit approximating.')
             return -1
 
         print('--------------- Iteration ' + str(self.iter) + ' ---------------')
         before = time.time()
-        next_stream, err, area, rank = self.evaluate_iter(self.curr_stream, self.iter, step_size, parallel, threshold, least_error)
+        next_stream, err, area, rank = self.evaluate_iter(self.curr_stream, self.iter, step_size, parallel, threshold, least_error, use_weight)
         after = time.time()
 
 
@@ -262,18 +328,80 @@ class GreedyWorker():
         source_file = os.path.join(self.output, 'tmp', 'iter{}design{}.v'.format(self.iter, rank[0]))
         target_file = os.path.join(self.output, 'approx_design', 'iter{}.v'.format(self.iter))
         shutil.copyfile(source_file, target_file)
+
+        source_file = os.path.join(self.output, 'tmp', 'iter{}design{}_syn.v'.format(self.iter, rank[0]))
+        target_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(self.iter))
+        shutil.copyfile(source_file, target_file)
         self.curr_stream = next_stream
 
-        if err >= threshold+0.01:
+        if err >= 0.05+0.01 and not self.fiv:
+            self.fiv = True
             a = np.array(self.area_list)
             e = np.array(self.error_list)
-            a[e > threshold] = np.inf
+            a[e > 0.05] = np.inf
             it = np.argmin(a)
-            source_file = os.path.join(self.output, 'approx_design', 'iter{}.v'.format(it))
-            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, round(threshold * 100)))
+            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 5))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
-                f.write('{}% error metric chip area {:.2f}\n'.format(round(threshold * 100), self.area_list[it]))
+                sta_script = os.path.join(self.output, 'sta.script')
+                sta_output = os.path.join(self.output, 'sta.out')
+                app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
+                power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
+                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(5, self.area_list[it], app_delay, power))
+
+        if err >= 0.10+0.01 and not self.ten:
+            self.ten = True
+            a = np.array(self.area_list)
+            e = np.array(self.error_list)
+            a[e > 0.1] = np.inf
+            it = np.argmin(a)
+            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 10))
+            shutil.copyfile(source_file, target_file)
+            with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
+                sta_script = os.path.join(self.output, 'sta.script')
+                sta_output = os.path.join(self.output, 'sta.out')
+                app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
+                power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
+                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(10, self.area_list[it], app_delay, power))
+
+        if err >= 0.15+0.01 and not self.fif:
+            self.fif = True
+            a = np.array(self.area_list)
+            e = np.array(self.error_list)
+            a[e > 0.15] = np.inf
+            it = np.argmin(a)
+            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 15))
+            shutil.copyfile(source_file, target_file)
+            with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
+                sta_script = os.path.join(self.output, 'sta.script')
+                sta_output = os.path.join(self.output, 'sta.out')
+                app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
+                power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
+                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(15, self.area_list[it], app_delay, power))
+
+
+        if err >= 0.20+0.01 and not self.twe:
+            self.twe = True
+            a = np.array(self.area_list)
+            e = np.array(self.error_list)
+            a[e > 0.2] = np.inf
+            it = np.argmin(a)
+            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 20))
+            shutil.copyfile(source_file, target_file)
+            with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
+                sta_script = os.path.join(self.output, 'sta.script')
+                sta_output = os.path.join(self.output, 'sta.out')
+                app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
+                power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
+                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(20, self.area_list[it], app_delay, power))
+
+
+
+
             print('Reach error threshold. Exit approximation.')
             return -1
         
@@ -290,7 +418,7 @@ class GreedyWorker():
         return 0
 
 
-    def evaluate_iter(self, curr_k_stream, num_iter, step_size, parallel, threshold, least_error):
+    def evaluate_iter(self, curr_k_stream, num_iter, step_size, parallel, threshold, least_error, use_weight):
     
         k_lists = []
         count = 0
@@ -314,7 +442,7 @@ class GreedyWorker():
         # Parallel mode
         if parallel:
             pool = mp.Pool(mp.cpu_count())
-            results = [pool.apply_async(evaluate_design,args=(k_lists[i], self, 'iter'+str(num_iter)+'design'+str(i), False )) for i in range(len(k_lists))]
+            results = [pool.apply_async(evaluate_design,args=(k_lists[i], self, 'iter'+str(num_iter)+'design'+str(i), False, use_weight )) for i in range(len(k_lists))]
             pool.close()
             pool.join()
             for result in results:
@@ -333,7 +461,7 @@ class GreedyWorker():
         if least_error:
             rank = least_error_opt(np.array(err_list), np.array(area_list) / self.initial_area, threshold+0.01)
         else:
-            rank = optimization(np.array(err_list), np.array(area_list) / self.initial_area, threshold+0.01)
+            rank = optimization(np.array(err_list), np.array(area_list), self.initial_area, self.error_list[-1], self.area_list[-1], threshold+0.01)
         result = k_lists[rank[0]]
 
         for i,e in enumerate(err_list):
@@ -350,12 +478,12 @@ class GreedyWorker():
 
         plt.scatter(error_np, area_np, c='r', s=6)
         plt.plot(error_np, area_np, c='b', linewidth=3)
-        plt.xlim(0,1.0)
-        plt.ylim(0,1.1)
+        #plt.xlim(0,1.0)
+        #plt.ylim(0,1.1)
         plt.ylabel('Area ratio')
         plt.xlabel('HD Approximation Error')
-        plt.xticks(np.arange(0,1,0.1))
-        plt.yticks(np.arange(0,1.1,0.1))
+        #plt.xticks(np.arange(0,1,0.1))
+        #plt.yticks(np.arange(0,1.1,0.1))
         plt.title('Greedy search on ' + self.modulename)
         plt.savefig(os.path.join(self.output, 'visualization.png'))
 

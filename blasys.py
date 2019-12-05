@@ -18,7 +18,6 @@ class Blasys(Cmd):
         self.input_file = None
         self.output = None
         self.partitioned = False
-        self.initialized = False
         self.testbench = None
     
     def do_exit(self, args):
@@ -64,11 +63,7 @@ class Blasys(Cmd):
         input_file = args_list[0]
  
         if len(args_list) == 3:
-            # Check existence of testbench file
-            if not os.path.exists(args_list[2]) or os.path.isdir(args_list[2]):
-                print('[error] cannot find testbench file', args_list[2])
-                return
-            self.testbench = args_list[2]
+            self.testbench = int(args_list[2])
 
         # Load path to executable
         app_path = os.path.dirname(os.path.realpath(__file__))
@@ -76,12 +71,37 @@ class Blasys(Cmd):
             config = yaml.safe_load(config_file)
         config['part_config'] = os.path.join(app_path, 'config', 'test.ini')
 
-        self.optimizer = GreedyWorker(input_file, self.testbench, self.liberty, config)
+        self.optimizer = GreedyWorker(input_file, self.liberty, config, None)
         self.input_file = input_file
         print('Successfully loaded input file and created optimizer.\n')
 
+        respond = input('Please specify output folder (by default \'output\') ')
+        if respond == '':
+            respond = 'output'
+
+        while 1:
+            print('Create output folder', respond)
+            if os.path.isdir(respond):
+                a = input('Output path already exists. Delete current directory? (Y/N)')
+                if a.lower() == 'y':
+                    shutil.rmtree(respond)
+                    break
+            else:
+                break
+
+            respond = input('Please specify output folder (by default \'output\') ')
+            if respond == '':
+                respond = 'output'
+
+        # Create output dir
+        self.optimizer.create_output_dir(respond)
+        self.evaluate_initial()
+        self.output = respond
+
+
+
     def help_read_verilog(self):
-        print('[Usage] read_verilog INPUT_FILE_PATH [-tb TESTBENCH_PATH]')
+        print('[Usage] read_verilog INPUT_FILE_PATH [-tb NUM_TEST_VECTOR]')
 
 
     def do_partitioning(self, args):
@@ -112,25 +132,7 @@ class Blasys(Cmd):
             args_list.pop(idx)
         else:
             num_part = None
-        if len(args_list) == 0 or args_list[0] == '':
-            print('[Error] Please enter output folder name.')
-            self.help_partitioning()
-            return
-
-        print('Create output folder', args_list[0])
-        if os.path.isdir(args_list[0]):
-            a = input('Output path already exists. Delete current directory? (Y/N)')
-            if a.lower() == 'n':
-                print('To change output folder, please run command output_dir.')
-                return
-            if a.lower() != 'y':
-                print('[Error] Sorry I don\'t understand. Please try again.\n')
-                return
-            else:
-                shutil.rmtree(args_list[0])
-       
-        self.optimizer.create_output_dir(args_list[0])
-        self.output = args_list[0]        
+     
             
         if num_part is None:
             self.optimizer.recursive_partitioning()
@@ -142,8 +144,7 @@ class Blasys(Cmd):
 
 
     def help_partitioning(self):
-        print('[Usage] partitioning OUTPUT_DIR [-n NUMBER_OF_PARTITIONS]')
-        print('First argument is the output folder. Number of partition is optional.')
+        print('[Usage] partitioning [-n NUMBER_OF_PARTITIONS]')
 
     
     def do_greedy(self, args):
@@ -157,6 +158,12 @@ class Blasys(Cmd):
             args_list.remove('-p')
         else:
             parallel = False
+
+        if '-w' in args_list:
+            weighted = True
+            args_list.remove('-w')
+        else:
+            weighted = False
 
         if '-t' in args_list:
             idx = args_list.index('-t')
@@ -195,17 +202,13 @@ class Blasys(Cmd):
             args_list.pop(idx)
         else:
             stepsize = 1
-        # Initialize if not
-        if not self.initialized:
-            self.evaluate_initial()
-            self.initialized = True
 
         # Call greedy_opt
-        self.optimizer.greedy_opt(parallel, stepsize, threshold)
+        self.optimizer.greedy_opt(parallel, stepsize, threshold, weighted)
 
 
     def help_greedy(self):
-        print('greedy [-t THRESHOLD] [-s STEP_SIZE] [-p]')
+        print('greedy [-t THRESHOLD] [-s STEP_SIZE] [-p] [-w]')
 
     def do_run_iter(self, args):
         if not self.partitioned:
@@ -218,6 +221,12 @@ class Blasys(Cmd):
             args_list.remove('-p')
         else:
             parallel = False
+
+        if '-w' in args_list:
+            weighted = True
+            args_list.remove('-w')
+        else:
+            weighted = False
 
         if '-t' in args_list:
             idx = args_list.index('-t')
@@ -276,18 +285,14 @@ class Blasys(Cmd):
         else:
             iteration = 1
 
-        # Initialize if not
-        if not self.initialized:
-            self.evaluate_initial()
-            self.initialized = True
         # Call greedy_opt
         for i in range(iteration):
-            if self.optimizer.next_iter(parallel, stepsize, threshold) == -1:
+            if self.optimizer.next_iter(parallel, stepsize, threshold, use_weight=weighted) == -1:
                 print('You have either reached error threshold or all partitions reached factorization degree 1.')
                 return
 
     def help_run_iter(self):
-        print('[Usage] run_iter [-i NUMBER_ITERATION] [-t THRESHOLD] [-s STEPSIZE] [-p]')
+        print('[Usage] run_iter [-i NUMBER_ITERATION] [-t THRESHOLD] [-s STEPSIZE] [-p] [-w]')
 
     def do_clear(self, args):
         a = input('Are you sure to clear?\nDoing this will clear ALL approximate work done in this session. (Y/N)')
@@ -300,16 +305,12 @@ class Blasys(Cmd):
         self.input_file = None
         self.output = None
         self.partitioned = False
-        self.initialized = False
         self.testbench = None
 
     def help_clear(self):
         print('[Usage] Clear ALL approximate work done in this session. Be careful to use it.')
 
     def do_display_result(self, args):
-        if not self.initialized:
-            print('[Error] No approximate results founded.\n')
-            return
         error_list = []
         area_list = []
         with open(os.path.join(self.output,'data.csv')) as data:
@@ -338,12 +339,23 @@ class Blasys(Cmd):
 
     def evaluate_initial(self):
         if self.testbench is None:
-            testbench_file = os.path.join(self.output, 'tb.v')
-            with open(testbench_file, 'w') as f:
-                create_testbench(self.input_file, 5000, f)
-            self.optimizer.testbench = testbench_file
+            self.optimizer.evaluate_initial()
+        else:
+            self.optimizer.evaluate_initial(self.testbench)
+        self.optimizer.convert2aig()
 
-        self.optimizer.evaluate_initial()
+    def do_blasys(self, args):
+        # Call blasys
+        if self.input_file is None:
+            print('[Error] No input file. Please first specify an input verilog file.\n')
+            return
+
+        self.optimizer.blasys()
+
+
+
+    def help_blasys(self):
+        print('Run BMF on truthtable WITHOUT partitioning')
 
 
 
