@@ -3,6 +3,9 @@ all : _asso.so clean
 CC = gcc
 CFLAGS = -O2 -fPIC -c
 SFLAGS = -shared
+ifeq ($(shell uname -s | tr A-Z a-z),darwin)
+SFLAGS += -undefined dynamic_lookup
+endif
 
 ENV=$(shell python3-config --cflags | cut -d " " -f1)
 ifeq ($(ENV),)
