@@ -1,7 +1,7 @@
 all : _asso.so clean
 
 CC = gcc
-CFLAGS = -O2 -fPIC -c
+CFLAGS = -O2 -fPIC -c -std=c99
 SFLAGS = -shared
 ifeq ($(shell uname -s | tr A-Z a-z),darwin)
 SFLAGS += -undefined dynamic_lookup
