@@ -5,9 +5,11 @@ CFLAGS = -O2 -fPIC -c -std=c99
 SFLAGS = -shared
 ifeq ($(shell uname -s | tr A-Z a-z),darwin)
 SFLAGS += -undefined dynamic_lookup
+ENV=$(shell python3-config --cflags)
+else
+ENV=$(shell python3-config --cflags | cut -d " " -f1)
 endif
 
-ENV=$(shell python3-config --cflags | cut -d " " -f1)
 ifeq ($(ENV),)
 $(error Cannot find Python environment.,,)
 endif
