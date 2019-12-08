@@ -256,13 +256,14 @@ class GreedyWorker():
         self.curr_stream = self.output_list.copy()
 
 
-    def greedy_opt(self, parallel, step_size = 1, threshold=1.0, use_weight=False):
+    def greedy_opt(self, parallel, step_size = 1, threshold=[1000000.], use_weight=False):
+        threshold.sort()
         while True:
             if self.next_iter(parallel, step_size, threshold, use_weight=use_weight) == -1:
                 break
 
 
-    def next_iter(self, parallel, step_size, threshold=1.0, least_error=False, use_weight=False):
+    def next_iter(self, parallel, step_size, threshold=[1000000.], least_error=False, use_weight=False):
 
         if self.iter == 0:
             print('==================== Starting Approximation by Greedy Search  ====================')
@@ -279,7 +280,7 @@ class GreedyWorker():
         
         if max(self.curr_stream) == 1:
             it = np.argmin(self.area_list)
-            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
+            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it-1))
             target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 'REST'))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
@@ -287,13 +288,13 @@ class GreedyWorker():
                 sta_output = os.path.join(self.output, 'sta.out')
                 app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
                 power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
-                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format('REST', self.area_list[it], app_delay, power))
+                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format('REST', self.area_list[it-1], app_delay, power))
             print('All subcircuits have been approximated to degree 1. Exit approximating.')
             return -1
 
         print('--------------- Iteration ' + str(self.iter) + ' ---------------')
         before = time.time()
-        next_stream, err, area, rank = self.evaluate_iter(self.curr_stream, self.iter, step_size, parallel, threshold, least_error, use_weight)
+        next_stream, err, area, rank = self.evaluate_iter(self.curr_stream, self.iter, step_size, parallel, threshold[0], least_error, use_weight)
         after = time.time()
 
 
@@ -331,21 +332,24 @@ class GreedyWorker():
         self.curr_stream = next_stream
 
 
-        if err >= threshold+0.01:
+        if err >= threshold[0]+0.01:
+            ts = threshold.pop(0)
+            print('Threshold on', ts)
             a = np.array(self.area_list)
             e = np.array(self.error_list)
-            a[e > threshold] = np.inf
+            a[e > ts] = np.inf
             it = np.argmin(a)
             source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
-            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, int(threshold*100)))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, int(ts*100)))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
                 sta_script = os.path.join(self.output, 'sta.script')
                 sta_output = os.path.join(self.output, 'sta.out')
                 app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
                 power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
-                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(int(threshold*100), self.area_list[it], app_delay, power))
+                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(int(ts*100), self.area_list[it], app_delay, power))
 
+        if len(threshold) == 0: 
             print('Reach error threshold. Exit approximation.')
             return -1
         

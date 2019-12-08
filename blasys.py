@@ -3,6 +3,7 @@ import os
 import yaml
 import regex as re
 import shutil
+import numpy as np
 from utils.banner import print_banner
 from utils.greedyWorker import GreedyWorker
 from utils.create_tb import create_testbench
@@ -172,17 +173,18 @@ class Blasys(Cmd):
                 self.help_greedy()
                 return
 
-            if not args_list[idx+1].replace('.', '', 1).isdigit():
-                print('[Error] Please put float-point threshold.')
+            if not args_list[idx+1].replace('.', '', 1).replace(',', '').isdigit():
+                print('[Error] Please put float-point digits as threshold.')
                 self.help_greedy()
                 return
 
             # Get threshold
             threshold = float(args_list[idx+1])
+            threshold_list = list(map(float, threshold.split(',')))
             args_list.pop(idx)
             args_list.pop(idx)
         else:
-            threshold = 1.0
+            threshold_list = [np.inf]
 
         if '-s' in args_list:
             idx = args_list.index('-s')
@@ -204,7 +206,7 @@ class Blasys(Cmd):
             stepsize = 1
 
         # Call greedy_opt
-        self.optimizer.greedy_opt(parallel, stepsize, threshold, weighted)
+        self.optimizer.greedy_opt(parallel, stepsize, threshold_list, weighted)
 
 
     def help_greedy(self):
@@ -245,7 +247,7 @@ class Blasys(Cmd):
             args_list.pop(idx)
             args_list.pop(idx)
         else:
-            threshold = 1.0
+            threshold = np.inf
 
         if '-s' in args_list:
             idx = args_list.index('-s')
@@ -259,7 +261,6 @@ class Blasys(Cmd):
                 self.help_greedy()
                 return
 
-            # Get threshold
             stepsize = int(args_list[idx+1])
             args_list.pop(idx)
             args_list.pop(idx)
@@ -278,7 +279,6 @@ class Blasys(Cmd):
                 self.help_run_iter()
                 return
 
-            # Get threshold
             iteration = int(args_list[idx+1])
             args_list.pop(idx)
             args_list.pop(idx)
@@ -287,7 +287,7 @@ class Blasys(Cmd):
 
         # Call greedy_opt
         for i in range(iteration):
-            if self.optimizer.next_iter(parallel, stepsize, threshold, use_weight=weighted) == -1:
+            if self.optimizer.next_iter(parallel, stepsize, [threshold], use_weight=weighted) == -1:
                 print('You have either reached error threshold or all partitions reached factorization degree 1.')
                 return
 

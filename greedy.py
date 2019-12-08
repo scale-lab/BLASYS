@@ -3,6 +3,7 @@ from utils.banner import print_banner
 import yaml
 import argparse
 import os
+import numpy as np
 
 
 
@@ -19,7 +20,7 @@ def main():
     parser.add_argument('-tb', '--testbench', help='Number of test vectors', type=int, default=10000, dest='testbench')
     parser.add_argument('-n', help='Number of partitions', default=None, type=int, dest='npart')
     parser.add_argument('-o', help='Output directory', default='output', dest='output')
-    parser.add_argument('-ts', '--threshold', help='Threshold on error', default=0.9, type=float, dest='threshold')
+    parser.add_argument('-ts', '--threshold', help='Threshold on error', default='None', dest='threshold')
     parser.add_argument('-lib', '--liberty', help='Liberty file name', required=True, dest='liberty')
     parser.add_argument('-ss', '--stepsize', help='Step size of optimization process', default=1, type=int, dest='stepsize')
     parser.add_argument('--parallel', help='Run the flow in parallel mode if specified', dest='parallel', action='store_true')
@@ -35,6 +36,10 @@ def main():
         config = yaml.safe_load(config_file)
 
     config['part_config'] = os.path.join(app_path, 'config', 'test.ini')
+    if args.threshold == 'None':
+        threshold_list = [np.inf]
+    else:
+        threshold_list = list(map(float, args.threshold.split(',')))
 
     worker = GreedyWorker(args.input, args.liberty, config, None)
     worker.create_output_dir(args.output)
@@ -46,7 +51,7 @@ def main():
         else:
             worker.recursive_partitioning(args.npart)
 
-        worker.greedy_opt(args.parallel, args.stepsize, args.threshold, use_weight=args.use_weight)
+        worker.greedy_opt(args.parallel, args.stepsize, threshold_list, use_weight=args.use_weight)
     else:
         worker.blasys(args.use_weight)
 

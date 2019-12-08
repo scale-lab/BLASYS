@@ -375,7 +375,7 @@ def get_delay(sta, script, liberty, input_file, modulename, output_file):
         f.write('create_clock -name clk -period 1\n')
         f.write('set_input_delay -clock clk 0 [all_inputs]\n')
         f.write('set_output_delay -clock clk 0 [all_outputs]\n')
-        f.write('report_checks\n')
+        f.write('report_checks -digits 6\n')
         f.write('exit')
 
     with open(output_file, 'w') as f:
@@ -400,7 +400,7 @@ def get_power(sta, script, liberty, input_file, modulename, output_file, delay):
         f.write('set_input_delay -clock clk 0 [all_inputs]\n')
         f.write('set_output_delay -clock clk 0 [all_outputs]\n')
         f.write('report_checks\n')
-        f.write('report_power\n')
+        f.write('report_power - digits 6\n')
         f.write('exit')
 
     with open(output_file, 'w') as f:
