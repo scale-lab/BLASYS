@@ -42,9 +42,9 @@ def evaluate_design(k_stream, worker, filename, display=True, use_weight=False):
     output_syn = os.path.join(worker.output, 'tmp', filename)
     area  = synth_design(' '.join(verilog_list), output_syn, worker.library, worker.script, worker.path['yosys'])
 
-    f = distance(ground_truth, truth_dir, use_weight)
+    f, f_list = distance(ground_truth, truth_dir, use_weight)
     print('Simulation error: {:.6f}\tCircuit area: {:.6f}'.format(f, area))
-    return f, area
+    return f, f_list, area
 
 
 def synth_design(input_file, output_file, lib_file, script, yosys):

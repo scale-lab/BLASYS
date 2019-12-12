@@ -173,13 +173,13 @@ class Blasys(Cmd):
                 self.help_greedy()
                 return
 
-            if not args_list[idx+1].replace('.', '', 1).replace(',', '').isdigit():
-                print('[Error] Please put float-point digits as threshold.')
-                self.help_greedy()
-                return
+            # if not args_list[idx+1].replace('.', '', 1).replace(',', '').isdigit():
+                # print('[Error] Please put float-point digits as threshold.')
+                # self.help_greedy()
+                # return
 
             # Get threshold
-            threshold = float(args_list[idx+1])
+            threshold = args_list[idx+1]
             threshold_list = list(map(float, threshold.split(',')))
             args_list.pop(idx)
             args_list.pop(idx)

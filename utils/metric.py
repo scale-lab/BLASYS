@@ -12,11 +12,13 @@ def distance(original_path, approximate_path, use_weight=False):
     if len(org_line_list) != len(app_line_list):
         print('ERROR! sizes of input files are not equal! Aborting...')
         return -1
-
+    HD = Hamming_Distance(org,app)
+    MAE = Weighted_HD(org, app)[0]
+    MAE_P = Weighted_HD(org, app)[1]
     if use_weight:
-        return Weighted_HD(org, app)
+        return MAE_P, [HD, MAE, MAE_P]
     else:
-        return Hamming_Distance(org, app)
+        return HD, [HD, MAE, MAE_P]
 
 
 
@@ -31,6 +33,8 @@ def Weighted_HD(org_line_list, app_line_list):
     err = []
     num_vec = len(org_line_list)
     num_pos = len(org_line_list[0])
+
+    maxnum = 2 ** num_pos - 1
 
     #weight = np.array([2**i for i in range(num_pos)][::-1])
     #org = np.array(org_line_list, dtype=int)
@@ -48,14 +52,14 @@ def Weighted_HD(org_line_list, app_line_list):
         appnum = int(''.join(app_line_list[i]), 2)
         
         if orgnum != 0:
-            err.append( np.abs(orgnum - appnum) / orgnum )
+            err.append( np.abs(orgnum - appnum) )
         #org_list.append(orgnum)
         else:
             err.append(0)
         # err.append(np.sum(weight * (org[i] != app[i])) / np.sum(weight*org[i]) )
         # err.append(np.abs(np.sum(weight * org[i]) - np.sum(weight * app[i])))
 
-    return np.mean(err)
+    return np.mean(err), np.mean(err) / maxnum
 
     #return np.sum((org != app) * weight) / np.sum(org* weight)
 

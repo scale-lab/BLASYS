@@ -34,6 +34,7 @@ class GreedyWorker():
         self.path = path
 
         self.error_list = [0.0]
+        self.metric_list = [[]]
         self.area_list = []
         self.iter = 0
 
@@ -273,7 +274,9 @@ class GreedyWorker():
                 synth_input = os.path.join(self.output, self.modulename+'_syn.v')
                 self.delay = get_delay(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output)
                 power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay) * 1e6
-                f.write('Original chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(self.initial_area, self.delay, power))
+                # f.write('Original chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(self.initial_area, self.delay, power))
+                f.write('{:<10}{:<10}{:<10}{:<15}{:<15}{:<15}\n'.format('HD', 'MAE', 'MAE%', 'Area(um^2)', 'Power', 'Delay') )
+                f.write('{:<10.2f}{:<12.2f}{:<10.2f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(0, 0, 0, self.initial_area, power, self.delay) )
 
 
         print('Current stream of factorization degree:', ', '.join(map(str, self.curr_stream)))
@@ -288,13 +291,15 @@ class GreedyWorker():
                 sta_output = os.path.join(self.output, 'sta.out')
                 app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
                 power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
-                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format('REST', self.area_list[it-1], app_delay, power))
+                # f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format('REST', self.area_list[it-1], app_delay, power))
+                f.write('{:<10.6f}{:<12.4e}{:<10.6f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(self.metric_list[it][0], self.metric_list[it][1], self.metric_list[it][2], self.area_list[it], power, app_delay) )
+
             print('All subcircuits have been approximated to degree 1. Exit approximating.')
             return -1
 
         print('--------------- Iteration ' + str(self.iter) + ' ---------------')
         before = time.time()
-        next_stream, err, area, rank = self.evaluate_iter(self.curr_stream, self.iter, step_size, parallel, threshold[0], least_error, use_weight)
+        next_stream, err, area, err_sum, rank = self.evaluate_iter(self.curr_stream, self.iter, step_size, parallel, threshold[0], least_error, use_weight)
         after = time.time()
 
 
@@ -302,7 +307,11 @@ class GreedyWorker():
         print('--------------- Finishing Iteration' + str(self.iter) + '---------------')
         part_idx = list(np.nonzero(np.subtract(next_stream, self.curr_stream)))
         print('Partition', *part_idx, 'being approximated')
-        msg = 'Approximated HD error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err, 100 * area / self.initial_area, time_used)
+        if use_weight:
+            met = 'MAE'
+        else:
+            met = 'HD'
+        msg = 'Approximated {} error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(met, 100*err, 100 * area / self.initial_area, time_used)
         print(msg)
         with open(os.path.join(self.output, 'log'), 'a') as log_file:
             log_file.write(str(next_stream))
@@ -334,7 +343,7 @@ class GreedyWorker():
 
         if err >= threshold[0]+0.01:
             ts = threshold.pop(0)
-            print('Threshold on', ts)
+            print('Reach threshold on', ts)
             a = np.array(self.area_list)
             e = np.array(self.error_list)
             a[e > ts] = np.inf
@@ -347,7 +356,8 @@ class GreedyWorker():
                 sta_output = os.path.join(self.output, 'sta.out')
                 app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
                 power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
-                f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(int(ts*100), self.area_list[it], app_delay, power))
+                #f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(int(ts*100), self.area_list[it], app_delay, power))
+                f.write('{:<10.6f}{:<12.4e}{:<10.6f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(self.metric_list[it][0], self.metric_list[it][1], self.metric_list[it][2], self.area_list[it], power, app_delay) )
 
         if len(threshold) == 0: 
             print('Reach error threshold. Exit approximation.')
@@ -361,6 +371,7 @@ class GreedyWorker():
 
         self.error_list.append(err)
         self.area_list.append(area)
+        self.metric_list.append(err_sum)
         self.plot(self.error_list, self.area_list)
 
         return 0
@@ -385,6 +396,7 @@ class GreedyWorker():
             count += 1
 
         err_list = []
+        err_summary = []
         area_list = []
     
         # Parallel mode
@@ -395,15 +407,17 @@ class GreedyWorker():
             pool.join()
             for result in results:
                 err_list.append(result.get()[0])
-                area_list.append(result.get()[1])
+                err_summary.append(result.get()[1])
+                area_list.append(result.get()[2])
         else:
         # Sequential mode
             for i in range(len(k_lists)):
                 # Evaluate each list
                 print('======== Design number ' + str(i))
                 k_stream = k_lists[i]
-                err, area = evaluate_design(k_stream, self, 'iter'+str(num_iter)+'design'+str(i))
+                err, err_s, area = evaluate_design(k_stream, self, 'iter'+str(num_iter)+'design'+str(i))
                 err_list.append(err)
+                err_summary.append(err_s)
                 area_list.append(area)
 
         if least_error:
@@ -416,7 +430,7 @@ class GreedyWorker():
             if e <= self.error_list[-1] and area_list[i] <= self.area_list[-1]:
                 result[changed[i]] = k_lists[i][changed[i]]
             
-        return result, err_list[rank[0]], area_list[rank[0]], rank
+        return result, err_list[rank[0]], area_list[rank[0]], err_summary[rank[0]], rank
 
     def plot(self, error_list, area_list):
 
