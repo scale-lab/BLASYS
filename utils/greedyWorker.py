@@ -153,9 +153,7 @@ class GreedyWorker():
         print('Original design area ', str(input_area))
         self.initial_area = input_area
         self.area_list.append(self.initial_area)
-        with open(os.path.join(self.output, 'data.csv'), 'w') as data:
-            data.write('HD Error,Chip area,Time used\n')
-            data.write('{:.6f},{:.6f},{}\n'.format(0, self.initial_area,'Original'))
+
 
         return inpout(self.input)
 
@@ -275,8 +273,11 @@ class GreedyWorker():
                 self.delay = get_delay(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output)
                 power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay) * 1e6
                 # f.write('Original chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(self.initial_area, self.delay, power))
-                f.write('{:<10}{:<10}{:<10}{:<15}{:<15}{:<15}\n'.format('HD', 'MAE', 'MAE%', 'Area(um^2)', 'Power', 'Delay') )
+                f.write('{:<10}{:<12}{:<10}{:<15}{:<15}{:<15}\n'.format('HD', 'MAE', 'MAE%', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
                 f.write('{:<10.2f}{:<12.2f}{:<10.2f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(0, 0, 0, self.initial_area, power, self.delay) )
+            with open(os.path.join(self.output, 'data.csv'), 'a') as data:
+                data.write('{},{},{},{},{},{},{}\n'.format('Iter','HD', 'MAE', 'MAE%', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
+                data.write('{},{:.6f},{:.6e},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format('Org', 0, 0, 0, self.initial_area, power, self.delay) )
 
 
         print('Current stream of factorization degree:', ', '.join(map(str, self.curr_stream)))
@@ -318,8 +319,8 @@ class GreedyWorker():
             log_file.write('\n')
             log_file.write(msg)
         
-        with open(os.path.join(self.output, 'data.csv'), 'a') as data:
-            data.write('{:.6f},{:.6f},{:.2f}\n'.format(err, area,time_used))
+        # with open(os.path.join(self.output, 'data.csv'), 'a') as data:
+            # data.write('{:.6f},{:.6f},{:.2f}\n'.format(err, area,time_used))
 
         # Moving approximate result to approx_design
         # for i,r in enumerate(rank):
@@ -340,6 +341,12 @@ class GreedyWorker():
         shutil.copyfile(source_file, target_file)
         self.curr_stream = next_stream
 
+        sta_script = os.path.join(self.output, 'sta.script')
+        sta_output = os.path.join(self.output, 'sta.out')
+        delay_iter = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
+        power_iter = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
+        with open(os.path.join(self.output, 'data.csv'), 'a') as data:
+            data.write('{},{:.6f},{:.6e},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format(self.iter, err_sum[0], err_sum[1], err_sum[2], area, power_iter, delay_iter) )
 
         if err >= threshold[0]+0.01:
             ts = threshold.pop(0)
