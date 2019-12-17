@@ -110,8 +110,17 @@ class GreedyWorker():
         self.modulenames = [self.modulename]
         os.mkdir(os.path.join(self.output, self.modulename))
         truth_dir = os.path.join(self.output, self.modulename)
-        
+       
+        sta_script = os.path.join(self.output, 'sta.script')
+        sta_output = os.path.join(self.output, 'sta.out')
+        synth_input = os.path.join(self.output, self.modulename+'_syn.v')
+        self.delay = get_delay(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output)
+        power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay) * 1e6
+
         f = open(os.path.join(self.output, 'data.csv'), 'a')
+        f.write('{},{},{},{},{},{},{}\n'.format('Iter','HD', 'MAE', 'MAE%', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
+        f.write('{},{:.6f},{:.6e},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format('Org', 0, 0, 0, self.initial_area, power, self.delay) )
+
         err_list = []
         area_list = []
         for k in range(out-1, 0,-1):
@@ -121,14 +130,19 @@ class GreedyWorker():
             out_file = os.path.join(self.output, self.modulename, self.modulename+'_approx_k='+str(k))
             gen_truth = os.path.join(self.output, self.modulename+'.truth_wh_'+str(k))
             area = synth_design(in_file, out_file, self.library, self.script, self.path['yosys'])
-            err = distance(truth_dir+'.truth', gen_truth, use_weight)
+            err, err_sum = distance(truth_dir+'.truth', gen_truth, use_weight)
             err_list.append(err)
             area_list.append(area/self.initial_area)
             print('Factorization level {}, Area {}, Error {}\n'.format(k, area, err))
-            f.write('{:.6f},{:.6f},Level{}'.format(err, area, k))
+            # f.write('{:.6f},{:.6f},Level{}'.format(err, area, k))
+            sta_script = os.path.join(self.output, 'sta.script')
+            sta_output = os.path.join(self.output, 'sta.out')
+            delay_iter = get_delay(self.path['OpenSTA'], sta_script, self.library, out_file+'_syn.v', self.modulename, sta_output)
+            power_iter = get_power(self.path['OpenSTA'], sta_script, self.library, out_file+'_syn.v', self.modulename, sta_output, self.delay) * 1e6
 
+            f.write('{},{:.6f},{:.6e},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format(k, err_sum[0], err_sum[1], err_sum[2], area, power_iter, delay_iter) )
         self.plot(err_list, area_list)
-
+        f.close()
 
 
 
