@@ -34,8 +34,11 @@ class GreedyWorker():
         self.path = path
 
         self.error_list = [0.0]
-        self.metric_list = [[]]
+        self.metric_list = [[.0, .0, .0]]
         self.area_list = []
+        self.power_list = []
+        self.delay_list = []
+        self.design_list = []
         self.iter = 0
 
 
@@ -267,6 +270,8 @@ class GreedyWorker():
                 os.remove(file_path+'.iv')
 
         self.curr_stream = self.output_list.copy()
+        self.curr_streams = [self.output_list.copy()]
+        self.explored_streams = [self.output_list.copy()]
 
 
     def greedy_opt(self, parallel, step_size = 1, threshold=[1000000.], use_weight=False):
@@ -289,16 +294,22 @@ class GreedyWorker():
                 # f.write('Original chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(self.initial_area, self.delay, power))
                 f.write('{:<10}{:<12}{:<10}{:<15}{:<15}{:<15}\n'.format('HD', 'MAE', 'MAE%', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
                 f.write('{:<10.2f}{:<12.2f}{:<10.2f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(0, 0, 0, self.initial_area, power, self.delay) )
+            self.power_list.append(power)
+            self.delay_list.append(self.delay)
             with open(os.path.join(self.output, 'data.csv'), 'a') as data:
                 data.write('{},{},{},{},{},{},{}\n'.format('Iter','HD', 'MAE', 'MAE%', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
                 data.write('{},{:.6f},{:.6e},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format('Org', 0, 0, 0, self.initial_area, power, self.delay) )
 
 
-        print('Current stream of factorization degree:', ', '.join(map(str, self.curr_stream)))
+        print('Current stream of factorization degree:\n','\n'.join(map(str, self.curr_streams)))
         
-        if max(self.curr_stream) == 1:
-            it = np.argmin(self.area_list)
-            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it-1))
+        if len(self.curr_streams) == 1 and max(self.curr_streams[0]) == 1:
+
+            a = np.array(self.area_list)
+            e = np.array(self.error_list)
+            a[e > threshold[0]] = np.inf
+            it = np.argmin(a)
+            source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[it]))
             target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 'REST'))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
@@ -314,7 +325,7 @@ class GreedyWorker():
 
         print('--------------- Iteration ' + str(self.iter) + ' ---------------')
         before = time.time()
-        next_stream, err, area, err_sum, rank = self.evaluate_iter(self.curr_stream, self.iter, step_size, parallel, threshold[0], least_error, use_weight)
+        next_stream, streams, err, area, err_sum, delay, power, name_list, rank = self.evaluate_iter(self.curr_streams, self.iter, step_size, parallel, threshold[0], least_error, use_weight)
         after = time.time()
 
 
@@ -326,7 +337,7 @@ class GreedyWorker():
             met = 'MAE'
         else:
             met = 'HD'
-        msg = 'Approximated {} error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(met, 100*err, 100 * area / self.initial_area, time_used)
+        msg = 'Approximated {} error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(met, 100*err[rank[0]], 100 * area[rank[0]] / self.initial_area, time_used)
         print(msg)
         with open(os.path.join(self.output, 'log'), 'a') as log_file:
             log_file.write(str(next_stream))
@@ -346,30 +357,39 @@ class GreedyWorker():
         #     target_file = os.path.join(self.output, 'approx_design', 'iter{}_{}.v'.format(self.iter, i))
         #     shutil.move(source_file, target_file)
         
-        source_file = os.path.join(self.output, 'tmp', 'iter{}design{}.v'.format(self.iter, rank[0]))
-        target_file = os.path.join(self.output, 'approx_design', 'iter{}.v'.format(self.iter))
-        shutil.copyfile(source_file, target_file)
+        # source_file = os.path.join(self.output, 'tmp', 'iter{}design{}.v'.format(self.iter, rank[0]))
+        # target_file = os.path.join(self.output, 'approx_design', 'iter{}.v'.format(self.iter))
+        # shutil.copyfile(source_file, target_file)
 
-        source_file = os.path.join(self.output, 'tmp', 'iter{}design{}_syn.v'.format(self.iter, rank[0]))
-        target_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(self.iter))
-        shutil.copyfile(source_file, target_file)
-        self.curr_stream = next_stream
+        # for i, n in enumerate(name_list):
+            # source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(n))
+            # target_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(self.iter))
+            # shutil.copyfile(source_file, target_file)
+        
+        self.curr_streams = [streams[i] for i in rank[:10]]
 
-        sta_script = os.path.join(self.output, 'sta.script')
-        sta_output = os.path.join(self.output, 'sta.out')
-        delay_iter = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
-        power_iter = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
+            # sta_script = os.path.join(self.output, 'sta.script')
+            # sta_output = os.path.join(self.output, 'sta.out')
+            # delay_design = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
+            # power_design = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
+            
+            # self.power_list.append(power_design)
+            # self.delay_list.append(delay_design)
+            
+            # if i == rank[0]:
         with open(os.path.join(self.output, 'data.csv'), 'a') as data:
-            data.write('{},{:.6f},{:.6e},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format(self.iter, err_sum[0], err_sum[1], err_sum[2], area, power_iter, delay_iter) )
+            data.write('{},{:.6f},{:.6e},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format(self.iter, err_sum[rank[0]][0], err_sum[rank[0]][1], err_sum[rank[0]][2], area[rank[0]], power[rank[0]], delay[rank[0]]) )
+        self.power_list += power
+        self.delay_list += delay
 
-        if err >= threshold[0]+0.01:
+        if err[rank[0]] >= threshold[0]+0.01:
             ts = threshold.pop(0)
             print('Reach threshold on', ts)
             a = np.array(self.area_list)
             e = np.array(self.error_list)
             a[e > ts] = np.inf
             it = np.argmin(a)
-            source_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(it))
+            source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[it]))
             target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, int(ts*100)))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
@@ -378,6 +398,7 @@ class GreedyWorker():
                 app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
                 power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
                 #f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(int(ts*100), self.area_list[it], app_delay, power))
+                
                 f.write('{:<10.6f}{:<12.4e}{:<10.6f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(self.metric_list[it][0], self.metric_list[it][1], self.metric_list[it][2], self.area_list[it], power, app_delay) )
 
         if len(threshold) == 0: 
@@ -390,56 +411,78 @@ class GreedyWorker():
 
         self.iter += 1
 
-        self.error_list.append(err)
-        self.area_list.append(area)
-        self.metric_list.append(err_sum)
+        self.error_list += err
+        self.area_list += area
+        self.metric_list += err_sum
+        self.design_list += name_list
+        
         self.plot(self.error_list, self.area_list)
 
         return 0
 
 
-    def evaluate_iter(self, curr_k_stream, num_iter, step_size, parallel, threshold, least_error, use_weight):
+    def evaluate_iter(self, curr_k_streams, num_iter, step_size, parallel, threshold, least_error, use_weight):
     
         k_lists = []
-        count = 0
-        changed = {}
-
-        # Create a set of candidate k_streams
-        for i in range(len(curr_k_stream)):
-            if curr_k_stream[i] == 1:
-                continue
-
-            new_k_stream = list(curr_k_stream)
-            new_k_stream[i] = max(new_k_stream[i] - step_size, 1)
-            k_lists.append(new_k_stream)
-
-            changed[count] = i
-            count += 1
-
         err_list = []
         err_summary = []
         area_list = []
-    
-        # Parallel mode
-        if parallel:
-            pool = mp.Pool(mp.cpu_count())
-            results = [pool.apply_async(evaluate_design,args=(k_lists[i], self, 'iter'+str(num_iter)+'design'+str(i), False, use_weight )) for i in range(len(k_lists))]
-            pool.close()
-            pool.join()
-            for result in results:
-                err_list.append(result.get()[0])
-                err_summary.append(result.get()[1])
-                area_list.append(result.get()[2])
-        else:
-        # Sequential mode
-            for i in range(len(k_lists)):
-                # Evaluate each list
-                print('======== Design number ' + str(i))
-                k_stream = k_lists[i]
-                err, err_s, area = evaluate_design(k_stream, self, 'iter'+str(num_iter)+'design'+str(i))
-                err_list.append(err)
-                err_summary.append(err_s)
-                area_list.append(area)
+        delay_list = []
+        power_list = []
+        name_list = []
+        count = 0
+        changed = {}
+
+        for num_track, curr_k_stream in enumerate(curr_k_streams):
+            print('==========TRACK {} =========='.format(num_track))
+            # Create a set of candidate k_streams
+            k_lists_tmp = []
+            for i in range(len(curr_k_stream)):
+                if curr_k_stream[i] == 1:
+                    continue
+
+                new_k_stream = list(curr_k_stream)
+                new_k_stream[i] = max(new_k_stream[i] - step_size, 1)
+                
+                if new_k_stream in self.explored_streams:
+                    continue
+                k_lists_tmp.append(new_k_stream)
+                self.explored_streams.append(new_k_stream)
+                
+                changed[count] = i
+                count += 1
+
+            # err_list = []
+            # err_summary = []
+            # area_list = []
+            name_list += ['iter'+str(num_iter)+'track'+str(num_track)+'design'+str(i) for i in range((len(k_lists_tmp)))]
+        
+            # Parallel mode
+            if parallel:
+                pool = mp.Pool(mp.cpu_count())
+                results = [pool.apply_async(evaluate_design,args=(k_lists_tmp[i], self, 'iter'+str(num_iter)+'track'+str(num_track)+'design'+str(i), False, use_weight )) for i in range(len(k_lists_tmp))]
+                pool.close()
+                pool.join()
+                for result in results:
+                    err_list.append(result.get()[0])
+                    err_summary.append(result.get()[1])
+                    area_list.append(result.get()[2])
+                    delay_list.append(result.get()[3])
+                    power_list.append(result.get()[4])
+            else:
+            # Sequential mode
+                for i in range(len(k_lists_tmp)):
+                    # Evaluate each list
+                    print('======== Design number ' + str(i))
+                    k_stream = k_lists_tmp[i]
+                    err, err_s, area, delay, power = evaluate_design(k_stream, self, 'iter'+str(num_iter)+'track'+str(num_track)+'design'+str(i))
+                    err_list.append(err)
+                    err_summary.append(err_s)
+                    area_list.append(area)
+                    delay_list.append(delay)
+                    power_list.append(power)
+
+            k_lists += k_lists_tmp
 
         if least_error:
             rank = least_error_opt(np.array(err_list), np.array(area_list) / self.initial_area, threshold+0.01)
@@ -447,28 +490,33 @@ class GreedyWorker():
             rank = optimization(np.array(err_list), np.array(area_list), self.initial_area, self.error_list[-1], self.area_list[-1], threshold+0.01)
         result = k_lists[rank[0]]
 
-        for i,e in enumerate(err_list):
-            if e <= self.error_list[-1] and area_list[i] <= self.area_list[-1]:
-                result[changed[i]] = k_lists[i][changed[i]]
+        # for i,e in enumerate(err_list):
+            # if e <= self.error_list[-1] and area_list[i] <= self.area_list[-1]:
+                # result[changed[i]] = k_lists[i][changed[i]]
             
-        return result, err_list[rank[0]], area_list[rank[0]], err_summary[rank[0]], rank
+        return result, k_lists, err_list, area_list, err_summary, delay_list, power_list, name_list, rank
 
     def plot(self, error_list, area_list):
 
-        error_np = np.array(error_list)
-        area_np = np.array( area_list )
+        error_np = np.array(error_list) * 100
+        area_np = np.array( area_list ) / area_list[0] * 100
         c = np.random.rand(len(error_list))
 
-        plt.scatter(error_np, area_np, c='r', s=6)
-        plt.plot(error_np, area_np, c='b', linewidth=3)
+        fig, ax = plt.subplots(1, 1)
+        ax.scatter(error_np, area_np, c='r', s=6)
+        # plt.plot(error_np, area_np, c='b', linewidth=3)
         #plt.xlim(0,1.0)
         #plt.ylim(0,1.1)
-        plt.ylabel('Area ratio')
-        plt.xlabel('HD Approximation Error')
+        ax.set_ylabel('Area ratio (%)')
+        ax.set_xlabel('HD Approximation Error (%)')
+        ax.set(xlim=(1e-3, 1e2))
         #plt.xticks(np.arange(0,1,0.1))
         #plt.yticks(np.arange(0,1.1,0.1))
-        plt.title('Greedy search on ' + self.modulename)
-        plt.savefig(os.path.join(self.output, 'visualization.png'))
+        ax.set_title('Greedy search on ' + self.modulename)
+        ax.set_xscale('log')
+        fig.savefig(os.path.join(self.output, 'visualization.png'))
+        
+        fig.clf()
 
 
 

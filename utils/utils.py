@@ -43,8 +43,18 @@ def evaluate_design(k_stream, worker, filename, display=True, use_weight=False):
     area  = synth_design(' '.join(verilog_list), output_syn, worker.library, worker.script, worker.path['yosys'])
 
     f, f_list = distance(ground_truth, truth_dir, use_weight)
-    print('Simulation error: {:.6f}\tCircuit area: {:.6f}'.format(f, area))
-    return f, f_list, area
+
+    # Estimate time and power
+    sta_script = os.path.join(worker.output, 'tmp', filename+'_sta.script')
+    sta_output = os.path.join(worker.output, 'tmp', filename+'_sta.out')
+    delay = get_delay(worker.path['OpenSTA'], sta_script, worker.library, output_syn+'_syn.v', worker.modulename, sta_output)
+    power = get_power(worker.path['OpenSTA'], sta_script, worker.library, output_syn+'_syn.v', worker.modulename, sta_output, worker.delay)
+
+    print('Simulation error: {:.6f}\tCircuit area: {:.6f}\tCircuit delay: {:.6f}\tPower consumption: {:.6f}'.format(f, area, delay, power))
+
+    os.remove(sta_script)
+    os.remove(sta_output)
+    return f, f_list, area, delay, power
 
 
 def synth_design(input_file, output_file, lib_file, script, yosys):
