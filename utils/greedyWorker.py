@@ -118,8 +118,7 @@ class GreedyWorker():
         sta_output = os.path.join(self.output, 'sta.out')
         synth_input = os.path.join(self.output, self.modulename+'_syn.v')
         self.delay = get_delay(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output)
-        power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay) * 1e6
-
+        power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay)
         f = open(os.path.join(self.output, 'data.csv'), 'a')
         f.write('{},{},{},{},{},{},{}\n'.format('Iter','HD', 'MAE', 'MAE%', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
         f.write('{},{:.6f},{:.6e},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format('Org', 0, 0, 0, self.initial_area, power, self.delay) )
@@ -141,7 +140,7 @@ class GreedyWorker():
             sta_script = os.path.join(self.output, 'sta.script')
             sta_output = os.path.join(self.output, 'sta.out')
             delay_iter = get_delay(self.path['OpenSTA'], sta_script, self.library, out_file+'_syn.v', self.modulename, sta_output)
-            power_iter = get_power(self.path['OpenSTA'], sta_script, self.library, out_file+'_syn.v', self.modulename, sta_output, self.delay) * 1e6
+            power_iter = get_power(self.path['OpenSTA'], sta_script, self.library, out_file+'_syn.v', self.modulename, sta_output, self.delay)
 
             f.write('{},{:.6f},{:.6e},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format(k, err_sum[0], err_sum[1], err_sum[2], area, power_iter, delay_iter) )
         self.plot(err_list, area_list)
@@ -290,7 +289,7 @@ class GreedyWorker():
                 sta_output = os.path.join(self.output, 'sta.out')
                 synth_input = os.path.join(self.output, self.modulename+'_syn.v')
                 self.delay = get_delay(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output)
-                power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay) * 1e6
+                power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay)
                 # f.write('Original chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(self.initial_area, self.delay, power))
                 f.write('{:<10}{:<12}{:<10}{:<15}{:<15}{:<15}\n'.format('HD', 'MAE', 'MAE%', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
                 f.write('{:<10.2f}{:<12.2f}{:<10.2f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(0, 0, 0, self.initial_area, power, self.delay) )
@@ -308,17 +307,17 @@ class GreedyWorker():
             a = np.array(self.area_list)
             e = np.array(self.error_list)
             a[e > threshold[0]] = np.inf
-            it = np.argmin(a)
-            source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[it]))
+            idx = np.argmin(a)
+            source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx]))
             target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 'REST'))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
-                sta_script = os.path.join(self.output, 'sta.script')
-                sta_output = os.path.join(self.output, 'sta.out')
-                app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
-                power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
+                # sta_script = os.path.join(self.output, 'sta.script')
+                # sta_output = os.path.join(self.output, 'sta.out')
+                # app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
+                # power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
                 # f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format('REST', self.area_list[it-1], app_delay, power))
-                f.write('{:<10.6f}{:<12.4e}{:<10.6f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(self.metric_list[it][0], self.metric_list[it][1], self.metric_list[it][2], self.area_list[it], power, app_delay) )
+                f.write('{:<10.6f}{:<12.4e}{:<10.6f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(self.metric_list[idx][0], self.metric_list[idx][1], self.metric_list[idx][2], self.area_list[idx], self.power_list[idx], self.delay_list[idx]) )
 
             print('All subcircuits have been approximated to degree 1. Exit approximating.')
             return -1
@@ -379,6 +378,13 @@ class GreedyWorker():
             # if i == rank[0]:
         with open(os.path.join(self.output, 'data.csv'), 'a') as data:
             data.write('{},{:.6f},{:.6e},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format(self.iter, err_sum[rank[0]][0], err_sum[rank[0]][1], err_sum[rank[0]][2], area[rank[0]], power[rank[0]], delay[rank[0]]) )
+
+        self.iter += 1
+
+        self.error_list += err
+        self.area_list += area
+        self.metric_list += err_sum
+        self.design_list += name_list
         self.power_list += power
         self.delay_list += delay
 
@@ -388,18 +394,17 @@ class GreedyWorker():
             a = np.array(self.area_list)
             e = np.array(self.error_list)
             a[e > ts] = np.inf
-            it = np.argmin(a)
-            source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[it]))
+            idx = np.argmin(a)
+            source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx]))
             target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, int(ts*100)))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
-                sta_script = os.path.join(self.output, 'sta.script')
-                sta_output = os.path.join(self.output, 'sta.out')
-                app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
-                power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
+                # sta_script = os.path.join(self.output, 'sta.script')
+                # sta_output = os.path.join(self.output, 'sta.out')
+                # app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
+                # power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
                 #f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(int(ts*100), self.area_list[it], app_delay, power))
-                
-                f.write('{:<10.6f}{:<12.4e}{:<10.6f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(self.metric_list[it][0], self.metric_list[it][1], self.metric_list[it][2], self.area_list[it], power, app_delay) )
+                f.write('{:<10.6f}{:<12.4e}{:<10.6f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(self.metric_list[idx][0], self.metric_list[idx][1], self.metric_list[idx][2], self.area_list[idx], self.power_list[idx], self.delay_list[idx]) )
 
         if len(threshold) == 0: 
             print('Reach error threshold. Exit approximation.')
@@ -409,12 +414,6 @@ class GreedyWorker():
         # target_file = os.path.join(self.output, 'approx_design', 'iter{}.v'.format(self.iter))
         # shutil.copyfile(source_file, target_file)
 
-        self.iter += 1
-
-        self.error_list += err
-        self.area_list += area
-        self.metric_list += err_sum
-        self.design_list += name_list
         
         self.plot(self.error_list, self.area_list)
 

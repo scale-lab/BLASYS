@@ -410,7 +410,7 @@ def get_power(sta, script, liberty, input_file, modulename, output_file, delay):
         f.write('set_input_delay -clock clk 0 [all_inputs]\n')
         f.write('set_output_delay -clock clk 0 [all_outputs]\n')
         f.write('report_checks\n')
-        f.write('report_power - digits 6\n')
+        f.write('report_power - digits 12\n')
         f.write('exit')
 
     with open(output_file, 'w') as f:
@@ -425,4 +425,4 @@ def get_power(sta, script, liberty, input_file, modulename, output_file, delay):
                 break
             line = f.readline()
 
-    return power
+    return power * 1e6
