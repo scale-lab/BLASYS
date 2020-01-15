@@ -59,7 +59,7 @@ def evaluate_design(k_stream, worker, filename, display=True, use_weight=False):
 
 def synth_design(input_file, output_file, lib_file, script, yosys):
     yosys_command = 'read_verilog ' + input_file + '; ' \
-            + 'synth -flatten; opt; opt_clean -purge; techmap; write_verilog -noattr ' +output_file + '.v; abc -liberty '+lib_file \
+            + 'synth -flatten; opt; opt_clean -purge; techmap; opt; opt_clean -purge; write_verilog -noattr ' +output_file + '.v; abc -liberty '+lib_file \
             + ' -script ' + script + '; stat -liberty '+lib_file + '; write_verilog -noattr ' +output_file + '_syn.v;\n '
 
     area = 0
@@ -306,7 +306,7 @@ def number_of_cell(input_file, yosys):
     Get number of yosys standard cells of input circuit
     '''
     yosys_command = 'read_verilog ' + input_file + '; ' \
-            + 'synth -flatten; opt; opt_clean -purge; techmap; stat;\n'
+            + 'synth -flatten; opt; opt_clean -purge; techmap; opt; opt_clean -purge; stat;\n'
     num_cell = 0
     output_file = input_file[:-2] + '_syn.log'
     line=subprocess.call(yosys+" -p \'"+ yosys_command+"\' > "+ output_file, shell=True)

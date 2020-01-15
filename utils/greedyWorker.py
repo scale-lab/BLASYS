@@ -273,14 +273,14 @@ class GreedyWorker():
         self.explored_streams = [self.output_list.copy()]
 
 
-    def greedy_opt(self, parallel, step_size = 1, threshold=[1000000.], use_weight=False):
+    def greedy_opt(self, parallel, step_size = 1, threshold=[1000000.], use_weight=False, track=3):
         threshold.sort()
         while True:
-            if self.next_iter(parallel, step_size, threshold, use_weight=use_weight) == -1:
+            if self.next_iter(parallel, step_size, threshold, use_weight=use_weight, track=track) == -1:
                 break
 
 
-    def next_iter(self, parallel, step_size, threshold=[1000000.], least_error=False, use_weight=False):
+    def next_iter(self, parallel, step_size, threshold=[1000000.], least_error=False, use_weight=False, track=3):
 
         if self.iter == 0:
             print('==================== Starting Approximation by Greedy Search  ====================')
@@ -365,7 +365,7 @@ class GreedyWorker():
             # target_file = os.path.join(self.output, 'approx_design', 'iter{}_syn.v'.format(self.iter))
             # shutil.copyfile(source_file, target_file)
         
-        self.curr_streams = [streams[i] for i in rank[:10]]
+        self.curr_streams = [streams[i] for i in rank[:track]]
 
             # sta_script = os.path.join(self.output, 'sta.script')
             # sta_output = os.path.join(self.output, 'sta.out')
@@ -508,7 +508,7 @@ class GreedyWorker():
         #plt.ylim(0,1.1)
         ax.set_ylabel('Area ratio (%)')
         ax.set_xlabel('HD Approximation Error (%)')
-        ax.set(xlim=(1e-3, 1e2))
+        ax.set(xlim=(1e-3, 1e2), ylim=(.0, 1.2))
         #plt.xticks(np.arange(0,1,0.1))
         #plt.yticks(np.arange(0,1.1,0.1))
         ax.set_title('Greedy search on ' + self.modulename)
