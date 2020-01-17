@@ -19,6 +19,7 @@ Be sure to install following tools before running BLASYS toolchain.
 2. **ABC**: Logic synthesis. (https://github.com/berkeley-abc/abc)
 3. **Icarus Verilog**: Simulation and HD error estimation. (http://iverilog.icarus.com)
 4. **LSOracle**: Partitioning. (https://github.com/LNIS-Projects/LSOracle)
+4. **OpenSTA**: Power and delay estimation. (https://github.com/The-OpenROAD-Project/OpenSTA)
 
 **NOTE:** After installing tools above, you should either **add them into environment path of your system**, or **put the path to excutable into** ``params.yml``.
 
@@ -47,21 +48,26 @@ make
 Before running BLASYS for first time, please open ``config/params.yml`` and enter path to executable files for all tools in previous section. If you have added them into your system environment, you may just enter the command name.
 
 ### Script for Greedy Design-Space Exploration
-For circuits of small-medium size, ``greedy.py`` is recommended, which performs greedy design-space exploration. The command-line arguments are
+``blasys.py`` performs greedy design-space exploration with proper command-line arguments, which are
 ```
-python3 [path to BLASYS folder]/greedy.py \
+python3 [path to BLASYS folder]/blasys.py \
                  -i PATH_TO_INPUT_VERILOG \
                  -lib PATH_TO_LIBERTY_FILE \
                  [-n NUMBER_OF_PARTITIONS] \
                  [-tb NUMBER_OF_TEST_VECTORS] \
                  [-o OUTPUT_FOLDER] \
-                 [-ts THRESHOLD] \
+                 [-ts LIST_THRESHOLD] \
                  [-ss STEP_SIZE] \
+                 [--track NUMBER_OF_TRACKS]
                  [--parallel] \ 
                  [--weight] \
                  [--single]
 ```
-First two arguments (input / testbench) are mandatory. BLASYS takes a recursive partitioning scheme based on number of standard cells. Thus, number of partitions is optional. It also generates test bench automatically. Number of test vectors is optional, too. Default output folder is ``output``. Default step-size is 1. If no threshold ``-ts`` is specified, BLASYS will keep running until all partitions reach factorization degree 1. 
+First two arguments (input / testbench) are mandatory. BLASYS takes a recursive partitioning scheme based on number of standard cells. Thus, number of partitions is optional. It also generates test bench automatically. Number of test vectors is optional, too. Default output folder is ``output``. Default step-size is 1. 
+
+You can provide a list of error thresholds which are separated by comma. If no threshold ``-ts`` is specified, BLASYS will keep running until all partitions reach factorization degree 1. 
+
+BLASYS performs multi-track greedy exploration. The default number of tracks is 3. You can adjust the number by flag ``--track``.
 
 The flag ``--parallel`` indicates parallel mode. If specified, BLASYS will run in parallel with all available cores in your machine.
 
@@ -86,13 +92,13 @@ read_verilog PATH_TO_INPUT [-tb NUMBER_OF_TEST_VECTOR]
 ```
 partitioning [-n NUMBER_OF_PARTITIONS]
 ```
-5. At this step, BLASYS is ready to do approximation. There are two commands. The first one is to do greedy design-space exploration until error threshold is met or all partitions reach factorization degree 1. All arguments are optional. If flag ``-p`` is specified, BLASYS will run in parallel mode. If flag ``-w`` is specified, the error metric will compute weighted error based on bit significance.
+5. At this step, BLASYS is ready to do approximation. There are two commands. The first one is to do greedy design-space exploration until error threshold is met or all partitions reach factorization degree 1. All arguments are optional. If flag ``-p`` is specified, BLASYS will run in parallel mode. If flag ``-w`` is specified, the error metric will compute weighted error based on bit significance. The default number of tracks is 3.
 ```
-greedy [-t THRESHOLD] [-s STEP_SIZE] [-p] [-w]
+greedy [-ts LIST_THRESHOLD] [-s STEP_SIZE] [-tr NUMBER_OF_TRACKS] [-p] [-w]
 ```
 Or you may specify the number of iterations by following command. The default number of iteration number is 1.
 ```
-run_iter [-i NUMBER_OF_ITERATION] [-t THRESHOLD] [-s STEP_SIZE] [-p] [-w]
+run_iter [-i NUMBER_OF_ITERATION] [-ts THRESHOLD] [-s STEP_SIZE] [-tr NUMBER_OF_TRACKS] [-p] [-w]
 ```
 6. As mentioned before, BLASYS may directly factorize truth table without partitioning. This can be done by command 
 ```
