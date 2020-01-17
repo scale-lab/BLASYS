@@ -228,7 +228,7 @@ class GreedyWorker():
                         'partitioning 4 -c ' + self.path['part_config'] + '; ' \
                         'get_all_partitions ' + part_dir
                 with open(log_partition, 'a') as file_handler:
-                    subprocess.call([self.path['lsoracle'], '-c', lsoracle_command], stderr=file_handler, stdout=file_handler)
+                    subprocess.call([self.path['lsoracle'], '-c', lsoracle_command], stderr=subprocess.STDOUT, stdout=file_handler)
                 partitioned.extend([mod + '_' + str(i) for i in range(num_parts)])
                 
                 with open(toplevel, 'a') as top:
