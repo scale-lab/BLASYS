@@ -135,7 +135,7 @@ class GreedyWorker():
             err, err_sum = distance(truth_dir+'.truth', gen_truth, use_weight)
             err_list.append(err)
             area_list.append(area/self.initial_area)
-            print('Factorization level {}, Area {}, Error {}\n'.format(k, area, err))
+            # print('Factorization level {}, Area {}, Error {}\n'.format(k, area, err))
             # f.write('{:.6f},{:.6f},Level{}'.format(err, area, k))
             sta_script = os.path.join(self.output, 'sta.script')
             sta_output = os.path.join(self.output, 'sta.out')
@@ -143,6 +143,11 @@ class GreedyWorker():
             power_iter = get_power(self.path['OpenSTA'], sta_script, self.library, out_file+'_syn.v', self.modulename, sta_output, self.delay)
 
             f.write('{},{:.6f},{:.6e},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format(k, err_sum[0], err_sum[1], err_sum[2], area, power_iter, delay_iter) )
+            if use_weight:
+                print('Factorization degree {}, MAE {:.4%}, Area {:.2f}, Power {:.4f}, Delay {:.4f}'.format(k, err_sum[2], area, power_iter, delay_iter))
+
+            else:
+                print('Factorization degree {}, HD {:.4%}, Area {:.2f}, Power {:.4f}, Delay {:.4f}'.format(k, err_sum[0], area, power_iter, delay_iter))
         self.plot(err_list, area_list)
         f.close()
 
@@ -205,7 +210,7 @@ class GreedyWorker():
         
         log_partition = os.path.join(self.output, 'lsoracle.log')
         with open(log_partition, 'w') as file_handler:
-            subprocess.call([self.path['lsoracle'], '-c', lsoracle_command], stderr=file_handler, stdout=file_handler)
+            subprocess.call([self.path['lsoracle'], '-c', lsoracle_command], stderr=subprocess.STDOUT, stdout=file_handler)
 
         partitioned = [self.modulename + '_' + str(i) for i in range(num_parts)]
 

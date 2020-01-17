@@ -134,7 +134,8 @@ class Blasys(Cmd):
         else:
             num_part = None
      
-            
+        self.optimizer.convert2aig()
+
         if num_part is None:
             self.optimizer.recursive_partitioning()
         else:
@@ -384,7 +385,7 @@ class Blasys(Cmd):
             self.optimizer.evaluate_initial()
         else:
             self.optimizer.evaluate_initial(self.testbench)
-        self.optimizer.convert2aig()
+        # self.optimizer.convert2aig()
 
     def do_blasys(self, args):
         # Call blasys
@@ -396,7 +397,7 @@ class Blasys(Cmd):
             weight = True
         else:
             weight = False
-        self.optimizer.blasys(False)
+        self.optimizer.blasys(weight)
 
 
 
