@@ -2,6 +2,7 @@ import regex as re
 import sys
 import os
 import numpy as np
+import shutil
 import subprocess
 from .asso import asso
 from .metric import distance
@@ -327,23 +328,23 @@ def write_aiger(input_file, yosys, output_file, map_file):
     # subprocess.call(yosys+" -p \'"+yosys_command+"\'")
     subprocess.call([yosys, '-p', yosys_command], stdout=subprocess.DEVNULL)
     # Parse map file and return dict
-    input_map = {}
-    output_map = {}
-    with open(map_file) as f:
-        line = f.readline()
-        while line:
-            tokens = line.split()
-            if tokens[0] == 'input':
-                input_map[int(tokens[1])] = tokens[3]
-            if tokens[0] == 'output':
-                output_map[int(tokens[1])] = tokens[3]
+    # input_map = {}
+    # output_map = {}
+    # with open(map_file) as f:
+        # line = f.readline()
+        # while line:
+            # tokens = line.split()
+            # if tokens[0] == 'input':
+                # input_map[int(tokens[1])] = tokens[3]
+            # if tokens[0] == 'output':
+                # output_map[int(tokens[1])] = tokens[3]
 
-            line = f.readline()
+            # line = f.readline()
 
-    org_input_map, org_output_map = inpout_map(input_file)
+    # org_input_map, org_output_map = inpout_map(input_file)
 
-    return {i: org_input_map[input_map[i]] for i in range(len(input_map))}, \
-            {i: org_output_map[output_map[i]] for i in range(len(output_map))}
+    # return {i: org_input_map[input_map[i]] for i in range(len(input_map))}, \
+            # {i: org_output_map[output_map[i]] for i in range(len(output_map))}
 
 
 
@@ -426,3 +427,70 @@ def get_power(sta, script, liberty, input_file, modulename, output_file, delay):
             line = f.readline()
 
     return power * 1e6
+
+
+
+def create_wrapper(inp, out, top, vmap, worker):
+    tmp = os.path.join(worker.output, 'tmp.v')
+    yosys_command = 'read_verilog ' + inp + '; synth -flatten; opt; opt_clean; techmap; write_verilog ' + tmp + ';\n'
+    subprocess.call([worker.path['yosys'], '-p', yosys_command], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+
+    out_file = open(out, 'w')
+
+    # Write module signature from tmp file
+    tmp_file = open(tmp)
+    isVector = {}
+    line = tmp_file.readline()
+    while line:
+        tokens = line.strip('\n;').split()
+
+        if len(tokens) > 0 and tokens[0] == 'module':
+            out_file.write(line)
+
+        if len(tokens) > 0 and ( tokens[0] == 'input' or tokens[0] == 'output' ):
+            out_file.write(line)
+            if len(tokens) == 2:
+                isVector[tokens[1]] = False
+            else:
+                isVector[tokens[2]] = True
+
+        line = tmp_file.readline()
+    tmp_file.close()
+
+    # Prepare list of arguments
+    arg_list = []
+    map_file = open(vmap)
+    line = map_file.readline()
+    while line:
+        tokens = line.split()
+
+        if tokens[0] == 'input' or tokens[0] == 'output':
+            if isVector[tokens[3]] is False:
+                arg_list.append(tokens[3])
+            else:
+                arg_list.append(tokens[3] + '[' + tokens[2] + ']')
+        line = map_file.readline()
+
+    map_file.close()
+
+    # Call old top-level module
+    out_file.write('  top U0 ( ' + ' , '.join(arg_list) + ' );\n')
+    out_file.write('endmodule\n\n')
+
+    # Copy old top-level and change module name
+    top_file = open(top)
+    line = top_file.readline()
+    replaced = False
+    while line:
+        tokens = line.split()
+        if len(tokens) > 0 and tokens[0] == 'module' and not replaced:
+            line = line.replace(worker.modulename, 'top', 1)
+            replaced = True
+        out_file.write(line)
+        line = top_file.readline()
+    top_file.close()
+
+    out_file.close()
+    
+    os.remove(top)
+    shutil.move(out, top)

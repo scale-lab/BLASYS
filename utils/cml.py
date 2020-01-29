@@ -4,9 +4,9 @@ import yaml
 import regex as re
 import shutil
 import numpy as np
-from utils.banner import print_banner
-from utils.greedyWorker import GreedyWorker
-from utils.create_tb import create_testbench
+from .banner import print_banner
+from .greedyWorker import GreedyWorker
+from .create_tb import create_testbench
 
 class Blasys(Cmd):
     prompt = 'blasys> '

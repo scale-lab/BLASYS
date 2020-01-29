@@ -5,7 +5,7 @@ import argparse
 import os
 import numpy as np
 import sys
-from cml import Blasys
+from utils.cml import Blasys
 
 
 
@@ -19,7 +19,7 @@ def main():
     # Parse command-line args
     parser = argparse.ArgumentParser(description='BLASYS -- Approximate Logic Synthesis Using Boolean Matrix Factorization')
     parser.add_argument('-i', help='Input verilog file', required=True, dest='input')
-    parser.add_argument('-tb', '--testbench', help='Number of test vectors', type=int, default=10000, dest='testbench')
+    parser.add_argument('-tb', '--testbench', help='Number of test vectors', required=True, dest='testbench')
     parser.add_argument('-n', help='Number of partitions', default=None, type=int, dest='npart')
     parser.add_argument('-o', help='Output directory', default='output', dest='output')
     parser.add_argument('-ts', '--threshold', help='Threshold on error', default='None', dest='threshold')
@@ -44,9 +44,9 @@ def main():
     else:
         threshold_list = list(map(float, args.threshold.split(',')))
 
-    worker = GreedyWorker(args.input, args.liberty, config, None)
+    worker = GreedyWorker(args.input, args.liberty, config, args.testbench)
     worker.create_output_dir(args.output)
-    pis, pos = worker.evaluate_initial(args.testbench)
+    pis, pos = worker.evaluate_initial()
     if args.single is not True:
         worker.convert2aig()
         if args.npart is None:

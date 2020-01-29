@@ -4,9 +4,9 @@ import regex as re
 import os
 import argparse
 import shutil
-from utils.utils import synth_design, get_delay, get_power
-from utils.create_tb import create_testbench
-from utils.metric import distance
+from .utils import synth_design, get_delay, get_power
+from .create_tb import create_testbench
+from .metric import distance
 import subprocess
 
 

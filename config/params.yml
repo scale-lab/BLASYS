@@ -1,6 +1,6 @@
 
 # LSOracle for partitioning
-lsoracle: '/home/jingxiao/new_lsoracle/LSOracle/build/core/lsoracle'
+lsoracle: '/home/jingxiao/Tools/LSOracle/build/core/lsoracle'
 
 # Synthesis
 yosys: 'yosys'
@@ -10,7 +10,7 @@ iverilog: 'iverilog'
 vvp: 'vvp'
 
 # ABC for synthesis
-abc: 'abc'
+abc: '/home/jingxiao/Tools/abc/abc'
 
 # OpenSTA for delay and power analysis
 OpenSTA: 'sta'

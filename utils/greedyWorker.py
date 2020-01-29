@@ -9,14 +9,14 @@ import multiprocessing as mp
 import shutil
 import time
 import ctypes
-from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell, write_aiger, get_delay, get_power, approximate
+from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell, write_aiger, get_delay, get_power, approximate, create_wrapper
 from .optimizer import optimization, least_error_opt
 from .create_tb import create_testbench
 from .metric import distance
 
 
 class GreedyWorker():
-    def __init__(self, input_circuit, library, path, testbench=None):
+    def __init__(self, input_circuit, library, path, testbench):
         # Check executable
         assert shutil.which(path['iverilog']), 'Cannot find iverilog'
         assert shutil.which(path['vvp']), 'Cannot find vvp'
@@ -41,7 +41,7 @@ class GreedyWorker():
         self.design_list = []
         self.iter = 0
 
-
+        self.modulename = None
         # Get modulename
         with open(self.input) as file:
             line = file.readline()
@@ -51,6 +51,8 @@ class GreedyWorker():
                     if tokens[i] == 'module':
                         self.modulename = tokens[i+1]
                         break
+                if self.modulename is not None:
+                    break
                 line = file.readline()
 
 
@@ -85,23 +87,23 @@ class GreedyWorker():
         print('Parsing input verilog into aig format ...')
         self.aig = os.path.join(self.output, self.modulename + '.aig')
         mapping = os.path.join(self.output, self.modulename + '.map')
-        inp_map, out_map = write_aiger(self.input, self.path['yosys'], self.aig, mapping)
-        self.testbench = os.path.join(self.output, self.modulename+'_aig_tb.v')
-        with open(self.testbench_v) as f:
-            bench = f.readlines()
-        with open(self.testbench, 'w') as f:
-            for i, content in enumerate(bench):
-                if i != 3:
-                    f.write(content)
-                else:
-                    f.write(self.modulename+' dut(')
+        write_aiger(self.input, self.path['yosys'], self.aig, mapping)
+        # self.testbench = os.path.join(self.output, self.modulename+'_aig_tb.v')
+        # with open(self.testbench_v) as f:
+            # bench = f.readlines()
+        # with open(self.testbench, 'w') as f:
+            # for i, content in enumerate(bench):
+                # if i != 3:
+                    # f.write(content)
+                # else:
+                    # f.write(self.modulename+' dut(')
 
-                    f.write('pi[{}]'.format(inp_map[0]))
-                    for i in range(1, len(inp_map)):
-                        f.write(', pi[{}]'.format(inp_map[i]))
-                    for i in range(len(out_map)):
-                        f.write(', po[{}]'.format(out_map[i]))
-                    f.write(');\n')
+                    # f.write('pi[{}]'.format(inp_map[0]))
+                    # for i in range(1, len(inp_map)):
+                        # f.write(', pi[{}]'.format(inp_map[i]))
+                    # for i in range(len(out_map)):
+                        # f.write(', po[{}]'.format(out_map[i]))
+                    # f.write(');\n')
 
     def blasys(self, use_weight=False):
         inp, out = inpout(self.input)
@@ -154,15 +156,15 @@ class GreedyWorker():
 
 
 
-    def evaluate_initial(self, tb_size=10000):
-        if self.testbench is None:
-            self.testbench_v = os.path.join(self.output, self.modulename+'_tb.v')
-            with open(self.testbench_v, 'w') as f:
-                create_testbench(self.input, tb_size, f)
+    def evaluate_initial(self):
+       #  if self.testbench is None:
+            # self.testbench_v = os.path.join(self.output, self.modulename+'_tb.v')
+            # with open(self.testbench_v, 'w') as f:
+                # create_testbench(self.input, tb_size, f)
 
         #self.testbench = self.testbench_v
         print('Simulating truth table on input design...')
-        subprocess.call([self.path['iverilog'], '-o', self.modulename+'.iv', self.input, self.testbench_v ])
+        subprocess.call([self.path['iverilog'], '-o', self.modulename+'.iv', self.input, self.testbench ])
         output_truth = os.path.join(self.output, self.modulename+'.truth')
         with open(output_truth, 'w') as f:
             subprocess.call([self.path['vvp'], self.modulename+'.iv'], stdout=f)
@@ -242,6 +244,12 @@ class GreedyWorker():
 
 
         self.truthtable_for_parts()
+
+        # Rewrite top-level
+        mapping = os.path.join(self.output, self.modulename + '.map')
+        outfile = os.path.join(self.output, 'out.v')
+        topfile = os.path.join(self.output, 'partition', self.modulename + '.v')
+        create_wrapper(self.input, outfile, topfile, mapping, self)
      
 
     def truthtable_for_parts(self):
