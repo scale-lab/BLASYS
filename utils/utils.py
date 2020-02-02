@@ -458,22 +458,51 @@ def create_wrapper(inp, out, top, vmap, worker):
     
     # Prepare list of arguments
     arg_list = []
+    input_dict = {}
+    output_dict = {}
     map_file = open(vmap)
     line = map_file.readline()
     while line:
         tokens = line.split()
 
-        if tokens[0] == 'input' or tokens[0] == 'output':
+        if tokens[0] == 'input':
             if isVector[tokens[3]] is False:
-                arg_list.append(tokens[3])
+                input_dict[tokens[3]] = int(tokens[1])
             else:
-                arg_list.append(tokens[3] + '[' + tokens[2] + ']')
+                input_dict[tokens[3] + '[' + tokens[2] + ']'] = int(tokens[1])
+
+        if tokens[0] == 'output':
+            if isVector[tokens[3]] is False:
+                output_dict[tokens[3]] = int(tokens[1])
+            else:
+                output_dict[tokens[3] + '[' + tokens[2] + ']'] = int(tokens[1])
+
+
         line = map_file.readline()
+
+    inp_digit = len(str(len(input_dict)))
+    out_digit = len(str(len(output_dict)))
 
     map_file.close()
 
     # Call old top-level module
-    out_file.write('  top U0 ( ' + ' , '.join(arg_list) + ' );\n')
+    # out_file.write('  top U0 ( ' + ' , '.join(arg_list) + ' );\n')
+    out_file.write('  top U0 ( ')
+    first = True
+    for i in input_dict:
+        if not first:
+            out_file.write(',')
+        first = False
+        out_file.write(' .pi{0:0{1}}({2}) '.format(input_dict[i], inp_digit, i))
+
+    for i in output_dict:
+        if not first:
+            out_file.write(',')
+        first = False
+        out_file.write(' .po{0:0{1}}({2}) '.format(output_dict[i], out_digit, i))
+
+
+    out_file.write(');\n')
     out_file.write('endmodule\n\n')
 
     # Copy old top-level and change module name
