@@ -12,7 +12,7 @@ import yaml
 def create_testbench(input_file, output_file, num, yosys):
 
     f = open(output_file, 'w')
-    modulename, inp, n_inputs, out, n_outputs = module_info(input_file, yosys)
+    modulename, port_list, inp, n_inputs, out, n_outputs = module_info(input_file, yosys)
 
     f.write("module "+modulename+"_tb;\n")
     f.write('reg ['+str(n_inputs-1)+':0] pi;\n')
@@ -27,21 +27,52 @@ def create_testbench(input_file, output_file, num, yosys):
     # f.write(');\n')
 
     first = True
-    count = 0
-    for i in inp:
-        if not first:
-            f.write(',')
-        first = False
-        f.write(' .{}(pi[{}:{}]) '.format(i, count + inp[i] - 1, count))
-        count += inp[i]
+    inp_count = 0
+    out_count = 0
 
-    count = 0
-    for i in out:
+    for i in port_list:
         if not first:
             f.write(',')
         first = False
-        f.write(' .{}(po[{}:{}]) '.format(i, count + out[i] - 1, count))
-        count += out[i]
+
+        if i in inp:
+            if inp[i] > 1:
+                f.write(' pi[{}:{}] '.format(inp_count + inp[i] - 1, inp_count))
+            else:
+                f.write(' pi[{}] '.format(inp_count))
+            inp_count += inp[i]
+
+        elif i in out:
+            if out[i] > 1:
+                f.write(' po[{}:{}] '.format(out_count + out[i] - 1, out_count))
+            else:
+                f.write(' po[{}] '.format(out_count))
+            out_count += out[i]
+
+        else:
+            print('[Error] Port {} is not defined as input or output.'.format(i))
+            sys.exit(0)
+    #count = 0
+    #for i in inp:
+    #    if not first:
+    #        f.write(',')
+    #    first = False
+    #    if inp[i] > 1:
+    #        f.write(' .{}(pi[{}:{}]) '.format(i, count + inp[i] - 1, count))
+    #    else:
+    #        f.write(' .{}(pi[{}]) '.format(i, count))
+    #    count += inp[i]
+
+    #count = 0
+    #for i in out:
+    #    if not first:
+    #        f.write(',')
+    #    first = False
+    #    if out[i] > 1:
+    #        f.write(' .{}(po[{}:{}]) '.format(i, count + out[i] - 1, count))
+    #    else:
+    #        f.write(' .{}(po[{}]) '.format(i, count))
+    #    count += out[i]
 
 
     f.write(');\n')
@@ -89,10 +120,14 @@ def module_info(fname, yosys_path):
     modulename = None
     line = tmp_file.readline()
     while line:
-        tokens = re.split('[ (]',line.strip().strip(';'))
-        
+        tokens = re.split('[ ()]', line.strip().strip(';').strip())
+         
         if len(tokens) > 0 and tokens[0] == 'module' and modulename is None:
             modulename = tokens[1]
+            port_list = re.split('[,()]', line.strip().strip(';').strip())[1:]
+            port_list = [s.strip() for s in port_list if s.strip() != '']
+
+
 
         if len(tokens) == 2 and ( tokens[0] == 'input' or tokens[0] == 'output' ):
             if tokens[0] == 'input':
@@ -118,10 +153,9 @@ def module_info(fname, yosys_path):
 
     tmp_file.close()  
 
-
     os.remove(tmp)
 
-    return modulename, inp, inp_count, out, out_count
+    return modulename, port_list, inp, inp_count, out, out_count
 
 
 def main():

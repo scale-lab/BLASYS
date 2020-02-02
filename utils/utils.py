@@ -441,7 +441,7 @@ def create_wrapper(inp, out, top, vmap, worker):
     isVector = {}
     line = tmp_file.readline()
     while line:
-        tokens = line.strip().strip(';').split()
+        tokens = line.strip().strip(';').strip().split()
 
         if len(tokens) > 0 and tokens[0] == 'module':
             out_file.write(line)
