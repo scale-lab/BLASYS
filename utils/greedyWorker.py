@@ -202,7 +202,7 @@ class GreedyWorker():
         self.modulenames = []
 
         if num_parts is None:
-            num_parts = number_of_cell(self.input, self.path['yosys']) // 40 + 1
+            num_parts = number_of_cell(self.input, self.path['yosys']) // 30 + 1
 
         print('Partitioning input circuit...')
         part_dir = os.path.join(self.output, 'partition')
@@ -227,11 +227,11 @@ class GreedyWorker():
             inp, out = inpout(mod_path)
             if inp > 16:
                 lsoracle_command = 'read_verilog ' + mod_path + '; ' \
-                        'partitioning 4 -c ' + self.path['part_config'] + '; ' \
+                        'partitioning 3 -c ' + self.path['part_config'] + '; ' \
                         'get_all_partitions ' + part_dir
                 with open(log_partition, 'a') as file_handler:
                     subprocess.call([self.path['lsoracle'], '-c', lsoracle_command], stderr=subprocess.STDOUT, stdout=file_handler)
-                partitioned.extend([mod + '_' + str(i) for i in range(num_parts)])
+                partitioned.extend([mod + '_' + str(i) for i in range(3)])
                 
                 with open(toplevel, 'a') as top:
                     subprocess.call(['cat', mod_path], stdout=top)

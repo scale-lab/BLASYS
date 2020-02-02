@@ -101,7 +101,7 @@ def inpout(fname):
     return n_inputs, n_outputs
 
 
-def  gen_truth(fname, modulename):
+def gen_truth(fname, modulename):
     with open(fname+'.v') as file:
         f=open(fname+'_tb.v', "w+")
         line = file.readline()
@@ -325,7 +325,6 @@ def write_aiger(input_file, yosys, output_file, map_file):
     '''
     yosys_command = 'read_verilog ' + input_file + '; aigmap; write_aiger -vmap '\
             + map_file + ' ' + output_file + ';'
-    # subprocess.call(yosys+" -p \'"+yosys_command+"\'")
     subprocess.call([yosys, '-p', yosys_command], stdout=subprocess.DEVNULL)
     # Parse map file and return dict
     # input_map = {}
@@ -348,37 +347,37 @@ def write_aiger(input_file, yosys, output_file, map_file):
 
 
 
-def inpout_map(fname):
-    input_map = {}
-    output_map = {}
-    with open(fname) as file:
-        line = file.readline()
-        inp=0
-        out=0
-        n_inp = 0
-        n_out = 0
-        while line:
-            line.strip()
-            tokens=re.split('[ ,;\n]', line)
-            for t in tokens:
-                t.strip()
-                if t != "":
-                    if inp == 1 and t != 'output':
-                        input_map[t.strip('\\')] = n_inp
-                        n_inp += 1
-                    if out == 1 and t != 'wire' and t != 'assign':
-                        output_map[t.strip('\\')] = n_out
-                        n_out += 1
-                    if t == 'input':
-                        inp=1
-                    elif t == 'output':
-                        out=1
-                        inp=0
-                    elif t == 'wire' or t == 'assign':
-                        out=0
-            line=file.readline()
-
-    return input_map, output_map
+# def inpout_map(fname):
+#     input_map = {}
+#     output_map = {}
+#     with open(fname) as file:
+#         line = file.readline()
+#         inp=0
+#         out=0
+#         n_inp = 0
+#         n_out = 0
+#         while line:
+#             line.strip()
+#             tokens=re.split('[ ,;\n]', line)
+#             for t in tokens:
+#                 t.strip()
+#                 if t != "":
+#                     if inp == 1 and t != 'output':
+#                         input_map[t.strip('\\')] = n_inp
+#                         n_inp += 1
+#                     if out == 1 and t != 'wire' and t != 'assign':
+#                         output_map[t.strip('\\')] = n_out
+#                         n_out += 1
+#                     if t == 'input':
+#                         inp=1
+#                     elif t == 'output':
+#                         out=1
+#                         inp=0
+#                     elif t == 'wire' or t == 'assign':
+#                         out=0
+#             line=file.readline()
+# 
+#     return input_map, output_map
 
 def get_delay(sta, script, liberty, input_file, modulename, output_file):
     with open(script, 'w') as f:
@@ -442,7 +441,7 @@ def create_wrapper(inp, out, top, vmap, worker):
     isVector = {}
     line = tmp_file.readline()
     while line:
-        tokens = line.strip('\n;').split()
+        tokens = line.strip().strip(';').split()
 
         if len(tokens) > 0 and tokens[0] == 'module':
             out_file.write(line)
@@ -456,7 +455,7 @@ def create_wrapper(inp, out, top, vmap, worker):
 
         line = tmp_file.readline()
     tmp_file.close()
-
+    
     # Prepare list of arguments
     arg_list = []
     map_file = open(vmap)
@@ -494,3 +493,4 @@ def create_wrapper(inp, out, top, vmap, worker):
     
     os.remove(top)
     shutil.move(out, top)
+
