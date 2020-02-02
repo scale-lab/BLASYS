@@ -25,18 +25,6 @@ Be sure to install following tools before running BLASYS toolchain.
 
 ![Flow](https://github.com/scale-lab/BLASYS/blob/master/doc/flow.png?raw=true)
 
-## Input Format
-BLASYS tool reads in a verilog file, and converts to AIG representation for partitioning. The module signature for input circuit should look like
-```
-module input ( pi0, pi1, pi2, ..., pin, po0, po1, po2, ..., pon );
-input pi0, pi1, pi2, ..., pin ;
-output pin, po0, po1, po2, ..., pon ;
-wire ... ;
-...
-endmodule
-```
-The exact variable name does not matter. But you have to make sure that both input pins and output pins are flattened.
-
 ## Usage
 ### Installation
 Enter following command in terminal to clone and build BLASYS tool-chain.
@@ -45,16 +33,28 @@ git clone https://github.com/scale-lab/BLASYS
 cd BLASYS
 make
 ```
-Before running BLASYS for first time, please open ``config/params.yml`` and enter path to executable files for all tools in previous section. If you have added them into your system environment, you may just enter the command name.
+**[NOTE]** Before running BLASYS for first time, please open ``config/params.yml`` and enter path to executable files for all tools in previous section. If you have added them into your system environment, you may just enter the command name.
+
+### Testbench Generation
+BLASYS provides the script ``testbench.py`` to generate testbench for an input verilog. Please use following command
+```
+python3 [path to BLASYS folder]/testbench.py \
+                 -i PATH_TO_INPUT_VERILOG \
+                 -o PATH_TO_OUTPUT_TESTBENCH \
+                 [-n NUMBER_OF_TEST_VECTORS]
+```
+You should specify input verilog file with flag ``-i``, and path to output testbench with flag ``-o``. 
+
+The number of test vectors is optional. Default number is 10,000. However, if total number of input bits is less than 17, it will enumerate all possible combinations of test vectors.
 
 ### Script for Greedy Design-Space Exploration
 ``blasys.py`` performs greedy design-space exploration with proper command-line arguments, which are
 ```
 python3 [path to BLASYS folder]/blasys.py \
                  -i PATH_TO_INPUT_VERILOG \
+                 -tb PATH_TO_TESTBENCH \
                  -lib PATH_TO_LIBERTY_FILE \
                  [-n NUMBER_OF_PARTITIONS] \
-                 [-tb NUMBER_OF_TEST_VECTORS] \
                  [-o OUTPUT_FOLDER] \
                  [-ts LIST_THRESHOLD] \
                  [-ss STEP_SIZE] \
@@ -63,9 +63,13 @@ python3 [path to BLASYS folder]/blasys.py \
                  [--weight] \
                  [--single]
 ```
-First two arguments (input / testbench) are mandatory. BLASYS takes a recursive partitioning scheme based on number of standard cells. Thus, number of partitions is optional. It also generates test bench automatically. Number of test vectors is optional, too. Default output folder is ``output``. Default step-size is 1. 
+First two arguments (input / testbench) are mandatory. You should also provide liberty file for synthesis.
 
-You can provide a list of error thresholds which are separated by comma. If no threshold ``-ts`` is specified, BLASYS will keep running until all partitions reach factorization degree 1. 
+BLASYS takes a recursive partitioning scheme based on number of standard cells. Thus, number of partitions is optional.
+
+Default output folder is ``output``. Default step-size is 1. 
+
+You can provide a list of error thresholds which are separated by comma, e.g. ``-ts 0.05,0.10``. If no threshold ``-ts`` is specified, BLASYS will keep running until all partitions reach factorization degree 1. 
 
 BLASYS performs multi-track greedy exploration. The default number of tracks is 3. You can adjust the number by flag ``--track``.
 
