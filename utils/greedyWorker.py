@@ -12,12 +12,13 @@ import ctypes
 from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell, write_aiger, get_delay, get_power, approximate, create_wrapper
 from .optimizer import optimization, least_error_opt
 from .create_tb import create_testbench
-from .metric import distance
+from . import metric
 
 
 class GreedyWorker():
-    def __init__(self, input_circuit, library, path, testbench):
+    def __init__(self, input_circuit, library, path, testbench, err_metric):
         # Check executable
+        print('Checking software dependency ...')
         assert shutil.which(path['iverilog']), 'Cannot find iverilog'
         assert shutil.which(path['vvp']), 'Cannot find vvp'
         assert shutil.which(path['abc']), 'Cannot find abc'
@@ -34,15 +35,22 @@ class GreedyWorker():
         self.path = path
 
         self.error_list = [0.0]
-        self.metric_list = [[.0, .0, .0]]
+        #self.metric_list = [[.0, .0, .0]]
         self.area_list = []
         self.power_list = []
         self.delay_list = []
         self.design_list = []
         self.iter = 0
 
+        # Get metric function
+        try:
+            self.metric = getattr(metric, err_metric)
+        except AttributeError:
+            print('[Error] Metric function {}() not found in utils/metric.py.'.format(err_metric))
+            sys.exit(1)
+
+        # Get module name
         self.modulename = None
-        # Get modulename
         with open(self.input) as file:
             line = file.readline()
             while line:
@@ -286,14 +294,14 @@ class GreedyWorker():
         self.explored_streams = [self.output_list.copy()]
 
 
-    def greedy_opt(self, parallel, step_size = 1, threshold=[1000000.], use_weight=False, track=3):
+    def greedy_opt(self, parallel, step_size = 1, threshold=[1000000.], track=3):
         threshold.sort()
         while True:
-            if self.next_iter(parallel, step_size, threshold, use_weight=use_weight, track=track) == -1:
+            if self.next_iter(parallel, step_size, threshold, track=track) == -1:
                 break
 
 
-    def next_iter(self, parallel, step_size, threshold=[1000000.], least_error=False, use_weight=False, track=3):
+    def next_iter(self, parallel, step_size, threshold=[1000000.], least_error=False, track=3):
 
         if self.iter == 0:
             print('==================== Starting Approximation by Greedy Search  ====================')
@@ -302,15 +310,14 @@ class GreedyWorker():
                 sta_output = os.path.join(self.output, 'sta.out')
                 synth_input = os.path.join(self.output, self.modulename+'_syn.v')
                 self.delay = get_delay(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output)
-                power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay)
-                # f.write('Original chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(self.initial_area, self.delay, power))
-                f.write('{:<10}{:<12}{:<10}{:<15}{:<15}{:<15}\n'.format('HD', 'MAE', 'MAE%', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
-                f.write('{:<10.2f}{:<12.2f}{:<10.2f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(0, 0, 0, self.initial_area, power, self.delay) )
+                power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay) 
+                f.write('{:<10}{:<15}{:<15}{:<15}\n'.format('Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
+                f.write('{:<10.2f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(0, self.initial_area, power, self.delay) )
             self.power_list.append(power)
             self.delay_list.append(self.delay)
             with open(os.path.join(self.output, 'data.csv'), 'a') as data:
-                data.write('{},{},{},{},{},{},{}\n'.format('Iter','HD', 'MAE', 'MAE%', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
-                data.write('{},{:.6f},{:.6e},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format('Org', 0, 0, 0, self.initial_area, power, self.delay) )
+                data.write('{},{},{},{},{}\n'.format('Iter','Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
+                data.write('{},{:.6f},{:.2f},{:.6f},{:.6f}\n'.format('Org', 0, self.initial_area, power, self.delay) )
 
 
         print('Current stream of factorization degree:\n','\n'.join(map(str, self.curr_streams)))
@@ -330,14 +337,14 @@ class GreedyWorker():
                 # app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
                 # power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
                 # f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format('REST', self.area_list[it-1], app_delay, power))
-                f.write('{:<10.6f}{:<12.4e}{:<10.6f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(self.metric_list[idx][0], self.metric_list[idx][1], self.metric_list[idx][2], self.area_list[idx], self.power_list[idx], self.delay_list[idx]) )
+                f.write('{:<10.6f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(self.error_list[idx], self.area_list[idx], self.power_list[idx], self.delay_list[idx]) )
 
             print('All subcircuits have been approximated to degree 1. Exit approximating.')
             return -1
 
         print('--------------- Iteration ' + str(self.iter) + ' ---------------')
         before = time.time()
-        next_stream, streams, err, area, err_sum, delay, power, name_list, rank = self.evaluate_iter(self.curr_streams, self.iter, step_size, parallel, threshold[0], least_error, use_weight)
+        next_stream, streams, err, area, delay, power, name_list, rank = self.evaluate_iter(self.curr_streams, self.iter, step_size, parallel, threshold[0], least_error)
         after = time.time()
 
 
@@ -345,11 +352,8 @@ class GreedyWorker():
         print('--------------- Finishing Iteration' + str(self.iter) + '---------------')
         part_idx = list(np.nonzero(np.subtract(next_stream, self.curr_stream)))
         print('Partition', *part_idx, 'being approximated')
-        if use_weight:
-            met = 'MAE'
-        else:
-            met = 'HD'
-        msg = 'Approximated {} error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(met, 100*err[rank[0]], 100 * area[rank[0]] / self.initial_area, time_used)
+
+        msg = 'Approximated error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err[rank[0]], 100 * area[rank[0]] / self.initial_area, time_used)
         print(msg)
         with open(os.path.join(self.output, 'log'), 'a') as log_file:
             log_file.write(str(next_stream))
@@ -390,13 +394,12 @@ class GreedyWorker():
             
             # if i == rank[0]:
         with open(os.path.join(self.output, 'data.csv'), 'a') as data:
-            data.write('{},{:.6f},{:.6e},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format(self.iter, err_sum[rank[0]][0], err_sum[rank[0]][1], err_sum[rank[0]][2], area[rank[0]], power[rank[0]], delay[rank[0]]) )
+            data.write('{},{:.6%},{:.2f},{:.6f},{:.6f}\n'.format(self.iter, err[rank[0]], area[rank[0]], power[rank[0]], delay[rank[0]]) )
 
         self.iter += 1
 
         self.error_list += err
         self.area_list += area
-        self.metric_list += err_sum
         self.design_list += name_list
         self.power_list += power
         self.delay_list += delay
@@ -417,7 +420,7 @@ class GreedyWorker():
                 # app_delay = get_delay(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output)
                 # power = get_power(self.path['OpenSTA'], sta_script, self.library, source_file, self.modulename, sta_output, self.delay) * 1e6
                 #f.write('{}% error metric chip area {:.2f}, delay {:.2f}, power {:.2f}\n'.format(int(ts*100), self.area_list[it], app_delay, power))
-                f.write('{:<10.6f}{:<12.4e}{:<10.6f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(self.metric_list[idx][0], self.metric_list[idx][1], self.metric_list[idx][2], self.area_list[idx], self.power_list[idx], self.delay_list[idx]) )
+                f.write('{:<10.6f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(self.error_list[idx], self.area_list[idx], self.power_list[idx], self.delay_list[idx]) )
 
         if len(threshold) == 0: 
             print('Reach error threshold. Exit approximation.')
@@ -433,11 +436,10 @@ class GreedyWorker():
         return 0
 
 
-    def evaluate_iter(self, curr_k_streams, num_iter, step_size, parallel, threshold, least_error, use_weight):
+    def evaluate_iter(self, curr_k_streams, num_iter, step_size, parallel, threshold, least_error):
     
         k_lists = []
         err_list = []
-        err_summary = []
         area_list = []
         delay_list = []
         power_list = []
@@ -464,32 +466,27 @@ class GreedyWorker():
                 changed[count] = i
                 count += 1
 
-            # err_list = []
-            # err_summary = []
-            # area_list = []
             name_list += ['iter'+str(num_iter)+'track'+str(num_track)+'design'+str(i) for i in range((len(k_lists_tmp)))]
         
             # Parallel mode
             if parallel:
                 pool = mp.Pool(mp.cpu_count())
-                results = [pool.apply_async(evaluate_design,args=(k_lists_tmp[i], self, 'iter'+str(num_iter)+'track'+str(num_track)+'design'+str(i), False, use_weight )) for i in range(len(k_lists_tmp))]
+                results = [pool.apply_async(evaluate_design,args=(k_lists_tmp[i], self, 'iter'+str(num_iter)+'track'+str(num_track)+'design'+str(i), False )) for i in range(len(k_lists_tmp))]
                 pool.close()
                 pool.join()
                 for result in results:
                     err_list.append(result.get()[0])
-                    err_summary.append(result.get()[1])
-                    area_list.append(result.get()[2])
-                    delay_list.append(result.get()[3])
-                    power_list.append(result.get()[4])
+                    area_list.append(result.get()[1])
+                    delay_list.append(result.get()[2])
+                    power_list.append(result.get()[3])
             else:
             # Sequential mode
                 for i in range(len(k_lists_tmp)):
                     # Evaluate each list
                     print('======== Design number ' + str(i))
                     k_stream = k_lists_tmp[i]
-                    err, err_s, area, delay, power = evaluate_design(k_stream, self, 'iter'+str(num_iter)+'track'+str(num_track)+'design'+str(i))
+                    err, area, delay, power = evaluate_design(k_stream, self, 'iter'+str(num_iter)+'track'+str(num_track)+'design'+str(i))
                     err_list.append(err)
-                    err_summary.append(err_s)
                     area_list.append(area)
                     delay_list.append(delay)
                     power_list.append(power)
@@ -497,7 +494,7 @@ class GreedyWorker():
             k_lists += k_lists_tmp
 
         if least_error:
-            rank = least_error_opt(np.array(err_list), np.array(area_list) / self.initial_area, threshold+0.01)
+            rank = least_error_opt(np.array(err_list), np.array(area_list) / self.initial_area, threshold)
         else:
             rank = optimization(np.array(err_list), np.array(area_list), self.initial_area, self.error_list[-1], self.area_list[-1], threshold+0.01)
         result = k_lists[rank[0]]
@@ -506,7 +503,7 @@ class GreedyWorker():
             # if e <= self.error_list[-1] and area_list[i] <= self.area_list[-1]:
                 # result[changed[i]] = k_lists[i][changed[i]]
             
-        return result, k_lists, err_list, area_list, err_summary, delay_list, power_list, name_list, rank
+        return result, k_lists, err_list, area_list, delay_list, power_list, name_list, rank
 
     def plot(self, error_list, area_list):
 

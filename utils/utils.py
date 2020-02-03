@@ -5,9 +5,9 @@ import numpy as np
 import shutil
 import subprocess
 from .asso import asso
-from .metric import distance
 
-def evaluate_design(k_stream, worker, filename, display=True, use_weight=False):
+
+def evaluate_design(k_stream, worker, filename, display=True):
     if display:
         print('Evaluating Design:', k_stream)
     verilog_list = [os.path.join(worker.output, 'partition', worker.modulename + '.v')]
@@ -43,7 +43,7 @@ def evaluate_design(k_stream, worker, filename, display=True, use_weight=False):
     output_syn = os.path.join(worker.output, 'tmp', filename)
     area  = synth_design(' '.join(verilog_list), output_syn, worker.library, worker.script, worker.path['yosys'])
 
-    f, f_list = distance(ground_truth, truth_dir, use_weight)
+    err = worker.metric(ground_truth, truth_dir)
 
     # Estimate time and power
     sta_script = os.path.join(worker.output, 'tmp', filename+'_sta.script')
@@ -51,11 +51,11 @@ def evaluate_design(k_stream, worker, filename, display=True, use_weight=False):
     delay = get_delay(worker.path['OpenSTA'], sta_script, worker.library, output_syn+'_syn.v', worker.modulename, sta_output)
     power = get_power(worker.path['OpenSTA'], sta_script, worker.library, output_syn+'_syn.v', worker.modulename, sta_output, worker.delay)
 
-    print('Simulation error: {:.6f}\tCircuit area: {:.6f}\tCircuit delay: {:.6f}\tPower consumption: {:.6f}'.format(f, area, delay, power))
+    print('Simulation error: {:.6f}\tCircuit area: {:.6f}\tCircuit delay: {:.6f}\tPower consumption: {:.6f}'.format(err, area, delay, power))
 
     os.remove(sta_script)
     os.remove(sta_output)
-    return f, f_list, area, delay, power
+    return err, area, delay, power
 
 
 def synth_design(input_file, output_file, lib_file, script, yosys):
@@ -323,7 +323,7 @@ def write_aiger(input_file, yosys, output_file, map_file):
     '''
     Convert verilog to aig file
     '''
-    yosys_command = 'read_verilog ' + input_file + '; aigmap; write_aiger -vmap '\
+    yosys_command = 'read_verilog ' + input_file + '; synth -flatten; opt; opt_clean -purge; aigmap; write_aiger -vmap '\
             + map_file + ' ' + output_file + ';'
     subprocess.call([yosys, '-p', yosys_command], stdout=subprocess.DEVNULL)
     # Parse map file and return dict
