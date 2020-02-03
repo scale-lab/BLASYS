@@ -6,21 +6,16 @@ if ! [ -e "$1" ]; then
 fi
 
 
-# c1355.v; partitioning in 5; threshold 0.02; sequential mode; parallel mode
-python3 ../greedy.py -i c1355.v -lib ${1} -o c1355_1_output -ts 0.02 -n 5 --parallel
+# c1355.v; 8000 test vectors; partitioning in 5; threshold 0.03; parallel mode; 5 tracks
+# python3 ../testbench.py -i c1355.v -o c1355_tb.v -n 8000
+# python3 ../blasys.py -i c1355.v -tb c1355_tb.v -lib ${1} -o c1355_output -ts 0.03 -n 5 --parallel --track 5
 
-# c1355.v; not specify partition number; threshold 0.03; parallel mode
-python3 ../greedy.py -i c1355.v -tb 10000 -lib ${1} -o c1355_2_output -ts 0.03 --parallel
+# adder.v; 2000 test vectors; not sepcify number of partitions; threshold on 0.02; parallel mode; 1 track
+# python3 ../testbench.py -i adder.v -o adder_tb.v -n 2000
+# python3 ../blasys.py -i adder.v -tb adder_tb.v -lib ${1} -o adder_output -ts 0.02 --parallel --track 1
 
-# c2670.v; not specify partition number; threshold 0.03; step size 2; parallel mode
-python3 ../greedy.py -i c2670.v -lib ${1} -o c2670_output -ts 0.03 -ss 2 --parallel
+# mul7u_01L.v; 10000 test vectors; partitioning in 40; threshold on 0.005; 10 tracks; parallel mode; MAE metric
+python3 ../testbench.py -i mul7u_01L.v -o mul7u_01L_tb.v -n 10000
+python3 ../blasys.py -i mul7u_01L.v -tb mul7u_01L_tb.v -lib ${1} -o mul7u_01L_output -ts 0.005 --parallel -n 40 --track 10 --weight
 
-# adder.v; not specify partition number; threshold 0.02; parallel mode
-python3 ../greedy.py -i adder.v -tb 5000 -lib ${1} -o adder_output -ts 0.2 --parallel
-
-# max.v; partitioning in 50; threshold 0.015; step_size 2; parallel mode
-python3 ../greedy.py -i max.v -tb 4000 -lib ${1} -o max_output -n 50 -ts 0.015 -ss 2 --parallel
-
-# sin.v; two-level partitioning; threshold 0.015; step_size 5; parallel mode
-# python3 ../recursive.py -i sin.v -tb sin_tb.v -lib ${1} -o sin_output -ts 0.015 -ss 5 --parallel
 

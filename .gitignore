@@ -15,3 +15,7 @@ hypergraph.txt
 # Regression test resuls
 test/*_output
 
+# Regression testbench
+test/*_tb.v
+test/hypergraph.txt
+
