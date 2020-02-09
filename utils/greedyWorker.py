@@ -9,14 +9,14 @@ import multiprocessing as mp
 import shutil
 import time
 import ctypes
-from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell, write_aiger, get_delay, get_power, approximate, create_wrapper
+from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell, write_aiger, get_delay, get_power, approximate, create_wrapper, module_info
 from .optimizer import optimization, least_error_opt
 from .create_tb import create_testbench
 from . import metric
 
 
 class GreedyWorker():
-    def __init__(self, input_circuit, library, path, testbench, err_metric):
+    def __init__(self, input_circuit, library, path, testbench, err_metric, sta):
         # Check executable
         print('Checking software dependency ...')
         assert shutil.which(path['iverilog']), 'Cannot find iverilog'
@@ -24,7 +24,8 @@ class GreedyWorker():
         assert shutil.which(path['abc']), 'Cannot find abc'
         assert shutil.which(path['lsoracle']), 'Cannot find lsoracle'
         assert shutil.which(path['yosys']), 'Cannot find yosys'
-        assert shutil.which(path['OpenSTA']), 'Cannot find OpenSTA'
+        if sta:
+            assert shutil.which(path['OpenSTA']), 'Cannot find OpenSTA'
     
         # Check library file
         assert os.path.exists(library), 'Cannot find liberty file'
@@ -33,6 +34,7 @@ class GreedyWorker():
         self.testbench = testbench
         self.library = library
         self.path = path
+        self.sta = sta
 
         self.error_list = [0.0]
         #self.metric_list = [[.0, .0, .0]]
@@ -113,8 +115,10 @@ class GreedyWorker():
                         # f.write(', po[{}]'.format(out_map[i]))
                     # f.write(');\n')
 
-    def blasys(self, use_weight=False):
-        inp, out = inpout(self.input)
+    def blasys(self):
+        # inp, out = inpout(self.input)
+        info = module_info(self.input, self.path['yosys'])
+        inp, out = info[3], info[5]
         if inp > 16:
             print('Too many input to directly factorize. Please use partitioning mode.')
             return 1
@@ -123,15 +127,21 @@ class GreedyWorker():
         self.modulenames = [self.modulename]
         os.mkdir(os.path.join(self.output, self.modulename))
         truth_dir = os.path.join(self.output, self.modulename)
-       
-        sta_script = os.path.join(self.output, 'sta.script')
-        sta_output = os.path.join(self.output, 'sta.out')
-        synth_input = os.path.join(self.output, self.modulename+'_syn.v')
-        self.delay = get_delay(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output)
-        power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay)
+        
+        if self.sta:
+            sta_script = os.path.join(self.output, 'sta.script')
+            sta_output = os.path.join(self.output, 'sta.out')
+            synth_input = os.path.join(self.output, self.modulename+'_syn.v')
+            self.delay = get_delay(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output)
+            power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay)
+        else:
+            self.delay = float('nan')
+            power = float('nan')
+
+
         f = open(os.path.join(self.output, 'data.csv'), 'a')
-        f.write('{},{},{},{},{},{},{}\n'.format('Iter','HD', 'MAE', 'MAE%', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
-        f.write('{},{:.6f},{:.6e},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format('Org', 0, 0, 0, self.initial_area, power, self.delay) )
+        f.write('{},{},{},{},{}\n'.format('Iter','Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
+        f.write('{},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format('Org', 0, self.initial_area, power, self.delay) )
 
         err_list = []
         area_list = []
@@ -142,22 +152,23 @@ class GreedyWorker():
             out_file = os.path.join(self.output, self.modulename, self.modulename+'_approx_k='+str(k))
             gen_truth = os.path.join(self.output, self.modulename+'.truth_wh_'+str(k))
             area = synth_design(in_file, out_file, self.library, self.script, self.path['yosys'])
-            err, err_sum = distance(truth_dir+'.truth', gen_truth, use_weight)
+            err = self.metric(truth_dir+'.truth', gen_truth)
             err_list.append(err)
             area_list.append(area/self.initial_area)
             # print('Factorization level {}, Area {}, Error {}\n'.format(k, area, err))
             # f.write('{:.6f},{:.6f},Level{}'.format(err, area, k))
-            sta_script = os.path.join(self.output, 'sta.script')
-            sta_output = os.path.join(self.output, 'sta.out')
-            delay_iter = get_delay(self.path['OpenSTA'], sta_script, self.library, out_file+'_syn.v', self.modulename, sta_output)
-            power_iter = get_power(self.path['OpenSTA'], sta_script, self.library, out_file+'_syn.v', self.modulename, sta_output, self.delay)
-
-            f.write('{},{:.6f},{:.6e},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format(k, err_sum[0], err_sum[1], err_sum[2], area, power_iter, delay_iter) )
-            if use_weight:
-                print('Factorization degree {}, MAE {:.4%}, Area {:.2f}, Power {:.4f}, Delay {:.4f}'.format(k, err_sum[2], area, power_iter, delay_iter))
-
+            if self.sta:
+                sta_script = os.path.join(self.output, 'sta.script')
+                sta_output = os.path.join(self.output, 'sta.out')
+                delay_iter = get_delay(self.path['OpenSTA'], sta_script, self.library, out_file+'_syn.v', self.modulename, sta_output)
+                power_iter = get_power(self.path['OpenSTA'], sta_script, self.library, out_file+'_syn.v', self.modulename, sta_output, self.delay)
+                print('Factorization degree {}, Metric {:.6%}, Area {:.2f}, Power {:.4f}, Delay {:.4f}'.format(k, err, area, power_iter, delay_iter))
             else:
-                print('Factorization degree {}, HD {:.4%}, Area {:.2f}, Power {:.4f}, Delay {:.4f}'.format(k, err_sum[0], area, power_iter, delay_iter))
+                delay_iter = float('nan')
+                power_iter = float('nan')
+                print('Factorization degree {}, Metric {:.6%}, Area {:.2f}'.format(k, err, area))
+            f.write('{},{:.6f},{:.2f},{:.6f},{:.6f}\n'.format(k, err, area, power_iter, delay_iter) )
+
         self.plot(err_list, area_list)
         f.close()
 
@@ -186,7 +197,7 @@ class GreedyWorker():
         self.area_list.append(self.initial_area)
 
 
-        return inpout(self.input)
+        # return inpout(self.input)
 
     def partitioning(self, num_parts):
         #self.num_parts = num_parts
@@ -306,11 +317,17 @@ class GreedyWorker():
         if self.iter == 0:
             print('==================== Starting Approximation by Greedy Search  ====================')
             with open(os.path.join(self.output, 'result', 'result.txt'), 'w') as f:
-                sta_script = os.path.join(self.output, 'sta.script')
-                sta_output = os.path.join(self.output, 'sta.out')
-                synth_input = os.path.join(self.output, self.modulename+'_syn.v')
-                self.delay = get_delay(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output)
-                power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay) 
+
+                if self.sta:
+                    sta_script = os.path.join(self.output, 'sta.script')
+                    sta_output = os.path.join(self.output, 'sta.out')
+                    synth_input = os.path.join(self.output, self.modulename+'_syn.v')
+                    self.delay = get_delay(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output)
+                    power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay) 
+                else:
+                    self.delay = float('nan')
+                    power = float('nan')
+
                 f.write('{:<10}{:<15}{:<15}{:<15}\n'.format('Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
                 f.write('{:<10.2f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(0, self.initial_area, power, self.delay) )
             self.power_list.append(power)

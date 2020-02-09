@@ -30,6 +30,7 @@ def main():
     parser.add_argument('--metric', help='Choose error metric', dest='metric', default='HD')
     parser.add_argument('--single', help='Factorize without partition', dest='single', action='store_true')
     parser.add_argument('--track', help='Number of tracks in greedy search', dest='track', type=int, default=3)
+    parser.add_argument('--sta', help='Use OpenSTA to estimate power and delay', dest='sta', action='store_true')
 
     args = parser.parse_args()
 
@@ -45,9 +46,9 @@ def main():
     else:
         threshold_list = list(map(float, args.threshold.split(',')))
 
-    worker = GreedyWorker(args.input, args.liberty, config, args.testbench, args.metric)
+    worker = GreedyWorker(args.input, args.liberty, config, args.testbench, args.metric, args.sta)
     worker.create_output_dir(args.output)
-    pis, pos = worker.evaluate_initial()
+    worker.evaluate_initial()
     if args.single is not True:
         worker.convert2aig()
         if args.npart is None:

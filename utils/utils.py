@@ -4,6 +4,7 @@ import os
 import numpy as np
 import shutil
 import subprocess
+import time
 from .asso import asso
 
 
@@ -44,17 +45,24 @@ def evaluate_design(k_stream, worker, filename, display=True):
     area  = synth_design(' '.join(verilog_list), output_syn, worker.library, worker.script, worker.path['yosys'])
 
     err = worker.metric(ground_truth, truth_dir)
+    
+    if worker.sta:
+        # Estimate time and power
+        sta_script = os.path.join(worker.output, 'tmp', filename+'_sta.script')
+        sta_output = os.path.join(worker.output, 'tmp', filename+'_sta.out')
+        delay = get_delay(worker.path['OpenSTA'], sta_script, worker.library, output_syn+'_syn.v', worker.modulename, sta_output)
+        power = get_power(worker.path['OpenSTA'], sta_script, worker.library, output_syn+'_syn.v', worker.modulename, sta_output, worker.delay)
 
-    # Estimate time and power
-    sta_script = os.path.join(worker.output, 'tmp', filename+'_sta.script')
-    sta_output = os.path.join(worker.output, 'tmp', filename+'_sta.out')
-    delay = get_delay(worker.path['OpenSTA'], sta_script, worker.library, output_syn+'_syn.v', worker.modulename, sta_output)
-    power = get_power(worker.path['OpenSTA'], sta_script, worker.library, output_syn+'_syn.v', worker.modulename, sta_output, worker.delay)
+        print('Simulation error: {:.6f}\tCircuit area: {:.6f}\tCircuit delay: {:.6f}\tPower consumption: {:.6f}'.format(err, area, delay, power))
 
-    print('Simulation error: {:.6f}\tCircuit area: {:.6f}\tCircuit delay: {:.6f}\tPower consumption: {:.6f}'.format(err, area, delay, power))
+        os.remove(sta_script)
+        os.remove(sta_output)
+    else:
+        delay = float('nan')
+        power = float('nan')
+        print('Simulation error: {:.6f}\tCircuit area: {:.6f}'.format(err, area))
 
-    os.remove(sta_script)
-    os.remove(sta_output)
+
     return err, area, delay, power
 
 
@@ -538,3 +546,56 @@ def create_wrapper(inp, out, top, vmap, worker):
     os.remove(top)
     shutil.move(out, top)
 
+
+
+
+def module_info(fname, yosys_path):
+
+    tmp = time.strftime('%Y_%m_%d-%H_%m_%s') + '.v'
+    yosys_command = 'read_verilog ' + fname + '; synth -flatten; opt; opt_clean; techmap; write_verilog ' + tmp + ';\n'
+    subprocess.call([yosys_path, '-p', yosys_command], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+
+    tmp_file = open(tmp)
+    inp = {}
+    inp_count = 0
+    out = {}
+    out_count = 0
+    modulename = None
+    line = tmp_file.readline()
+    while line:
+        tokens = re.split('[ ()]', line.strip().strip(';').strip())
+         
+        if len(tokens) > 0 and tokens[0] == 'module' and modulename is None:
+            modulename = tokens[1]
+            port_list = re.split('[,()]', line.strip().strip(';').strip())[1:]
+            port_list = [s.strip() for s in port_list if s.strip() != '']
+
+
+
+        if len(tokens) == 2 and ( tokens[0] == 'input' or tokens[0] == 'output' ):
+            if tokens[0] == 'input':
+                inp[tokens[1]] = 1
+                inp_count += 1
+            if tokens[0] == 'output':
+                out[tokens[1]] = 1
+                out_count += 1
+
+        if len(tokens) == 3 and ( tokens[0] == 'input' or tokens[0] == 'output' ):
+            range_str = tokens[1][1:-1].split(':')
+            range_int = list(map(int, range_str))
+            length = max(range_int) - min(range_int) + 1
+            if tokens[0] == 'input':
+                inp[tokens[2]] = length
+                inp_count += length
+            if tokens[0] == 'output':
+                out[tokens[2]] = length
+                out_count += length
+
+        line = tmp_file.readline()
+
+
+    tmp_file.close()  
+
+    os.remove(tmp)
+
+    return modulename, port_list, inp, inp_count, out, out_count
