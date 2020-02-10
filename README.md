@@ -117,7 +117,7 @@ read_testbench PATH_TO_TESTBENCH
 ```
 5. The next step is partitioning.  You may specify the number of partitions you want. Since BLASYS takes a recursive partitioning scheme, it is optional.
 ```
-partitioning [-n NUMBER_OF_PARTITIONS]
+partition [-n NUMBER_OF_PARTITIONS]
 ```
 6. Before approximating circuits, here are a few optional configurations. To turn on OpenSTA (for power and delay estimation) or turn off, you can use following command. **However, if you want to use OpenSTA, please provide a liberty file with command** ``read_liberty``.
 ```
@@ -127,13 +127,13 @@ To specify the error metric, use following command. **Again, if you want to use 
 ```
 metric METRIC_FUNCTION_NAME
 ```
-To run BLASYS in parallel mode, use following command. You are able to limit the number of cores to use. If cpu number is not specified, BLASYS will use all available cores.
+To turn on/off parallel mode in BLASYS, use following command. You are able to limit the number of cores to use. If cpu number is not specified, BLASYS will use all available cores.
 ```
-parallel [-cpu NUMBER_OF_CORES_USE]
+parallel on/off [-cpu NUMBER_OF_CORES_USE]
 ```
 7. At this step, BLASYS is ready to do approximation. There are two optio. Use following command to do greedy design-space exploration until error threshold is met or all partitions reach factorization degree 1. All arguments are optional. You can provide a list of threshold which are separated by comma, e.g. ``-ts 0.005,0.01``.The default step size is 1. The default number of tracks is 3.
 ```
-greedy [-ts LIST_THRESHOLD] [-s STEP_SIZE] [-tr NUMBER_OF_TRACKS]
+blasys [-ts LIST_THRESHOLD] [-s STEP_SIZE] [-tr NUMBER_OF_TRACKS]
 ```
 Or you may specify the number of iterations by following command. The default number of iteration number is 1.
 ```
