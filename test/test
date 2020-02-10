@@ -7,12 +7,12 @@ fi
 
 
 # c1355.v; 8000 test vectors; partitioning in 5; threshold 0.03; parallel mode; 5 tracks
-# python3 ../testbench.py -i c1355.v -o c1355_tb.v -n 8000
-# python3 ../blasys.py -i c1355.v -tb c1355_tb.v -lib ${1} -o c1355_output -ts 0.03 -n 5 --parallel --track 5
+python3 ../testbench.py -i c1355.v -o c1355_tb.v -n 8000
+python3 ../blasys.py -i c1355.v -tb c1355_tb.v -lib ${1} -o c1355_output -ts 0.03 -n 5 --parallel --track 5
 
 # adder.v; 2000 test vectors; not sepcify number of partitions; threshold on 0.02; parallel mode; 1 track
-# python3 ../testbench.py -i adder.v -o adder_tb.v -n 2000
-# python3 ../blasys.py -i adder.v -tb adder_tb.v -lib ${1} -o adder_output -ts 0.02 --parallel --track 1
+python3 ../testbench.py -i adder.v -o adder_tb.v -n 2000
+python3 ../blasys.py -i adder.v -tb adder_tb.v -lib ${1} -o adder_output -ts 0.02 --parallel --track 1
 
 # mul7u_01L.v; 10000 test vectors; partitioning in 40; threshold on 0.005; 10 tracks; parallel mode; MAE metric
 python3 ../testbench.py -i mul7u_01L.v -o mul7u_01L_tb.v -n 10000
