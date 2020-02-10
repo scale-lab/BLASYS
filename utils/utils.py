@@ -407,7 +407,7 @@ def get_delay(sta, script, liberty, input_file, modulename, output_file):
         f.write('exit')
 
     with open(output_file, 'w') as f:
-        subprocess.call([sta, '-f', script],stdout=f)
+        subprocess.call([sta, script],stdout=f)
 
     with open(output_file) as f:
         line = f.readline()
@@ -432,7 +432,7 @@ def get_power(sta, script, liberty, input_file, modulename, output_file, delay):
         f.write('exit')
 
     with open(output_file, 'w') as f:
-        subprocess.call([sta, '-f', script], stdout=f)
+        subprocess.call([sta, script], stdout=f)
 
     with open(output_file) as f:
         line = f.readline()
