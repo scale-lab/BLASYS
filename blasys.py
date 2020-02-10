@@ -26,14 +26,15 @@ def main():
     parser.add_argument('-o', '--output', help='Output directory', default='output', dest='output')
     parser.add_argument('-ts', '--threshold', help='Threshold on error', default='None', dest='threshold')
     parser.add_argument('-lib', '--liberty', help='Liberty file name', required=True, dest='liberty')
-    parser.add_argument('-ss', '--stepsize', help='Step size of optimization process', default=1, type=int, dest='stepsize')
-    parser.add_argument('--parallel', help='Run the flow in parallel mode if specified', dest='parallel', action='store_true')
-    # parser.add_argument('--weight', help='Use weight in error metric', dest='use_weight', action='store_true')
-    parser.add_argument('--metric', help='Choose error metric', dest='metric', default='HD')
-    parser.add_argument('--single', help='Factorize without partition', dest='single', action='store_true')
-    parser.add_argument('--track', help='Number of tracks in greedy search', dest='track', type=int, default=3)
-    parser.add_argument('--sta', help='Use OpenSTA to estimate power and delay', dest='sta', action='store_true')
+    parser.add_argument('-ss', '--stepsize', help='Step size of optimization process', default=1, type=int, dest='stepsize')   
+    parser.add_argument('-m', '--metric', help='Choose error metric', dest='metric', default='HD')
+    parser.add_argument('-tr', '--track', help='Number of tracks in greedy search', dest='track', type=int, default=3)
     parser.add_argument('-cpu', '--cpu_count', help='Specify number of CPU in parallel mode', dest='cpu', type=int, default=max_cpu)
+    
+    # Flags 
+    parser.add_argument('--parallel', help='Run the flow in parallel mode if specified', dest='parallel', action='store_true')
+    parser.add_argument('--no_partition', help='Factorize without partition', dest='single', action='store_true')
+    parser.add_argument('--sta', help='Use OpenSTA to estimate power and delay', dest='sta', action='store_true')
 
     args = parser.parse_args()
 
