@@ -28,7 +28,8 @@ class GreedyWorker():
             assert shutil.which(path['OpenSTA']), 'Cannot find OpenSTA'
     
         # Check library file
-        assert os.path.exists(library), 'Cannot find liberty file'
+        if library is not None:
+            assert os.path.exists(library), 'Cannot find liberty file'
 
         self.input = input_circuit
         self.testbench = testbench

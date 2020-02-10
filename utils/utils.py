@@ -67,17 +67,27 @@ def evaluate_design(k_stream, worker, filename, display=True):
 
 
 def synth_design(input_file, output_file, lib_file, script, yosys):
-    yosys_command = 'read_verilog ' + input_file + '; ' \
-            + 'synth -flatten; opt; opt_clean -purge; techmap; opt; opt_clean -purge; write_verilog -noattr ' +output_file + '.v; abc -liberty '+lib_file \
-            + ' -script ' + script + '; stat -liberty '+lib_file + '; write_verilog -noattr ' +output_file + '_syn.v;\n '
 
-    area = 0
-    line=subprocess.call(yosys+" -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True)
-    with open(output_file+".log", 'r') as file_handle:
-        for line in file_handle:
-            if 'Chip area' in line:
-                area = line.split()[-1]
-                break
+    if lib_file is not None:
+        yosys_command = 'read_verilog ' + input_file + '; ' + 'synth -flatten; opt; opt_clean -purge; techmap; opt; opt_clean -purge; write_verilog -noattr ' +output_file + '.v; abc -liberty '+lib_file + ' -script ' + script + '; stat -liberty '+lib_file + '; write_verilog -noattr ' +output_file + '_syn.v;\n '
+        area = 0
+        line=subprocess.call(yosys+" -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True)
+        with open(output_file+".log", 'r') as file_handle:
+            for line in file_handle:
+                if 'Chip area' in line:
+                    area = line.split()[-1]
+                    break
+    else:
+        yosys_command = 'read_verilog ' + input_file + '; ' + 'synth -flatten; opt; opt_clean -purge; techmap; opt; opt_clean -purge; write_verilog -noattr ' +output_file + '.v; abc -g NAND -script ' + script + '; write_verilog -noattr ' +output_file + '_syn.v;\n '
+        area = 0
+        line=subprocess.call(yosys+" -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True)
+        with open(output_file+".log", 'r') as file_handle:
+            return_list = []
+            for line in file_handle:
+                if 'ABC RESULTS:' in line and 'NAND cells:' in line:
+                    return_list.append(line.split()[-1])
+            area = return_list[-1]
+            
     return float(area)
 
 def inpout(fname):

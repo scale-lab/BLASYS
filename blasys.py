@@ -25,7 +25,7 @@ def main():
     parser.add_argument('-n', '--number', help='Number of partitions', default=None, type=int, dest='npart')
     parser.add_argument('-o', '--output', help='Output directory', default='output', dest='output')
     parser.add_argument('-ts', '--threshold', help='Threshold on error', default='None', dest='threshold')
-    parser.add_argument('-lib', '--liberty', help='Liberty file name', required=True, dest='liberty')
+    parser.add_argument('-lib', '--liberty', help='Liberty file name', default=None, dest='liberty')
     parser.add_argument('-ss', '--stepsize', help='Step size of optimization process', default=1, type=int, dest='stepsize')   
     parser.add_argument('-m', '--metric', help='Choose error metric', dest='metric', default='HD')
     parser.add_argument('-tr', '--track', help='Number of tracks in greedy search', dest='track', type=int, default=3)
