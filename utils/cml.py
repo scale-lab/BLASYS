@@ -1,28 +1,42 @@
 from cmd import Cmd
 import os
 import yaml
+import glob
 import regex as re
 import shutil
 import numpy as np
+import readline
 from .banner import print_banner
 from .greedyWorker import GreedyWorker
 from .create_tb import create_testbench
 
+def _complete_path(path):
+    if os.path.isdir(path):
+        return glob.glob(os.path.join(path, '*'))
+    else:
+        return glob.glob(path+'*')
+
 class Blasys(Cmd):
     prompt = 'blasys> '
-
 
     def __init__(self):
         super().__init__()
         self.liberty = None
         self.optimizer = None
         self.input_file = None
+        self.testbench = None
         self.output = None
         self.partitioned = False
-        self.testbench = None
+
+        self.parallel = True
+        self.cpu = None
+        self.metric = 'HD'
+
+        readline.set_completer_delims(' \t\n')
+
     
     def do_exit(self, args):
-        print('Bye.')
+        print('Blasys exit. Bye.')
         return True
 
     def help_exit(self):
@@ -35,12 +49,15 @@ class Blasys(Cmd):
             self.help_read_liberty()
             return
 
-        if self.liberty is not None:
-            print('[Error] Already loaded liberty file.')
-            return
+        # if self.liberty is not None:
+            # print('[Error] Already loaded liberty file.')
+            # return
         
-        print('Successfully loaded liberty file.\n') 
+        print('Successfully loaded liberty file {}.\n'.format(args)) 
         self.liberty = args
+
+    def complete_read_liberty(self, text, line, start_idx, end_idx):
+        return _complete_path(text)
 
 
     def help_read_liberty(self):
