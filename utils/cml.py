@@ -6,9 +6,13 @@ import regex as re
 import shutil
 import numpy as np
 import readline
+import multiprocessing as mp
 from .banner import print_banner
 from .greedyWorker import GreedyWorker
 from .create_tb import create_testbench
+from .utils import module_info, number_of_cell
+from . import metric
+
 
 def _complete_path(path):
     if os.path.isdir(path):
@@ -22,17 +26,27 @@ class Blasys(Cmd):
     def __init__(self):
         super().__init__()
         self.liberty = None
+        self.reset()
+        readline.set_completer_delims(' \t\n')
+
+
+    def reset(self):
         self.optimizer = None
         self.input_file = None
         self.testbench = None
         self.output = None
         self.partitioned = False
+        self.initialized = False
 
-        self.parallel = True
-        self.cpu = None
+        self.modulename = None
+        self.n_input = None
+        self.n_output = None
+        self.n_cell = None
+
+        self.parallel = False
+        self.cpu = mp.cpu_count()
+        self.sta = False
         self.metric = 'HD'
-
-        readline.set_completer_delims(' \t\n')
 
     
     def do_exit(self, args):
@@ -41,6 +55,9 @@ class Blasys(Cmd):
 
     def help_exit(self):
         print('Exit blasys tool.')
+
+
+
 
     def do_read_liberty(self, args):
         
@@ -53,82 +70,202 @@ class Blasys(Cmd):
             # print('[Error] Already loaded liberty file.')
             # return
         
-        print('Successfully loaded liberty file {}.\n'.format(args)) 
-        self.liberty = args
+        print('Successfully loaded liberty file {}.\n'.format(args))
+        if self.optimizer is None:
+            self.liberty = args
+        else:
+            self.optimizer.library = args
+
 
     def complete_read_liberty(self, text, line, start_idx, end_idx):
         return _complete_path(text)
 
 
     def help_read_liberty(self):
-        print('[Usage] read_liberty PATH_OF_LIBERTY')
+        print('[Usage] read_liberty PATH_OF_LIBERTY\n')
+
+
+
 
     def do_read_verilog(self, args):
-        if self.liberty is None:
-            print('[Error] No liberty file loaded. Please load liberty file by command read_liberty.')
-            return
-
-        args_list = args.split()
-        if not ( len(args_list) == 1 or (len(args_list) == 3 and args_list[1] == '-tb') ):
-            print('[Error] Invalid arguments.')
-            self.help_read_verilog()
-            return
         
         # Check existence of input file
-        if not os.path.exists(args_list[0]) or os.path.isdir(args_list[0]):
-            print('[Error] cannot find input file', args_list[0])
+        if not os.path.exists(args) or os.path.isdir(args):
+            print('[Error] cannot find input file', args)
+            self.help_read_verilog()
             return        
-        input_file = args_list[0]
- 
-        if len(args_list) == 3:
-            self.testbench = int(args_list[2])
+        input_file = args
 
         # Load path to executable
         app_path = os.path.dirname(os.path.realpath(__file__))
-        with open(os.path.join(app_path, 'config', 'params.yml'), 'r') as config_file:
+        with open(os.path.join(app_path, '..', 'config', 'params.yml'), 'r') as config_file:
             config = yaml.safe_load(config_file)
-        config['part_config'] = os.path.join(app_path, 'config', 'test.ini')
+        config['part_config'] = os.path.join(app_path, '..', 'config', 'test.ini')
 
-        self.optimizer = GreedyWorker(input_file, self.liberty, config, None)
+        # Initial BLASYS
+        self.optimizer = GreedyWorker(input_file, self.liberty, config, None, self.metric, self.sta)
         self.input_file = input_file
+        ret = module_info(input_file, config['yosys'])
+        self.n_cell = number_of_cell(input_file, config['yosys'])
+        self.modulename, self.n_input, self.n_output = ret[0], ret[3], ret[5]
         print('Successfully loaded input file and created optimizer.\n')
 
-        respond = input('Please specify output folder (by default \'output\') ')
+        respond = input('Please specify output folder (by default \'output\'):  ')
         if respond == '':
             respond = 'output'
 
         while 1:
             print('Create output folder', respond)
             if os.path.isdir(respond):
-                a = input('Output path already exists. Delete current directory? (Y/N)')
+                a = input('Output path already exists. Delete current directory? (Y/N):  ')
                 if a.lower() == 'y':
                     shutil.rmtree(respond)
                     break
             else:
                 break
 
-            respond = input('Please specify output folder (by default \'output\') ')
+            respond = input('Please specify output folder (by default \'output\'):  ')
             if respond == '':
                 respond = 'output'
 
         # Create output dir
         self.optimizer.create_output_dir(respond)
-        self.evaluate_initial()
+        print('\n')
+        # self.evaluate_initial()
         self.output = respond
 
-
+    def complete_read_verilog(self, text, line, start_idx, end_idx):
+        return _complete_path(text)
 
     def help_read_verilog(self):
-        print('[Usage] read_verilog INPUT_FILE_PATH [-tb NUM_TEST_VECTOR]')
+        print('[Usage] read_verilog INPUT_FILE_PATH\n')
 
 
-    def do_partitioning(self, args):
+
+
+
+    def do_read_testbench(self, args):    
+        if self.optimizer is None:
+            print('[Error] Please first read input Verilog.\n')
+            return
+        # Check existence of testbench
+        if not os.path.exists(args) or os.path.isdir(args):
+            print('[Error] cannot find testbench file', args)
+            self.help_read_testbench()
+            return        
+        self.testbench = args
+        self.optimizer.testbench = self.testbench
+        print('Successfully read testbench file.\n')
+
+    def complete_read_testbench(self, text, line, start_idx, end_idx):
+        return _complete_path(text)
+
+    def help_read_testbench(self):
+        print('[Usage] read_testbench TESTBENCH_PATH\n')
+
+
+
+
+    def do_sta(self, args):
+
+        if self.optimizer is None:
+            print('[Error] No input file found. Please first run read_verilog.\n')
+            return
+
+        if self.liberty is None:
+            print('[Error] No liberty file found. Please first run read_liberty.\n')
+            return
+
+        if args == 'on':
+            self.sta = True
+            self.optimizer.sta = True
+            print('Turn on OpenSTA. Evaluate power and delay.\n')
+        elif args == 'off':
+            self.sta = False
+            self.optimizer.sta = False
+            print('Turn off OpenSTA. Only evaluate area.\n')
+        else:
+            print('[Error] Invalid arguments.')
+            self.help_sta()
+
+    def help_sta(self):
+        print('[Usage] sta on/off\n')
+    
+
+    
+    def do_parallel(self, args):
+        args_list = args.split()
+
+        if args_list[0] == 'off':
+            self.parallel = False
+            print('Turn off parallel mode.\n')
+            return
+
+        elif args_list[0] == 'on':
+
+            if len(args_list) == 1:
+                self.parallel = True
+                print('Turn on parallel mode.\n')
+                return
+
+            if len(args_list) == 3 and args_list[1] == '-cpu':
+                self.parallel = True
+                cpu_set = int(args_list[2])
+                if cpu_set > self.cpu:
+                    print('Turn on parallel mode.')
+                    print('However, there are only {} available cores.'.format(self.cpu))
+                    print('Number of cores using: {}\n'.format(self.cpu))
+                    return
+                else:
+                    print('Turn on parallel mode.')
+                    self.cpu = cpu_set
+                    print('Number of cores using: {}\n'.format(self.cpu))
+                    return
+
+        print('[Error] Invalid arguments.')
+        self.help_parallel()
+
+
+    def help_parallel(self):
+        print('[Usage] To turn off parallel mode, type:')
+        print('        parallel off')
+        print('        To turn on parallel mode, type:')
+        print('        parallel on [-cpu NUMBER_OF_CORES]\n')
+
+
+
+    def do_metric(self, args):
+
+        if self.optimizer is None:
+            print('[Error] No input file found. Please first run read_verilog.\n')
+            return
+
+        if not hasattr(metric, args):
+            print('[Error] Cannot find metric function {} within utils/metric.py.')
+            self.help_metric()
+            return
+
+        self.optimizer.metric = args
+        self.metric = args
+
+        print('Successfully set error metric as {}\n'.format(args))
+
+    def help_metric(self):
+        print('[Usage] metric ERROR_METRIC\n')
+
+
+
+
+
+
+
+    def do_partition(self, args):
         if self.partitioned:
             print('[Error] Ciruit already partitioned.\n')
             return
 
-        if self.input_file is None:
-            print('[Error] No input file. Please first specify an input verilog file.\n')
+        if self.optimizer is None:
+            print('[Error] No input file found. Please first run read_verilog.\n')
             return
 
         args_list = args.split()
@@ -162,27 +299,35 @@ class Blasys(Cmd):
         print('\n')
 
 
-    def help_partitioning(self):
-        print('[Usage] partitioning [-n NUMBER_OF_PARTITIONS]')
+    def help_partition(self):
+        print('[Usage] partition [-n NUMBER_OF_PARTITIONS]\n')
 
     
-    def do_greedy(self, args):
+
+
+
+
+
+
+    def do_blasys(self, args):
+        if self.testbench is None:
+            print('[Error] No testbench found. Please first run read_testbench.\n')
+            return
+
+        if not self.initialized:
+            self.initialized = True
+            self.optimizer.evaluate_initial()
+        
+        if not self.partitioned and self.n_input <= 16 and self.n_cell < 40:
+            self.optimizer.blasys()
+            print('Finish.\n')
+            return
+
         if not self.partitioned:
-            print('[Error] Circuit has not been partitioned yet.')
+            print('[Error] Input circuit is too big. Please first partition by command partition.\n')
             return
 
         args_list = args.split()
-        if '-p' in args_list:
-            parallel = True
-            args_list.remove('-p')
-        else:
-            parallel = False
-
-        if '-w' in args_list:
-            weighted = True
-            args_list.remove('-w')
-        else:
-            weighted = False
 
         if '-tr' in args_list:
             idx = args_list.index('-tr')
@@ -240,29 +385,27 @@ class Blasys(Cmd):
             stepsize = 1
 
         # Call greedy_opt
-        self.optimizer.greedy_opt(parallel, stepsize, threshold_list, weighted, track=track)
+        self.optimizer.greedy_opt(self.parallel, self.cpu, stepsize, threshold_list, track=track)
 
 
-    def help_greedy(self):
-        print('greedy [-ts THRESHOLD] [-s STEP_SIZE] [-tr NUMBER_TRACK] [-p] [-w]')
+    def help_blasys(self):
+        print('[Usage] blasys [-ts THRESHOLDS] [-s STEP_SIZE] [-tr NUMBER_TRACK]\n')
 
     def do_run_iter(self, args):
+
         if not self.partitioned:
             print('[Error] Circuit has not been partitioned yet.')
             return
 
-        args_list = args.split()
-        if '-p' in args_list:
-            parallel = True
-            args_list.remove('-p')
-        else:
-            parallel = False
+        if self.testbench is None:
+            print('[Error] No testbench found. Please first run read_testbench.\n')
+            return
 
-        if '-w' in args_list:
-            weighted = True
-            args_list.remove('-w')
-        else:
-            weighted = False
+        if not self.initialized:
+            self.initialized = True
+            self.optimizer.evaluate_initial()
+
+        args_list = args.split()
 
         if '-ts' in args_list:
             idx = args_list.index('-ts')
@@ -271,17 +414,22 @@ class Blasys(Cmd):
                 self.help_greedy()
                 return
 
-            if not args_list[idx+1].replace('.', '', 1).isdigit():
-                print('[Error] Please put float-point threshold.')
-                self.help_greedy()
-                return
+            # if not args_list[idx+1].replace('.', '', 1).isdigit():
+                # print('[Error] Please put float-point threshold.')
+                # self.help_greedy()
+                # return
 
             # Get threshold
-            threshold = float(args_list[idx+1])
+            # threshold = float(args_list[idx+1])
+            # args_list.pop(idx)
+            # args_list.pop(idx)
+            threshold = args_list[idx+1]
+            threshold_list = list(map(float, threshold.split(',')))
             args_list.pop(idx)
             args_list.pop(idx)
+
         else:
-            threshold = np.inf
+            threshold_list = [np.inf]
 
         if '-tr' in args_list:
             idx = args_list.index('-tr')
@@ -337,12 +485,12 @@ class Blasys(Cmd):
 
         # Call greedy_opt
         for i in range(iteration):
-            if self.optimizer.next_iter(parallel, stepsize, [threshold], use_weight=weighted, track=track) == -1:
+            if self.optimizer.next_iter(self.parallel, self.cpu, stepsize, threshold_list, track=track) == -1:
                 print('You have either reached error threshold or all partitions reached factorization degree 1.')
                 return
 
     def help_run_iter(self):
-        print('[Usage] run_iter [-i NUMBER_ITERATION] [-ts THRESHOLD] [-tr NUMBER_TRACK] [-s STEPSIZE] [-p] [-w]')
+        print('[Usage] run_iter [-i NUMBER_ITERATION] [-ts THRESHOLDS] [-tr NUMBER_TRACK] [-s STEPSIZE]')
 
     def do_clear(self, args):
         a = input('Are you sure to clear?\nDoing this will clear ALL approximate work done in this session. (Y/N)')
@@ -351,19 +499,18 @@ class Blasys(Cmd):
         if a.lower() != 'y':
             print('[Error] Sorry I don\'t understand. Please try again.\n')
             return
-        self.optimizer = None
-        self.input_file = None
-        self.output = None
-        self.partitioned = False
-        self.testbench = None
+        # self.optimizer = None
+        # self.input_file = None
+        # self.output = None
+        # self.partitioned = False
+        # self.testbench = None
+        self.reset()
 
     def help_clear(self):
         print('[Usage] Clear ALL approximate work done in this session. Be careful to use it.')
 
-    def do_display_result(self, args):
-        hd_list = []
-        mae_list = []
-        mae_p_list = []
+    def do_stat(self, args):
+        metric_list = []
         area_list = []
         power_list = []
         delay_list = []
@@ -372,39 +519,37 @@ class Blasys(Cmd):
             line = data.readline().rstrip('\n')
             while line:
                 tokens = re.split(',',line)
-                hd_list.append(float(tokens[1]))
-                mae_list.append(float(tokens[2]))
-                mae_p_list.append(float(tokens[3]))
-                area_list.append(float(tokens[4]))
-                power_list.append(float(tokens[5]))
-                delay_list.append(float(tokens[6]))
+                metric_list.append(float(tokens[1]))
+                area_list.append(float(tokens[2]))
+                if tokens[3] == 'nan':
+                    power_list.append('nan')
+                    delay_list.append('nan')
+                else:
+                    power_list.append(float(tokens[3]))
+                    delay_list.append(float(tokens[4]))
                 #err = float(tokens[0])
                 #area = float(tokens[1])
                 #error_list.append(err)
                 #area_list.append(area)
                 line = data.readline().rstrip('\n')
         
-        print('{:<12}{:<12}{:<12}{:<12}{:<12}{:<12}{:<12}\n'.format('Iteration', 'HD Error', 'MAE', 'MAE%', 'Area(um^2)', 'Power(uW)', 'Delay(ns)'))
-        for i, ( hd, mae, mae_p, a, p, d ) in enumerate(zip(hd_list, mae_list, mae_p_list, area_list, power_list, delay_list)):
+        print('{:<12}{:<12}{:<12}{:<12}{:<12}\n'.format('Iteration', 'Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)'))
+        for i, ( m, a, p, d ) in enumerate(zip(metric_list, area_list, power_list, delay_list)):
             if i == 0:
                 it = 'Original'
             else:
                 it = i - 1
-            print('{:<12}{:<12.4f}{:<12.4f}{:<12.4f}{:<12.4f}{:<12.4f}{:<12.4f}\n'.format(it, hd, mae, mae_p, a, p, d))
 
-    def help_display_result(self):
+            if p != 'nan':
+                print('{:<12}{:<12.4f}{:<12.4f}{:<12.4f}{:<12.4f}\n'.format(it, m, a, p, d))
+            else:
+                print('{:<12}{:<12.4f}{:<12.4f}{:<12}{:<12}\n'.format(it, m, a, 'nan', 'nan'))
+
+    def help_stat(self):
         print('Show approximate result.')
 
 
-
-    def evaluate_initial(self):
-        if self.testbench is None:
-            self.optimizer.evaluate_initial()
-        else:
-            self.optimizer.evaluate_initial(self.testbench)
-        # self.optimizer.convert2aig()
-
-    def do_blasys(self, args):
+    def tmp1(self, args):
         # Call blasys
         if self.input_file is None:
             print('[Error] No input file. Please first specify an input verilog file.\n')
@@ -418,7 +563,7 @@ class Blasys(Cmd):
 
 
 
-    def help_blasys(self):
+    def tmp2(self):
         print('[Usage] blasys [-w]')
         print('Run BMF on truthtable WITHOUT partitioning')
 

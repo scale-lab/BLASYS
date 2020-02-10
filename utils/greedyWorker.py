@@ -346,7 +346,11 @@ class GreedyWorker():
             e = np.array(self.error_list)
             a[e > threshold[0]] = np.inf
             idx = np.argmin(a)
-            source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx]))
+            if idx == 0:
+                source_file = os.path.join(self.output, self.modulename + '_syn.v')
+            else:
+                idx = idx - 1
+                source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx]))
             target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 'REST'))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
@@ -412,7 +416,7 @@ class GreedyWorker():
             
             # if i == rank[0]:
         with open(os.path.join(self.output, 'data.csv'), 'a') as data:
-            data.write('{},{:.6%},{:.2f},{:.6f},{:.6f}\n'.format(self.iter, err[rank[0]], area[rank[0]], power[rank[0]], delay[rank[0]]) )
+            data.write('{},{:.6f},{:.2f},{:.6f},{:.6f}\n'.format(self.iter, err[rank[0]], area[rank[0]], power[rank[0]], delay[rank[0]]) )
 
         self.iter += 1
 
@@ -422,14 +426,20 @@ class GreedyWorker():
         self.power_list += power
         self.delay_list += delay
 
-        if err[rank[0]] >= threshold[0]+0.01:
+        if err[rank[0]] >= threshold[0]+0.005:
             ts = threshold.pop(0)
             print('Reach threshold on', ts)
             a = np.array(self.area_list)
             e = np.array(self.error_list)
             a[e > ts] = np.inf
             idx = np.argmin(a)
-            source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx]))
+            
+            if idx == 0:
+                source_file = os.path.join(self.output, self.modulename + '_syn.v')
+            else:
+                idx = idx - 1
+                source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx]))
+       
             target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, int(ts*100)))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
