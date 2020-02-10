@@ -5,6 +5,7 @@ import argparse
 import os
 import numpy as np
 import sys
+import multiprocessing as mp
 from utils.cml import Blasys
 
 
@@ -14,14 +15,15 @@ from utils.cml import Blasys
 #        MAIN        #
 ######################
 def main():
+    max_cpu = mp.cpu_count()
     app_path = os.path.dirname(os.path.realpath(__file__))
     
     # Parse command-line args
     parser = argparse.ArgumentParser(description='BLASYS -- Approximate Logic Synthesis Using Boolean Matrix Factorization')
-    parser.add_argument('-i', help='Input verilog file', required=True, dest='input')
+    parser.add_argument('-i', '--input', help='Input verilog file', required=True, dest='input')
     parser.add_argument('-tb', '--testbench', help='Number of test vectors', required=True, dest='testbench')
-    parser.add_argument('-n', help='Number of partitions', default=None, type=int, dest='npart')
-    parser.add_argument('-o', help='Output directory', default='output', dest='output')
+    parser.add_argument('-n', '--number', help='Number of partitions', default=None, type=int, dest='npart')
+    parser.add_argument('-o', '--output', help='Output directory', default='output', dest='output')
     parser.add_argument('-ts', '--threshold', help='Threshold on error', default='None', dest='threshold')
     parser.add_argument('-lib', '--liberty', help='Liberty file name', required=True, dest='liberty')
     parser.add_argument('-ss', '--stepsize', help='Step size of optimization process', default=1, type=int, dest='stepsize')
@@ -31,6 +33,7 @@ def main():
     parser.add_argument('--single', help='Factorize without partition', dest='single', action='store_true')
     parser.add_argument('--track', help='Number of tracks in greedy search', dest='track', type=int, default=3)
     parser.add_argument('--sta', help='Use OpenSTA to estimate power and delay', dest='sta', action='store_true')
+    parser.add_argument('-cpu', '--cpu_count', help='Specify number of CPU in parallel mode', dest='cpu', type=int, default=max_cpu)
 
     args = parser.parse_args()
 
@@ -56,7 +59,7 @@ def main():
         else:
             worker.recursive_partitioning(args.npart)
 
-        worker.greedy_opt(args.parallel, args.stepsize, threshold_list, track=args.track)
+        worker.greedy_opt(args.parallel, args.cpu, args.stepsize, threshold_list, track=args.track)
     else:
         worker.blasys()
 

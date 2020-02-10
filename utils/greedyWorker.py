@@ -305,14 +305,14 @@ class GreedyWorker():
         self.explored_streams = [self.output_list.copy()]
 
 
-    def greedy_opt(self, parallel, step_size = 1, threshold=[1000000.], track=3):
+    def greedy_opt(self, parallel, cpu_count, step_size = 1, threshold=[1000000.], track=3):
         threshold.sort()
         while True:
-            if self.next_iter(parallel, step_size, threshold, track=track) == -1:
+            if self.next_iter(parallel, cpu_count, step_size, threshold, track=track) == -1:
                 break
 
 
-    def next_iter(self, parallel, step_size, threshold=[1000000.], least_error=False, track=3):
+    def next_iter(self, parallel, cpu_count, step_size, threshold=[1000000.], least_error=False, track=3):
 
         if self.iter == 0:
             print('==================== Starting Approximation by Greedy Search  ====================')
@@ -361,7 +361,7 @@ class GreedyWorker():
 
         print('--------------- Iteration ' + str(self.iter) + ' ---------------')
         before = time.time()
-        next_stream, streams, err, area, delay, power, name_list, rank = self.evaluate_iter(self.curr_streams, self.iter, step_size, parallel, threshold[0], least_error)
+        next_stream, streams, err, area, delay, power, name_list, rank = self.evaluate_iter(self.curr_streams, self.iter, step_size, parallel, threshold[0], least_error, cpu_count)
         after = time.time()
 
 
@@ -453,7 +453,7 @@ class GreedyWorker():
         return 0
 
 
-    def evaluate_iter(self, curr_k_streams, num_iter, step_size, parallel, threshold, least_error):
+    def evaluate_iter(self, curr_k_streams, num_iter, step_size, parallel, threshold, least_error, cpu_count):
     
         k_lists = []
         err_list = []
@@ -487,7 +487,7 @@ class GreedyWorker():
         
             # Parallel mode
             if parallel:
-                pool = mp.Pool(mp.cpu_count())
+                pool = mp.Pool(cpu_count)
                 results = [pool.apply_async(evaluate_design,args=(k_lists_tmp[i], self, 'iter'+str(num_iter)+'track'+str(num_track)+'design'+str(i), False )) for i in range(len(k_lists_tmp))]
                 pool.close()
                 pool.join()
