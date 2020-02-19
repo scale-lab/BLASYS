@@ -168,9 +168,9 @@ class Blasys(Cmd):
 
     def do_sta(self, args):
 
-        if self.optimizer is None:
-            print('[Error] No input file found. Please first run read_verilog.\n')
-            return
+        # if self.optimizer is None:
+            # print('[Error] No input file found. Please first run read_verilog.\n')
+            # return
 
         if self.liberty is None:
             print('[Error] No liberty file found. Please first run read_liberty.\n')
@@ -178,11 +178,13 @@ class Blasys(Cmd):
 
         if args == 'on':
             self.sta = True
-            self.optimizer.sta = True
+            if self.optimizer is not None:
+                self.optimizer.sta = True
             print('Turn on OpenSTA. Evaluate power and delay.\n')
         elif args == 'off':
             self.sta = False
-            self.optimizer.sta = False
+            if self.optimizer is not None:
+                self.optimizer.sta = False
             print('Turn off OpenSTA. Only evaluate area.\n')
         else:
             print('[Error] Invalid arguments.')
@@ -236,16 +238,17 @@ class Blasys(Cmd):
 
     def do_metric(self, args):
 
-        if self.optimizer is None:
-            print('[Error] No input file found. Please first run read_verilog.\n')
-            return
+        # if self.optimizer is None:
+            # print('[Error] No input file found. Please first run read_verilog.\n')
+            # return
 
         if not hasattr(metric, args):
             print('[Error] Cannot find metric function {} within utils/metric.py.')
             self.help_metric()
             return
 
-        self.optimizer.metric = args
+        if self.optimizer is not None:
+            self.optimizer.metric = getattr(metric, args)
         self.metric = args
 
         print('Successfully set error metric as {}\n'.format(args))
@@ -268,25 +271,12 @@ class Blasys(Cmd):
             print('[Error] No input file found. Please first run read_verilog.\n')
             return
 
-        args_list = args.split()
-        if '-n' in args_list:
-            idx = args_list.index('-n')
-            if idx == len(args_list) - 1:
-                print('[Error] Please put number of partitions.')
-                self.help_partitioning()
-                return
+        if not args.isdigit():
+            print('[Error] Please put an integer as number of partitions.')
+            self.help_partition()
+            return
 
-            if not args_list[idx+1].isdigit():
-                print('[Error] Please put an integer as number of partitions.')
-                self.help_partitioning()
-                return
-
-            # Get threshold
-            num_part = int(args_list[idx+1])
-            args_list.pop(idx)
-            args_list.pop(idx)
-        else:
-            num_part = None
+        num_part = int(args)
      
         self.optimizer.convert2aig()
 
@@ -300,7 +290,7 @@ class Blasys(Cmd):
 
 
     def help_partition(self):
-        print('[Usage] partition [-n NUMBER_OF_PARTITIONS]\n')
+        print('[Usage] partition [NUMBER_OF_PARTITIONS]\n')
 
     
 

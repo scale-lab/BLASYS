@@ -13,4 +13,4 @@ vvp: 'vvp'
 abc: '/home/jingxiao/Tools/abc/abc'
 
 # OpenSTA for delay and power analysis
-OpenSTA: 'sta'
+OpenSTA: '/home/jingxiao/Tools/OpenSTA/app/sta'

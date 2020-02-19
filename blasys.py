@@ -15,6 +15,8 @@ from utils.cml import Blasys
 #        MAIN        #
 ######################
 def main():
+    
+    # System config
     max_cpu = mp.cpu_count()
     app_path = os.path.dirname(os.path.realpath(__file__))
     
@@ -50,9 +52,16 @@ def main():
     else:
         threshold_list = list(map(float, args.threshold.split(',')))
 
+    # Create optimizer
     worker = GreedyWorker(args.input, args.liberty, config, args.testbench, args.metric, args.sta)
+    
+    # Output directory
     worker.create_output_dir(args.output)
+    
+    # Evaluate input circuit
     worker.evaluate_initial()
+
+    # Partition mode or non_partition mode
     if args.single is not True:
         worker.convert2aig()
         if args.npart is None:
@@ -66,8 +75,22 @@ def main():
 
 
 if __name__ == '__main__':
+
+    # Open command-line interface
     if len(sys.argv) == 1:
         print_banner()
         Blasys().cmdloop()
+
+    # Use script file as command-line
+    elif len(sys.argv) == 3 and sys.argv[1] == '-f':
+        script = sys.argv[2]
+        blasys = Blasys()
+        with open(script, 'r') as f:
+            cmd = f.readline()
+            while cmd:
+                blasys.onecmd(cmd)
+                cmd = f.readline()
+
+    # Normal execution
     else:
         main()
