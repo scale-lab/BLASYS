@@ -57,6 +57,19 @@ class Blasys(Cmd):
         print('Exit blasys tool.')
 
 
+    def do_output_to(self, args):
+        arg_list = args.split()
+        if len(arg_list) != 1:
+            print('[Error] Invalid input.')
+            self.help_output_to()
+
+        self.output = arg_list[0]
+        print('Set output directory to {}.\n'.format(self.output))
+
+    def help_output_to(self):
+        print('[Usage] output_to DIRECTORY_OF_OUTPUT')
+
+
 
 
     def do_read_liberty(self, args):
@@ -110,29 +123,29 @@ class Blasys(Cmd):
         self.modulename, self.n_input, self.n_output = ret[0], ret[3], ret[5]
         print('Successfully loaded input file and created optimizer.\n')
 
-        respond = input('Please specify output folder (by default \'output\'):  ')
-        if respond == '':
-            respond = 'output'
+        #respond = input('Please specify output folder (by default \'output\'):  ')
+        #if respond == '':
+        #    respond = 'output'
 
-        while 1:
-            print('Create output folder', respond)
-            if os.path.isdir(respond):
-                a = input('Output path already exists. Delete current directory? (Y/N):  ')
-                if a.lower() == 'y':
-                    shutil.rmtree(respond)
-                    break
-            else:
-                break
+        #while 1:
+        #    print('Create output folder', respond)
+        #    if os.path.isdir(respond):
+        #        a = input('Output path already exists. Delete current directory? (Y/N):  ')
+        #        if a.lower() == 'y':
+        #            shutil.rmtree(respond)
+        #            break
+        #    else:
+        #        break
 
-            respond = input('Please specify output folder (by default \'output\'):  ')
-            if respond == '':
-                respond = 'output'
+        #    respond = input('Please specify output folder (by default \'output\'):  ')
+        #    if respond == '':
+        #        respond = 'output'
 
         # Create output dir
-        self.optimizer.create_output_dir(respond)
+        self.optimizer.create_output_dir(self.output)
         print('\n')
         # self.evaluate_initial()
-        self.output = respond
+        # self.output = respond
 
     def complete_read_verilog(self, text, line, start_idx, end_idx):
         return _complete_path(text)
@@ -168,15 +181,11 @@ class Blasys(Cmd):
 
     def do_sta(self, args):
 
-        # if self.optimizer is None:
-            # print('[Error] No input file found. Please first run read_verilog.\n')
-            # return
-
-        if self.liberty is None:
-            print('[Error] No liberty file found. Please first run read_liberty.\n')
-            return
-
+        # If turn on sta, user must provide liberty file.
         if args == 'on':
+            if self.liberty is None:
+                print('[Error] No liberty file found. Please first run read_liberty.\n')
+                return
             self.sta = True
             if self.optimizer is not None:
                 self.optimizer.sta = True

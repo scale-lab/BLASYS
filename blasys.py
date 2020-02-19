@@ -6,6 +6,7 @@ import os
 import numpy as np
 import sys
 import multiprocessing as mp
+import time
 from utils.cml import Blasys
 
 
@@ -25,7 +26,7 @@ def main():
     parser.add_argument('-i', '--input', help='Input verilog file', required=True, dest='input')
     parser.add_argument('-tb', '--testbench', help='Number of test vectors', required=True, dest='testbench')
     parser.add_argument('-n', '--number', help='Number of partitions', default=None, type=int, dest='npart')
-    parser.add_argument('-o', '--output', help='Output directory', default='output', dest='output')
+    parser.add_argument('-o', '--output', help='Output directory', default=None, dest='output')
     parser.add_argument('-ts', '--threshold', help='Threshold on error', default='None', dest='threshold')
     parser.add_argument('-lib', '--liberty', help='Liberty file name', default=None, dest='liberty')
     parser.add_argument('-ss', '--stepsize', help='Step size of optimization process', default=1, type=int, dest='stepsize')   
@@ -85,11 +86,15 @@ if __name__ == '__main__':
     elif len(sys.argv) == 3 and sys.argv[1] == '-f':
         script = sys.argv[2]
         blasys = Blasys()
+        print_banner()
         with open(script, 'r') as f:
             cmd = f.readline()
+            count = 0
             while cmd:
+                print('[' + str(count) + '] Run BLASYS command: '  + cmd )
                 blasys.onecmd(cmd)
                 cmd = f.readline()
+                count += 1
 
     # Normal execution
     else:
