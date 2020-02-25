@@ -7,6 +7,9 @@ import subprocess
 import time
 from .asso import asso
 
+class CombinationalLoop(Exception):
+    pass
+
 
 def evaluate_design(k_stream, worker, filename, display=True):
     if display:
@@ -23,16 +26,24 @@ def evaluate_design(k_stream, worker, filename, display=True):
             verilog_list.append(part_verilog)
             continue
         
-        part_verilog = os.path.join(worker.output, modulename, modulename + '_approx_k=' + str(approx_degree) + '.v')
+        part_verilog = os.path.join(worker.output, 'bmf_partition', modulename, modulename + '_approx_k=' + str(approx_degree) + '.v')
         # If has not been approximated before
         if not os.path.exists(part_verilog):
             print('----- Approximating part ' + str(i) + ' to degree ' + str(approx_degree))
 
-            directory = os.path.join(worker.output, modulename, modulename)
+            directory = os.path.join(worker.output, 'bmf_partition', modulename, modulename)
             approximate(directory, approx_degree, worker, i)
         
         verilog_list.append(part_verilog)
+    
+    # Synthesize and estimate chip area
+    try:
+        output_syn = os.path.join(worker.output, 'tmp', filename)
+        area  = synth_design(' '.join(verilog_list), output_syn, worker.library, worker.script, worker.path['yosys'])
+    except CombinationalLoop:
+        return None
 
+    # QoR estimation
     truth_dir = os.path.join(worker.output, 'truthtable', filename+'.truth')
     subprocess.call([worker.path['iverilog'], '-o', truth_dir[:-5]+'iv'] + verilog_list + [worker.testbench])
     with open(truth_dir, 'w') as f:
@@ -40,10 +51,6 @@ def evaluate_design(k_stream, worker, filename, display=True):
     os.remove(truth_dir[:-5] + 'iv')
 
     ground_truth = os.path.join(worker.output, worker.modulename + '.truth')
-    
-    output_syn = os.path.join(worker.output, 'tmp', filename)
-    area  = synth_design(' '.join(verilog_list), output_syn, worker.library, worker.script, worker.path['yosys'])
-
     err = worker.metric(ground_truth, truth_dir)
     
     if worker.sta:
@@ -71,23 +78,41 @@ def synth_design(input_file, output_file, lib_file, script, yosys):
     if lib_file is not None:
         yosys_command = 'read_verilog ' + input_file + '; ' + 'synth -flatten; opt; opt_clean -purge; techmap; opt; opt_clean -purge; write_verilog -noattr ' +output_file + '.v; abc -liberty '+lib_file + ' -script ' + script + '; stat -liberty '+lib_file + '; write_verilog -noattr ' +output_file + '_syn.v;\n '
         area = 0
-        line=subprocess.call(yosys+" -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True)
+        #line=subprocess.call(yosys+" -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True)
+        with open(output_file+'.log', 'w') as f:
+            line = subprocess.call([yosys, '-p', yosys_command], stdout=f, stderr=subprocess.STDOUT)
         with open(output_file+".log", 'r') as file_handle:
             for line in file_handle:
+                # Combinational loop
+                if 'Warning: found logic loop' in line:
+                    os.remove(output_file+'.log')
+                    raise CombinationalLoop()
+
+                # Find chip area and return
                 if 'Chip area' in line:
                     area = line.split()[-1]
                     break
+
     else:
         yosys_command = 'read_verilog ' + input_file + '; ' + 'synth -flatten; opt; opt_clean -purge; techmap; opt; opt_clean -purge; write_verilog -noattr ' +output_file + '.v; abc -g NAND -script ' + script + '; write_verilog -noattr ' +output_file + '_syn.v;\n '
         area = 0
-        line=subprocess.call(yosys+" -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True)
+        #line=subprocess.call(yosys+" -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True)
+        with open(output_file+'.log', 'w') as f:
+            line = subprocess.call([yosys, '-p', yosys_command], stdout=f, stderr=subprocess.STDOUT)
         with open(output_file+".log", 'r') as file_handle:
             return_list = []
             for line in file_handle:
+                # Combinational loop
+                if 'Warning: found logic loop' in line:
+                    os.remove(output_file+'.log')
+                    raise CombinationalLoop()
+
+                # Find num of NAND cells
                 if 'ABC RESULTS:' in line and 'NAND cells:' in line:
                     return_list.append(line.split()[-1])
             area = return_list[-1]
-            
+
+    os.remove(output_file+'.log')
     return float(area)
 
 def inpout(fname):
@@ -311,7 +336,7 @@ def approximate(inputfile, k, worker, i):
     asso( inputfile+'.truth', k )
     W = np.loadtxt(inputfile + '.truth_w_' + str(k), dtype=int)
     H = np.loadtxt(inputfile + '.truth_h_' + str(k), dtype=int)
-    formula_file = os.path.join(worker.output, modulename, modulename+'_formula.v')
+    formula_file = os.path.join(worker.output, 'bmf_partition', modulename, modulename+'_formula.v')
     if k == 1:
         W = W.reshape((W.size, 1))
         H = H.reshape((1, H.size))
@@ -555,6 +580,8 @@ def create_wrapper(inp, out, top, vmap, worker):
     
     os.remove(top)
     shutil.move(out, top)
+
+    os.remove(os.path.join(worker.output, 'tmp.v'))
 
 
 

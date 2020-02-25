@@ -30,52 +30,54 @@ def least_error_opt(err_list, area_list, threshold):
 
 def optimization_1(err_list, area_list, initial, prev_err, prev_area, threshold):
     gradient = np.zeros(len(err_list))    
-    
-    if err_list.min() <= prev_err + 0.01:
-        for (idx,(area, err)) in enumerate(zip(area_list, err_list)):
-            if err > prev_err + 0.01 or err > threshold:
-                gradient[idx] = np.inf
-            elif area > prev_area:
-                #gradient[idx] = np.sqrt((area-prev_area)**2 + (err-prev_err)**2)
-                gradient[idx] = (area/prev_area - 1) ** 2 / (err - prev_err)
-            elif err <= prev_err:
-                gradient[idx] = -np.inf
-            #elif err <= prev_err + 0.02:
-            else:
-                gradient[idx] = (area/prev_area - 1) / ((err - prev_err) ** 2)
 
-        rank1 = np.argsort(area_list, kind='stable')
-        rank2 = np.argsort(gradient[rank1], kind='stable')
-        rank3 = rank1[rank2]
+    for diff in [0.0001, 0.0002, 0.0004, 0.0008, 0.001, 0.005, 0.01, float('inf')]:
+        if err_list.min() <= prev_err + diff:
+            for (idx,(area, err)) in enumerate(zip(area_list, err_list)):
+                if err > prev_err + diff or err > threshold:
+                    gradient[idx] = np.inf
+                elif area > prev_area:
+                    #gradient[idx] = np.sqrt((area-prev_area)**2 + (err-prev_err)**2)
+                    gradient[idx] = (area/prev_area - 1) ** 2 / (err - prev_err)
+                elif err <= prev_err:
+                    gradient[idx] = -np.inf
+                #elif err <= prev_err + 0.02:
+                else:
+                    gradient[idx] = (area/prev_area - 1) / ((err - prev_err) ** 2)
+
+
+            rank1 = np.argsort(area_list, kind='stable')
+            rank2 = np.argsort(gradient[rank1], kind='stable')
+            rank3 = rank1[rank2]
+            
+            return rank3
+    #elif err_list.min() <= prev_err + 0.02:
+    #    for (idx,(area, err)) in enumerate(zip(area_list, err_list)):
+    #        if err > prev_err + 0.02 or err > threshold:
+    #            gradient[idx] = np.inf
+    #        elif area > prev_area:
+    #            gradient[idx] = np.sqrt((area-prev_area)**2 + (err-prev_err)**2)
+    #        else:
+    #            gradient[idx] = (area/prev_area - 1) / ((err - prev_err) ** 2)
+
+    #    rank1 = np.argsort(area_list, kind='stable')
+    #    rank2 = np.argsort(gradient[rank1], kind='stable')
+    #    rank3 = rank1[rank2]
         
-        return rank3
-    elif err_list.min() <= prev_err + 0.02:
-        for (idx,(area, err)) in enumerate(zip(area_list, err_list)):
-            if err > prev_err + 0.02 or err > threshold:
-                gradient[idx] = np.inf
-            elif area > prev_area:
-                gradient[idx] = np.sqrt((area-prev_area)**2 + (err-prev_err)**2)
-            else:
-                gradient[idx] = (area/prev_area - 1) / ((err - prev_err) ** 2)
+    #    return rank3
 
-        rank1 = np.argsort(area_list, kind='stable')
-        rank2 = np.argsort(gradient[rank1], kind='stable')
-        rank3 = rank1[rank2]
+    #else:
+    #    for (idx,(area, err)) in enumerate(zip(area_list, err_list)):
+    #        if err > threshold:
+    #            gradient[idx] = np.inf
+    #        elif area > prev_area:
+    #            gradient[idx] = np.sqrt((area-prev_area)**2 + (err-prev_err)**2)
+    #        else:
+    #            gradient[idx] = (area/prev_area - 1) / ((err - prev_err) ** 2)
+
+    #    rank1 = np.argsort(area_list, kind='stable')
+    #    rank2 = np.argsort(gradient[rank1], kind='stable')
+    #    rank3 = rank1[rank2]
         
-        return rank3
-
-    else:
-        for (idx,(area, err)) in enumerate(zip(area_list, err_list)):
-            if err > threshold:
-                gradient[idx] = np.inf
-            elif area > prev_area:
-                gradient[idx] = np.sqrt((area-prev_area)**2 + (err-prev_err)**2)
-            else:
-                gradient[idx] = (area/prev_area - 1) / ((err - prev_err) ** 2)
-
-        rank1 = np.argsort(area_list, kind='stable')
-        rank2 = np.argsort(gradient[rank1], kind='stable')
-        rank3 = rank1[rank2]
-        
-        return rank3
+    #    return rank3
 

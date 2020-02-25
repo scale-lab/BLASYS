@@ -489,7 +489,7 @@ class Blasys(Cmd):
                 return
 
     def help_run_iter(self):
-        print('[Usage] run_iter [-i NUMBER_ITERATION] [-ts THRESHOLDS] [-tr NUMBER_TRACK] [-s STEPSIZE]')
+        print('[Usage] run_iter [-i NUMBER_ITERATION] [-ts THRESHOLDS] [-tr NUMBER_TRACK] [-s STEPSIZE]\n')
 
     def do_clear(self, args):
         a = input('Are you sure to clear?\nDoing this will clear ALL approximate work done in this session. (Y/N)')
@@ -506,46 +506,72 @@ class Blasys(Cmd):
         self.reset()
 
     def help_clear(self):
-        print('[Usage] Clear ALL approximate work done in this session. Be careful to use it.')
+        print('[Usage] Clear ALL approximate work done in this session. Be careful to use it.\n')
 
     def do_stat(self, args):
-        metric_list = []
-        area_list = []
-        power_list = []
-        delay_list = []
-        with open(os.path.join(self.output,'data.csv')) as data:
-            line = data.readline()
-            line = data.readline().rstrip('\n')
-            while line:
-                tokens = re.split(',',line)
-                metric_list.append(float(tokens[1]))
-                area_list.append(float(tokens[2]))
-                if tokens[3] == 'nan':
-                    power_list.append('nan')
-                    delay_list.append('nan')
-                else:
-                    power_list.append(float(tokens[3]))
-                    delay_list.append(float(tokens[4]))
-                #err = float(tokens[0])
-                #area = float(tokens[1])
-                #error_list.append(err)
-                #area_list.append(area)
-                line = data.readline().rstrip('\n')
-        
-        print('{:<12}{:<12}{:<12}{:<12}{:<12}\n'.format('Iteration', 'Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)'))
-        for i, ( m, a, p, d ) in enumerate(zip(metric_list, area_list, power_list, delay_list)):
-            if i == 0:
-                it = 'Original'
-            else:
-                it = i - 1
+        arg_list = args.split()
 
-            if p != 'nan':
-                print('{:<12}{:<12.4f}{:<12.4f}{:<12.4f}{:<12.4f}\n'.format(it, m, a, p, d))
-            else:
-                print('{:<12}{:<12.4f}{:<12.4f}{:<12}{:<12}\n'.format(it, m, a, 'nan', 'nan'))
+        if len(arg_list) == 0:
+            metric_list = []
+            area_list = []
+            power_list = []
+            delay_list = []
+            name_list = []
+            with open(os.path.join(self.optimizer.output, 'result', 'iteration.csv')) as data:
+                line = data.readline()
+                line = data.readline().rstrip('\n')
+                while line:
+                    tokens = re.split(',',line)
+                    metric_list.append(float(tokens[1]))
+                    area_list.append(float(tokens[2]))
+                    name_list.append(tokens[5])
+                    if tokens[3] == 'nan':
+                        power_list.append('nan')
+                        delay_list.append('nan')
+                    else:
+                        power_list.append(float(tokens[3]))
+                        delay_list.append(float(tokens[4]))
+                    #err = float(tokens[0])
+                    #area = float(tokens[1])
+                    #error_list.append(err)
+                    #area_list.append(area)
+                    line = data.readline().rstrip('\n')
+            
+            print('{:<12}{:<20}{:<12}{:<12}{:<12}{:<12}\n'.format('Iteration', 'Design' ,'Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)'))
+            for i, ( m, a, p, d, design ) in enumerate(zip(metric_list, area_list, power_list, delay_list, name_list)):
+                if i == 0:
+                    it = 'Original'
+                else:
+                    it = i - 1
+
+                if p != 'nan':
+                    print('{:<12}{:<20}{:<12.4%}{:<12.4f}{:<12.4f}{:<12.4f}\n'.format(it, design, m, a, p, d))
+                else:
+                    print('{:<12}{:<20}{:<12.4%}{:<12.4f}{:<12}{:<12}\n'.format(it, design, m, a, 'nan', 'nan'))
+
+        else:
+            with open(os.path.join(self.optimizer.output, 'result', 'data.csv')) as data:
+                line = data.readline()
+                line = data.readline().rstrip('\n')
+                while line:
+                    tokens = re.split(',', line)
+                    if tokens[0] == args.strip():
+                        print('*'*15 + ' ' + args + ' ' + '*'*15)
+                        print('QoR:\t{:.4%}'.format(float(tokens[1])))
+                        print('Area:\t{:.2f}'.format(float(tokens[2])))
+                        if tokens[3] != 'nan':
+                            print('Power:\t{:.6f}'.format(float(tokens[3])))
+                            print('Delay:\t{:.6f}'.format(float(tokens[4])))
+                        return
+                    line = data.readline()
+
+            print('[Error] Cannot find design {}.'.format(args))
+            self.help_stat()
+            
 
     def help_stat(self):
-        print('Show approximate result.')
+        print('Show best approximate results per iteration.')
+        print('If a design name is provided, only information about it will be provided.\n')
 
 
     def tmp1(self, args):

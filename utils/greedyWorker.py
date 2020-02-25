@@ -44,6 +44,8 @@ class GreedyWorker():
         self.design_list = []
         self.iter = 0
 
+        self.iter_rank = [0]
+
         # Get metric function
         try:
             self.metric = getattr(metric, err_metric)
@@ -79,10 +81,10 @@ class GreedyWorker():
             shutil.rmtree(self.output)
         os.mkdir(self.output)
 
-        os.mkdir(os.path.join(self.output, 'approx_design'))
         os.mkdir(os.path.join(self.output, 'tmp'))
         os.mkdir(os.path.join(self.output, 'truthtable'))
         os.mkdir(os.path.join(self.output, 'result'))
+        os.mkdir(os.path.join(self.output, 'log'))
         # Write script
         self.script = os.path.join(self.output, 'abc.script')
         with open(self.script, 'w') as file:
@@ -123,9 +125,14 @@ class GreedyWorker():
             power = float('nan')
 
 
-        f = open(os.path.join(self.output, 'data.csv'), 'a')
-        f.write('{},{},{},{},{}\n'.format('Iter','Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
-        f.write('{},{:<.6f},{:.2f},{:.6f},{:.6f}\n'.format('Org', 0, self.initial_area, power, self.delay) )
+        f = open(os.path.join(self.output, 'result', 'iteration.csv'), 'a')
+        f.write('{},{},{},{},{},{}\n'.format('Iter','Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)', 'Filename') )
+        f.write('{},{:<.6f},{:.2f},{:.6f},{:.6f},{}\n'.format('Org', 0, self.initial_area, power, self.delay, 'Org') )
+
+        d = open(os.path.join(self.output, 'result', 'data.csv'), 'a')
+        d.write('{},{},{},{},{}\n'.format('Name','Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
+        d.write('{},{:.6f},{:.2f},{:.6f},{:.6f}\n'.format('Org', 0, self.initial_area, power, self.delay) )
+
 
         err_list = []
         area_list = []
@@ -133,7 +140,8 @@ class GreedyWorker():
             # Approximate
             approximate(truth_dir, k, self, 0)
             in_file = os.path.join(self.output, self.modulename+'_approx_k='+str(k)+'.v')
-            out_file = os.path.join(self.output, self.modulename, self.modulename+'_approx_k='+str(k))
+            filename = self.modulename+'_k='+str(k)
+            out_file = os.path.join(self.output, self.modulename, 'tmp', filename)
             gen_truth = os.path.join(self.output, self.modulename+'.truth_wh_'+str(k))
             area = synth_design(in_file, out_file, self.library, self.script, self.path['yosys'])
             err = self.metric(truth_dir+'.truth', gen_truth)
@@ -149,10 +157,14 @@ class GreedyWorker():
                 delay_iter = float('nan')
                 power_iter = float('nan')
                 print('Factorization degree {}, Metric {:.6%}, Area {:.2f}'.format(k, err, area))
-            f.write('{},{:.6f},{:.2f},{:.6f},{:.6f}\n'.format(k, err, area, power_iter, delay_iter) )
-
+            f.write('{},{:.6f},{:.2f},{:.6f},{:.6f},{}\n'.format(k, err, area, power_iter, delay_iter, filename) )
+            d.write('{},{:.6f},{:.2f},{:.6f},{:.6f}\n'.format(filename, err, area, power_iter, delay_iter) )
         self.plot(err_list, area_list)
         f.close()
+        d.close()
+
+        os.remove(sta_script)
+        os.remove(sta_output)
 
 
 
@@ -203,7 +215,7 @@ class GreedyWorker():
                 'partitioning ' + str(num_parts) + ' -c '+ self.path['part_config'] +'; ' \
                 'get_all_partitions ' + part_dir
         
-        log_partition = os.path.join(self.output, 'lsoracle.log')
+        log_partition = os.path.join(self.output, 'log', 'lsoracle.log')
         with open(log_partition, 'w') as file_handler:
             subprocess.call([self.path['lsoracle'], '-c', lsoracle_command], stderr=subprocess.STDOUT, stdout=file_handler)
 
@@ -243,6 +255,11 @@ class GreedyWorker():
         outfile = os.path.join(self.output, 'out.v')
         topfile = os.path.join(self.output, 'partition', self.modulename + '.v')
         create_wrapper(self.input, outfile, topfile, mapping, self)
+
+        # Clear up redundant file
+        os.remove(self.aig)
+        os.remove(os.path.join(self.output, self.modulename + '.map'))
+
      
 
     def truthtable_for_parts(self):
@@ -251,6 +268,9 @@ class GreedyWorker():
         self.output_list = []
         #for i in range(num_parts):
             #modulename = self.modulename + '_' + str(i)
+        bmf_part = 'bmf_partition'
+        os.mkdir(os.path.join(self.output, bmf_part))
+
         for i, modulename in enumerate(self.modulenames):
             file_path = os.path.join(self.output, 'partition', modulename)
             #if not os.path.exists(file_path + '.v'):
@@ -267,7 +287,7 @@ class GreedyWorker():
 
             # Generate truthtable
             print('Generate truth table for partition '+str(i))
-            part_output_dir = os.path.join(self.output, modulename)
+            part_output_dir = os.path.join(self.output, bmf_part, modulename)
             os.mkdir(part_output_dir)
             subprocess.call([self.path['iverilog'], '-o', file_path+'.iv', file_path+'.v', file_path+'_tb.v'])
             with open( os.path.join(part_output_dir, modulename + '.truth'), 'w') as f:
@@ -298,6 +318,9 @@ class GreedyWorker():
                     synth_input = os.path.join(self.output, self.modulename+'_syn.v')
                     self.delay = get_delay(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output)
                     power = get_power(self.path['OpenSTA'], sta_script, self.library, synth_input, self.modulename, sta_output, self.delay) 
+
+                    os.remove(sta_script)
+                    os.remove(sta_output)
                 else:
                     self.delay = float('nan')
                     power = float('nan')
@@ -306,9 +329,14 @@ class GreedyWorker():
                 f.write('{:<10.2f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(0, self.initial_area, power, self.delay) )
             self.power_list.append(power)
             self.delay_list.append(self.delay)
-            with open(os.path.join(self.output, 'data.csv'), 'a') as data:
-                data.write('{},{},{},{},{}\n'.format('Iter','Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
-                data.write('{},{:.6f},{:.2f},{:.6f},{:.6f}\n'.format('Org', 0, self.initial_area, power, self.delay) )
+            with open(os.path.join(self.output, 'result', 'iteration.csv'), 'a') as f:
+                f.write('{},{},{},{},{},{}\n'.format('Iter','Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)', 'Filename') )
+                f.write('{},{:.6f},{:.2f},{:.6f},{:.6f},{}\n'.format('Org', 0, self.initial_area, power, self.delay,'Org') )
+
+            with open(os.path.join(self.output, 'result', 'data.csv'), 'a') as f:
+                f.write('{},{},{},{},{}\n'.format('Name','Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
+                f.write('{},{:.6f},{:.2f},{:.6f},{:.6f}\n'.format('Org', 0, self.initial_area, power, self.delay) )
+
 
 
         print('Current stream of factorization degree:\n','\n'.join(map(str, self.curr_streams)))
@@ -345,7 +373,7 @@ class GreedyWorker():
 
         msg = 'Approximated error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err[rank[0]], 100 * area[rank[0]] / self.initial_area, time_used)
         print(msg)
-        with open(os.path.join(self.output, 'log'), 'a') as log_file:
+        with open(os.path.join(self.output, 'log', 'blasys.log'), 'a') as log_file:
             log_file.write(str(next_stream))
             log_file.write('\n')
             log_file.write(msg)
@@ -354,8 +382,12 @@ class GreedyWorker():
         self.curr_streams = [streams[i] for i in rank[:track]]
 
             
-        with open(os.path.join(self.output, 'data.csv'), 'a') as data:
-            data.write('{},{:.6f},{:.2f},{:.6f},{:.6f}\n'.format(self.iter, err[rank[0]], area[rank[0]], power[rank[0]], delay[rank[0]]) )
+        with open(os.path.join(self.output, 'result', 'iteration.csv'), 'a') as f:
+            f.write('{},{:.6f},{:.2f},{:.6f},{:.6f},{}\n'.format(self.iter, err[rank[0]], area[rank[0]], power[rank[0]], delay[rank[0]], name_list[rank[0]]) )
+        
+        with open(os.path.join(self.output, 'result', 'data.csv'), 'a') as f:
+            for i,n in enumerate(name_list):
+                f.write('{},{:.6f},{:.2f},{:.6f},{:.6f}\n'.format(n, err[i], area[i], power[i], delay[i]) )
 
         self.iter += 1
 
@@ -364,6 +396,8 @@ class GreedyWorker():
         self.design_list += name_list
         self.power_list += power
         self.delay_list += delay
+
+        self.iter_rank.append(rank[0])
 
         if err[rank[0]] >= threshold[0]+0.005:
             ts = threshold.pop(0)
@@ -424,42 +458,57 @@ class GreedyWorker():
                 changed[count] = i
                 count += 1
 
-            name_list += ['iter'+str(num_iter)+'track'+str(num_track)+'design'+str(i) for i in range((len(k_lists_tmp)))]
+            # name_list += ['{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i) for i in range((len(k_lists_tmp)))]
         
             # Parallel mode
             if parallel:
                 pool = mp.Pool(cpu_count)
-                results = [pool.apply_async(evaluate_design,args=(k_lists_tmp[i], self, 'iter'+str(num_iter)+'track'+str(num_track)+'design'+str(i), False )) for i in range(len(k_lists_tmp))]
+                results = [pool.apply_async(evaluate_design,args=(k_lists_tmp[i], self, '{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i), False )) for i in range(len(k_lists_tmp))]
                 pool.close()
                 pool.join()
-                for result in results:
-                    err_list.append(result.get()[0])
-                    area_list.append(result.get()[1])
-                    delay_list.append(result.get()[2])
-                    power_list.append(result.get()[3])
+                for idx, result in enumerate(results):
+                    res = result.get()
+                    if res is None:
+                        continue
+                    err_list.append(res[0])
+                    area_list.append(res[1])
+                    delay_list.append(res[2])
+                    power_list.append(res[3])
+                    k_lists.append(k_lists_tmp[idx])
+                    name_list.append('{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, idx) )
             else:
             # Sequential mode
                 for i in range(len(k_lists_tmp)):
                     # Evaluate each list
                     print('======== Design number ' + str(i))
                     k_stream = k_lists_tmp[i]
-                    err, area, delay, power = evaluate_design(k_stream, self, 'iter'+str(num_iter)+'track'+str(num_track)+'design'+str(i))
-                    err_list.append(err)
-                    area_list.append(area)
-                    delay_list.append(delay)
-                    power_list.append(power)
+                    res = evaluate_design(k_stream, self, '{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i))
+                    if res is None:
+                        continue
+                    err_list.append(res[0])
+                    area_list.append(res[1])
+                    delay_list.append(res[2])
+                    power_list.append(res[3])
 
-            k_lists += k_lists_tmp
+                    k_lists.append(k_stream)
+                    name_list.append('{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i) )
+
+            # k_lists += k_lists_tmp
 
         if least_error:
             rank = least_error_opt(np.array(err_list), np.array(area_list) / self.initial_area, threshold)
         else:
-            rank = optimization(np.array(err_list), np.array(area_list), self.initial_area, self.error_list[-1], self.area_list[-1], threshold+0.01)
+            rank = optimization(np.array(err_list), np.array(area_list), self.initial_area, self.error_list[self.iter_rank[-1]], self.area_list[self.iter_rank[-1]], threshold+0.01)
         result = k_lists[rank[0]]
 
         # for i,e in enumerate(err_list):
             # if e <= self.error_list[-1] and area_list[i] <= self.area_list[-1]:
                 # result[changed[i]] = k_lists[i][changed[i]]
+
+        print('stream length {}'.format(len(k_lists)))
+        print('res length {}'.format(len(err_list)))
+        print('design length {}'.format(len(name_list)))
+        print(name_list)
             
         return result, k_lists, err_list, area_list, delay_list, power_list, name_list, rank
 
