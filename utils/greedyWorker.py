@@ -9,7 +9,7 @@ import multiprocessing as mp
 import shutil
 import time
 import ctypes
-from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell, write_aiger, get_delay, get_power, approximate, create_wrapper, module_info
+from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell, write_aiger, get_delay, get_power, approximate, create_wrapper, module_info, NoValidDesign
 from .optimizer import optimization, least_error_opt
 from .create_tb import create_testbench
 from . import metric
@@ -340,9 +340,14 @@ class GreedyWorker():
 
 
         print('Current stream of factorization degree:\n','\n'.join(map(str, self.curr_streams)))
-        
-        if len(self.curr_streams) == 1 and max(self.curr_streams[0]) == 1:
 
+        print('--------------- Iteration ' + str(self.iter) + ' ---------------')
+        before = time.time()
+
+        try:
+            next_stream, streams, err, area, delay, power, name_list, rank = self.evaluate_iter(self.curr_streams, self.iter, step_size, parallel, threshold[0], least_error, cpu_count)
+        except NoValidDesign:
+            # If no more valid design
             a = np.array(self.area_list)
             e = np.array(self.error_list)
             a[e > threshold[0]] = np.inf
@@ -360,9 +365,7 @@ class GreedyWorker():
             print('All subcircuits have been approximated to degree 1. Exit approximating.')
             return -1
 
-        print('--------------- Iteration ' + str(self.iter) + ' ---------------')
-        before = time.time()
-        next_stream, streams, err, area, delay, power, name_list, rank = self.evaluate_iter(self.curr_streams, self.iter, step_size, parallel, threshold[0], least_error, cpu_count)
+
         after = time.time()
 
 
@@ -494,6 +497,9 @@ class GreedyWorker():
                     name_list.append('{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i) )
 
             # k_lists += k_lists_tmp
+        
+        if len(name_list) == 0:
+            raise NoValidDesign()
 
         if least_error:
             rank = least_error_opt(np.array(err_list), np.array(area_list) / self.initial_area, threshold)
@@ -504,11 +510,6 @@ class GreedyWorker():
         # for i,e in enumerate(err_list):
             # if e <= self.error_list[-1] and area_list[i] <= self.area_list[-1]:
                 # result[changed[i]] = k_lists[i][changed[i]]
-
-        print('stream length {}'.format(len(k_lists)))
-        print('res length {}'.format(len(err_list)))
-        print('design length {}'.format(len(name_list)))
-        print(name_list)
             
         return result, k_lists, err_list, area_list, delay_list, power_list, name_list, rank
 

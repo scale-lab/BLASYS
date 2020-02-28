@@ -10,6 +10,9 @@ from .asso import asso
 class CombinationalLoop(Exception):
     pass
 
+class NoValidDesign(Exception):
+    pass
+
 
 def evaluate_design(k_stream, worker, filename, display=True):
     if display:
