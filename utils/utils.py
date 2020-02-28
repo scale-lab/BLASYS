@@ -113,7 +113,10 @@ def synth_design(input_file, output_file, lib_file, script, yosys):
                 # Find num of NAND cells
                 if 'ABC RESULTS:' in line and 'NAND cells:' in line:
                     return_list.append(line.split()[-1])
-            area = return_list[-1]
+            if len(return_list) == 0:
+                area = 0
+            else:
+                area = return_list[-1]
 
     os.remove(output_file+'.log')
     return float(area)
