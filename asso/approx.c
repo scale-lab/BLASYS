@@ -219,10 +219,10 @@ int solve_basis(matrix S, int size, int dim, matrix B, int k, smatrix D,
                     /* UPDATE: penalize covered 0s only when somebody else doesn't
                      * cover them already! */
                     if (S[i][element->c] == 0) rowcount[i] -= opti->penalty_overcovered
-                    // * pow(2,(dim-element->c))   /*Soheil*/
+                    * pow(2,(dim-element->c))   /*Soheil*/
                     * (1 - covered[i][element->c]);
                     else rowcount[i] += opti->bonus_covered
-                    // * pow(2,(dim-element->c))   /*Soheil*/
+                    * pow(2,(dim-element->c))   /*Soheil*/
                     * (S[i][element->c] - covered[i][element->c]);
                     element = element->n;
                 }

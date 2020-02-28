@@ -170,7 +170,7 @@ int asso(char *filename, int k)
             if (approximate(D, n, m, B, k, S, &opti) != 1) 
 	            printf("Asso failed.\n");
 
-            error = sab(D, S, B, n, m, k, "uniform");
+            error = sab(D, S, B, n, m, k, "binary");
 
             // DEBUG
 #ifdef DEBUG

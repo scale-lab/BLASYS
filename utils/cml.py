@@ -282,12 +282,15 @@ class Blasys(Cmd):
             print('[Error] No input file found. Please first run read_verilog.\n')
             return
 
-        if not args.isdigit():
+        if not (args.isdigit() or args == ''):
             print('[Error] Please put an integer as number of partitions.')
             self.help_partition()
             return
 
-        num_part = int(args)
+        if args == '':
+            num_part = None
+        else:
+            num_part = int(args)
      
         self.optimizer.convert2aig()
 
@@ -319,7 +322,7 @@ class Blasys(Cmd):
             self.initialized = True
             self.optimizer.evaluate_initial()
         
-        if not self.partitioned and self.n_input <= 16 and self.n_cell < 40:
+        if not self.partitioned and self.n_input <= 16:
             self.optimizer.blasys()
             print('Finish.\n')
             return

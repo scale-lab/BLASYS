@@ -85,6 +85,8 @@ class GreedyWorker():
         os.mkdir(os.path.join(self.output, 'truthtable'))
         os.mkdir(os.path.join(self.output, 'result'))
         os.mkdir(os.path.join(self.output, 'log'))
+        bmf_part = 'bmf_partition'
+        os.mkdir(os.path.join(self.output, bmf_part))
         # Write script
         self.script = os.path.join(self.output, 'abc.script')
         with open(self.script, 'w') as file:
@@ -111,8 +113,11 @@ class GreedyWorker():
         self.input_list = [inp]
         self.output_list = [out]
         self.modulenames = [self.modulename]
-        os.mkdir(os.path.join(self.output, self.modulename))
-        truth_dir = os.path.join(self.output, self.modulename)
+        out_dir = os.path.join(self.output, 'bmf_partition', self.modulename)
+        os.mkdir(out_dir)
+        src_dir = os.path.join(self.output, self.modulename)
+        truth_dir = os.path.join(out_dir, self.modulename)
+        shutil.copyfile(src_dir+'.truth', truth_dir+'.truth')
         
         if self.sta:
             sta_script = os.path.join(self.output, 'sta.script')
@@ -139,10 +144,10 @@ class GreedyWorker():
         for k in range(out-1, 0,-1):
             # Approximate
             approximate(truth_dir, k, self, 0)
-            in_file = os.path.join(self.output, self.modulename+'_approx_k='+str(k)+'.v')
+            in_file = os.path.join(out_dir, self.modulename+'_approx_k='+str(k)+'.v')
             filename = self.modulename+'_k='+str(k)
-            out_file = os.path.join(self.output, self.modulename, 'tmp', filename)
-            gen_truth = os.path.join(self.output, self.modulename+'.truth_wh_'+str(k))
+            out_file = os.path.join(self.output, 'tmp', filename)
+            gen_truth = os.path.join(out_dir, self.modulename+'.truth_wh_'+str(k))
             area = synth_design(in_file, out_file, self.library, self.script, self.path['yosys'])
             err = self.metric(truth_dir+'.truth', gen_truth)
             err_list.append(err)
@@ -268,8 +273,7 @@ class GreedyWorker():
         self.output_list = []
         #for i in range(num_parts):
             #modulename = self.modulename + '_' + str(i)
-        bmf_part = 'bmf_partition'
-        os.mkdir(os.path.join(self.output, bmf_part))
+
 
         for i, modulename in enumerate(self.modulenames):
             file_path = os.path.join(self.output, 'partition', modulename)
@@ -287,7 +291,7 @@ class GreedyWorker():
 
             # Generate truthtable
             print('Generate truth table for partition '+str(i))
-            part_output_dir = os.path.join(self.output, bmf_part, modulename)
+            part_output_dir = os.path.join(self.output, 'bmf_partition', modulename)
             os.mkdir(part_output_dir)
             subprocess.call([self.path['iverilog'], '-o', file_path+'.iv', file_path+'.v', file_path+'_tb.v'])
             with open( os.path.join(part_output_dir, modulename + '.truth'), 'w') as f:
