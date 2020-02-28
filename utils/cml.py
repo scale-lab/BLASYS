@@ -6,12 +6,15 @@ import regex as re
 import shutil
 import numpy as np
 import readline
+import time
+import subprocess
 import multiprocessing as mp
 from .banner import print_banner
 from .greedyWorker import GreedyWorker
 from .create_tb import create_testbench
-from .utils import module_info, number_of_cell
+from .utils import module_info, number_of_cell, synth_design, get_power, get_delay
 from . import metric
+
 
 
 def _complete_path(path):
@@ -84,9 +87,8 @@ class Blasys(Cmd):
             # return
         
         print('Successfully loaded liberty file {}.\n'.format(args))
-        if self.optimizer is None:
-            self.liberty = args
-        else:
+        self.liberty = args
+        if self.optimizer is not None:
             self.optimizer.library = args
 
 
@@ -508,6 +510,9 @@ class Blasys(Cmd):
     def help_clear(self):
         print('[Usage] Clear ALL approximate work done in this session. Be careful to use it.\n')
 
+
+
+
     def do_stat(self, args):
         arg_list = args.split()
 
@@ -572,6 +577,96 @@ class Blasys(Cmd):
     def help_stat(self):
         print('Show best approximate results per iteration.')
         print('If a design name is provided, only information about it will be provided.\n')
+
+
+
+    def do_evaluate(self, args):
+        if not os.path.exists(args) or os.path.isdir(args):
+            print('[Error] Cannot find verilog file', args)
+            self.help_read_liberty()
+            return
+
+        if self.optimizer is None:
+            print('[Error] Please first read an input design by read_verilog.\n')
+            return
+        
+        if self.testbench is None:
+            print('[Error] Please first read a testbench by read_testbench.\n')
+            return
+
+        ret = module_info(args, self.optimizer.path['yosys'])
+
+        if not (ret[0] == self.modulename and ret[3] == self.n_input and ret[5] == self.n_output):
+            print('[Error] Different design from input verilog.')
+            print('        Please check module name, number of inputs and outputs.\n')
+            return
+
+        folder = 'tmp' + time.strftime('_%Y%m%d-%H%M%S')
+        os.mkdir(folder)
+
+        # Synthesize and estimate chip area
+        org_output_syn = os.path.join(folder, 'original')
+        org_area  = synth_design(self.input_file, org_output_syn, self.liberty, self.optimizer.script, self.optimizer.path['yosys'])
+
+        try:
+            output_syn = os.path.join(folder, 'design')
+            area  = synth_design(args, output_syn, self.liberty, self.optimizer.script, self.optimizer.path['yosys'])
+        except CombinationalLoop:
+            print('[Error] Combinational loop detected in approximate design.\n')
+            return
+
+        print('********** Design Area **********')
+        print('Original input: {}'.format(org_area))
+        print('Approx design:  {}'.format(area))
+        print('\n')
+
+        # QoR estimation
+        app_truth_dir = os.path.join(folder, 'approx.truth')
+        subprocess.call([self.optimizer.path['iverilog'], '-o', app_truth_dir[:-5]+'iv', args, self.testbench])
+        with open(app_truth_dir, 'w') as f:
+            subprocess.call([self.optimizer.path['vvp'], app_truth_dir[:-5]+'iv'], stdout=f)
+        os.remove(app_truth_dir[:-5] + 'iv')
+
+        org_truth_dir = os.path.join(folder, 'origin.truth')
+        subprocess.call([self.optimizer.path['iverilog'], '-o', org_truth_dir[:-5]+'iv', self.input_file, self.testbench])
+        with open(org_truth_dir, 'w') as f:
+            subprocess.call([self.optimizer.path['vvp'], org_truth_dir[:-5]+'iv'], stdout=f)
+        os.remove(org_truth_dir[:-5] + 'iv')
+
+        err = self.optimizer.metric(org_truth_dir, app_truth_dir)
+        print('********** QoR **********')
+        print('{}: {:.6%}'.format(self.metric, err))
+        print('\n')
+    
+        if self.sta:
+            # Estimate orignal time and power
+            sta_script = os.path.join(folder, 'sta.script')
+            sta_output = os.path.join(folder, 'sta.out')
+            org_delay = get_delay(self.optimizer.path['OpenSTA'], sta_script, self.liberty, org_output_syn+'_syn.v', self.modulename, sta_output)
+            org_power = get_power(self.optimizer.path['OpenSTA'], sta_script, self.liberty, org_output_syn+'_syn.v', self.modulename, sta_output, org_delay)
+            delay = get_delay(self.optimizer.path['OpenSTA'], sta_script, self.liberty, output_syn+'_syn.v', self.modulename, sta_output)
+            power = get_power(self.optimizer.path['OpenSTA'], sta_script, self.liberty, output_syn+'_syn.v', self.modulename, sta_output, org_delay)
+            os.remove(sta_script)
+            os.remove(sta_output)
+            print('********** Power Consumption **********')
+            print('Original input: {}'.format(org_power))
+            print('Approx design:  {}'.format(power))
+            print('\n') 
+            print('********** Circuit Delay **********')
+            print('Original input: {}'.format(org_delay))
+            print('Approx design:  {}'.format(delay))
+            print('\n')
+
+
+
+
+        
+
+    def help_evaluate(self):
+        print('[Usage] evaluate VERILOG_FILE')
+        print('Evaluate a customized design.\n')
+
+
 
 
     def tmp1(self, args):

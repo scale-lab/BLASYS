@@ -372,7 +372,7 @@ class GreedyWorker():
         time_used = after - before
         print('--------------- Finishing Iteration' + str(self.iter) + '---------------')
         part_idx = list(np.nonzero(np.subtract(next_stream, self.curr_stream)))
-        print('Partition', *part_idx, 'being approximated')
+        print('Partition', part_idx, 'being approximated')
 
         msg = 'Approximated error: {:.6f}%\tArea percentage: {:.6f}%\tTime used: {:.6f} sec\n'.format(100*err[rank[0]], 100 * area[rank[0]] / self.initial_area, time_used)
         print(msg)
