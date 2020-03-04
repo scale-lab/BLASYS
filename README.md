@@ -93,7 +93,7 @@ BLASYS also has a command-line interface version. To launch it, type following c
 python3 [path to BLASYS folder]/blasys.py
 ````
 Then, user will be able to type following commands to perform similar tasks as previous section.
-1. I/O operation
+#### 1. I/O operation
 
 ``read_liberty PATH_TO_LIBERTY`` If no liberty file is provided, BLASYS synthesizes circuits into NAND gates and uses number of cells as chip area. **But if you want to invoke OpenSTA for power and delay estimation, you should provide a liberty file.**
 
@@ -103,11 +103,11 @@ Then, user will be able to type following commands to perform similar tasks as p
 
 ``read_testbench PATH_TO_TESTBENCH``
 
-2. Circuit Partitioning
+#### 2. Circuit Partitioning
 
  ``partition [-n NUMBER_OF_PARTITIONS]``
 
-3. Configuration
+#### 3. Configuration
 
 ``sta on/off`` Call (or not call) OpenSTA to estimate power and delay.
 
@@ -115,7 +115,7 @@ Then, user will be able to type following commands to perform similar tasks as p
 
 ``parallel on/off [-cpu NUMBER_OF_CORES_USE]`` Turn on (or turn off) parallel execution. If parallel is on, user can limit maximum number of cores to use.
 
-4. Approximation. Definitions of parameters are same as previous table.
+#### 4. Approximation. Definitions of parameters are same as previous table.
 ```
 blasys [-ts LIST_THRESHOLD] [-s STEP_SIZE] [-tr NUMBER_OF_TRACKS]
 
@@ -123,7 +123,7 @@ OR
 
 run_iter [-i NUMBER_OF_ITERATION] [-ts THRESHOLD] [-s STEP_SIZE] [-tr NUMBER_OF_TRACKS]
 ```
-5. Display results
+#### 5. Display results
 
 ``stat`` To show the best approximation results of each iteration.
 
@@ -131,14 +131,31 @@ run_iter [-i NUMBER_OF_ITERATION] [-ts THRESHOLD] [-s STEP_SIZE] [-tr NUMBER_OF_
 
 ``evaluate PATH_TO_FILE`` To compare the original design with another design (not necessary to be from results of BLASYS).
 
-6. Clear results
+#### 6. Clear results
 
 ``clear``
 
-### Test samples
-In ``test`` folder, we provide several benchmarks together with test benches to test functionality. You may run BLASYS with previous instructions. Or locate into ``test`` folder and run the shell script we prepared for you by entering
+### Script File
+Users may write commands in a script file, and execute BLASYS upon that script file. The command of executing script file is
 ```
-./test [PATH_TO_LIBERTY]
+python3 [path to BLASYS folder]/blasys.py -f SCRIPT_FILE
+```
+In script file, each command takes a single line. An example can be
+```
+output_to c5315_script_output
+read_verilog c5315.v
+read_testbench c5315_tb.v
+parallel on
+metric HD
+sta on
+partition 35
+blasys -ts 0.01,0.02 -tr 3
+```
+
+### Test samples
+In ``test`` folder, we provide several benchmarks from EPFL combinational benchmark suite [4], ISCAS-85 benchmarks [5], EvoApproxLib[6] together with a runnable script. The command of test script shows below. If no design name is provided, it will execute tests for all benchmarks inside the folder.
+```
+./test PATH_TO_LIBERTY [DESIGN_NAME]
 ```
 
 ## Result
@@ -153,3 +170,7 @@ Since OS X 10.15 has problem with ``multiprocessing`` module in Python 3, parall
 1. Ma, J., Hashemi, S. and Reda S., "Approximate Logic Synthesis Using BLASYS", Article No.5, Workshop on Open-Source EDA Technology (WOSET), 2019.
 2. Hashemi, S., Tann, H. and Reda, S., 2019. Approximate Logic Synthesis Using Boolean Matrix Factorization. In Approximate Circuits (pp. 141-154). Springer, Cham.
 3. Hashemi, S., Tann, H. and Reda, S., 2018, June. BLASYS: approximate logic synthesis using boolean matrix factorization. In Proceedings of the 55th Annual Design Automation Conference (p. 55). ACM.
+
+4. Amarú, Luca, Pierre-Emmanuel Gaillardon, and Giovanni De Micheli. "The EPFL combinational benchmark suite." Proceedings of the 24th International Workshop on Logic & Synthesis (IWLS). No. CONF. 2015.
+5. Hansen, Mark C., Hakan Yalcin, and John P. Hayes. "Unveiling the ISCAS-85 benchmarks: A case study in reverse engineering." IEEE Design & Test of Computers 16.3 (1999): 72-80.
+6. Mrazek, Vojtech, Zdenek Vasicek, and Lukas Sekanina. "EvoApproxLib: Extended Library of Approximate Arithmetic Circuits.", Article No.10, Workshop on Open-Source EDA Technology (WOSET), 2019.
