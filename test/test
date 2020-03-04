@@ -1,21 +1,235 @@
 #!/bin/sh
 
 if ! [ -e "$1" ]; then
-    echo "[Usage] ./test PATH_TO_LIBERTY"
+    echo "[Usage] ./test PATH_TO_LIBERTY [TESTBENCH]"
     exit 1
 fi
 
 
-# c1355.v; 8000 test vectors; partitioning in 5; threshold 0.03; parallel mode; 5 tracks
-python3 ../testbench.py -i c1355.v -o c1355_tb.v -n 8000
-python3 ../blasys.py -i c1355.v -tb c1355_tb.v -lib ${1} -o c1355_output -ts 0.03 -n 5 --parallel --track 5
+# c17
+if [ "$2" = "" ] || [ "$2" = "c17" ]; then
+    python3 ../testbench.py -i c17.v -o c17_tb.v
+    # Non-partition mode; No liberty file (NAND mode); STA off; metric HD
+    echo "output_to c17_script_output" > c17_script
+    echo "read_verilog c17.v" >> c17_script
+    echo "read_testbench c17_tb.v" >> c17_script
+    echo "metric HD" >> c17_script
+    echo "blasys" >> c17_script
+    echo "stat" >> c17_script
+    if ! python3 ../blasys.py -f c17_script; then
+        echo "Encounter an error for testbench c17 (script mode). Exit."
+        exit
+    fi
+    rm c17_script
+    if ! python3 ../blasys.py -i c17.v -tb c17_tb.v -o c17_command_output -m HD --no_partition ; then
+        echo "Encounter an error for testbench c17 (command-line). Exit."
+        exit
+    fi
+    rm c17_tb.v
+fi
 
-# adder.v; 2000 test vectors; not sepcify number of partitions; threshold on 0.02; parallel mode; 1 track
-python3 ../testbench.py -i adder.v -o adder_tb.v -n 2000
-python3 ../blasys.py -i adder.v -tb adder_tb.v -lib ${1} -o adder_output -ts 0.02 --parallel --track 1
 
-# mul7u_01L.v; 10000 test vectors; partitioning in 40; threshold on 0.005; 10 tracks; parallel mode; MAE metric
-python3 ../testbench.py -i mul7u_01L.v -o mul7u_01L_tb.v -n 10000
-python3 ../blasys.py -i mul7u_01L.v -tb mul7u_01L_tb.v -lib ${1} -o mul7u_01L_output -ts 0.005 --parallel -n 40 --track 10 --metric MAE --sta
+# add8u_0FP
+if [ "$2" = "" ] || [ "$2" = "add8u_0FP" ]; then
+    python3 ../testbench.py -i add8u_0FP.v -o add8u_0FP_tb.v
+    # Non-partition mode; MAE metric; STA on
+    echo "read_liberty "${1} > add8u_0FP_script
+    echo "output_to add8u_script_output" >> add8u_0FP_script
+    echo "read_verilog add8u_0FP.v" >> add8u_0FP_script
+    echo "read_testbench add8u_0FP_tb.v" >> add8u_0FP_script
+    echo "metric MAE" >> add8u_0FP_script
+    echo "sta on" >> add8u_0FP_script
+    echo "blasys" >> add8u_0FP_script
+    echo "stat" >> add8u_0FP_script
+    if ! python3 ../blasys.py -f add8u_0FP_script; then
+        echo "Encounter an error for testbench add8u_0FP (script mode). Exit."
+        exit
+    fi
+    rm add8u_0FP_script
+    if ! python3 ../blasys.py -i add8u_0FP.v -tb add8u_0FP_tb.v -lib ${1} -o add8u_command_output -m MAE --sta --no_partition ; then
+        echo "Encounter an error for testbench add8u_0FP (command-line). Exit"
+        exit
+    fi
+    rm add8u_0FP_tb.v
+fi
 
+
+# adder.v; 4000 test vectors; threshold on 0.05; parallel mode; 1 exploration path; Hamming Distance
+if [ "$2" = "" ] || [ "$2" = "adder" ]; then
+    python3 ../testbench.py -i adder.v -o adder_tb.v -n 4000
+    # Script
+    echo "read_liberty "${1} > adder_script
+    echo "output_to adder_script_output" >> adder_script
+    echo "read_verilog adder.v" >> adder_script
+    echo "read_testbench adder_tb.v" >> adder_script
+    echo "parallel on" >> adder_script
+    echo "metric HD" >> adder_script
+    echo "partition" >> adder_script
+    echo "sta on" >> adder_script
+    echo "blasys -ts 0.05 -tr 1" >> adder_script
+    if ! python3 ../blasys.py -f adder_script ; then
+        echo "Encounter an error for testbench adder (script mode). Exit."
+        exit
+    fi
+    rm adder_script
+    # Command-line arguments
+    if ! python3 ../blasys.py -i adder.v -tb adder_tb.v -lib ${1} -o adder_command_output -ts 0.05 -m HD --parallel --track 1 --sta ; then
+        echo "Encounter an error for testbench adder (command mode). Exit."
+        exit
+    fi
+    rm adder_tb.v
+fi
+
+# bar.v; 2000 test vectors; 100 partition; threshold on 0.01; parallel mode; 2 exploration path; Hamming Distance; No liberty file
+if [ "$2" = "" ] || [ "$2" = "bar" ]; then
+    python3 ../testbench.py -i bar.v -o bar_tb.v -n 2000
+    # Script
+    echo "output_to bar_script_output" > bar_script
+    echo "read_verilog bar.v" >> bar_script
+    echo "read_testbench bar_tb.v" >> bar_script
+    echo "parallel on" >> bar_script
+    echo "metric HD" >> bar_script
+    echo "partition 100" >> bar_script
+    echo "sta off" >> bar_script
+    echo "blasys -ts 0.01 -tr 2" >> bar_script
+    if ! python3 ../blasys.py -f bar_script ; then
+        echo "Encounter an error for testbench bar (script mode). Exit."
+        exit
+    fi
+    rm bar_script
+    # Command-line arguments
+    if ! python3 ../blasys.py -i bar.v -tb bar_tb.v -n 100 -o bar_command_output -ts 0.01 -m HD --parallel --track 2 ; then
+        echo "Encounter an error for testbench bar (command mode). Exit."
+        exit
+    fi
+    rm bar_tb.v
+fi
+
+
+# mul7u_01L.v; 10000 test vectors; Threshold on 0.002 0.005, Partition into 40, Parallel mode, 5 exploration path, Metric MAE, Sta on
+if [ "$2" = "" ] || [ "$2" = "mul7u_01L" ] ; then
+    python3 ../testbench.py -i mul7u_01L.v -o mul7u_01L_tb.v -n 10000
+    # Script
+    echo "read_liberty "${1} > mul7u_script
+    echo "output_to mul7u_script_output" >> mul7u_script
+    echo "read_verilog mul7u_01L.v" >> mul7u_script
+    echo "read_testbench mul7u_01L_tb.v" >> mul7u_script
+    echo "parallel on" >> mul7u_script
+    echo "metric HD" >> mul7u_script
+    echo "sta on" >> mul7u_script
+    echo "partition 40" >> mul7u_script
+    echo "blasys -ts 0.002,0.005 -tr 5" >> mul7u_script
+    if ! python3 ../blasys.py -f mul7u_script; then
+        echo "Encounter an error for testbench mul7u_01L (script mode). Exit."
+        exit
+    fi
+    rm mul7u_script
+    # Command-line argument
+    if ! python3 ../blasys.py -i mul7u_01L.v -tb mul7u_01L_tb.v -lib ${1} -o mul7u_command_output -ts 0.002,0.005 --parallel -n 40 --track 5 --metric MAE --sta ; then
+        echo "Encounter an error for testbench mul7u_01L (command mode). Exit."
+        exit
+    fi
+    rm mul7u_01L_tb.v
+fi
+
+
+# c1355.v: Thredshold on 0.005 0.01, Parallel mode (Max 5 cores), 2 exploration path, Metric HD, sta off
+if [ "$2" = "" ] || [ "$2" = "c1355" ] ; then
+    python3 ../testbench.py -i c1355.v -o c1355_tb.v
+    # Script
+    echo "read_liberty "${1} > c1355_script
+    echo "output_to c1355_script_output" >> c1355_script
+    echo "read_verilog c1355.v" >> c1355_script
+    echo "read_testbench c1355_tb.v" >> c1355_script
+    echo "parallel on -cpu 5" >> c1355_script
+    echo "metric HD" >> c1355_script
+    echo "partition" >> c1355_script
+    echo "blasys -ts 0.005,0.01 -tr 2" >> c1355_script
+    if ! python3 ../blasys.py -f c1355_script; then
+        echo "Encounter an error for testbench c1355 (script mode). Exit."
+        exit
+    fi
+    rm c1355_script
+    if ! python3 ../blasys.py -i c1355.v -tb c1355_tb.v -lib ${1} -o c1355_command_output -ts 0.005,0.01 --parallel -cpu 5 --track 2 --metric HD ; then
+        echo "Encounter an error  for testbench c1355 (command-line). Exit."
+        exit
+    fi
+    rm c1355_tb.v
+fi
+
+# c2670.v: Partition in 30, Threshold on 0.005 0.01 0.02, Parallel mode (Max 10 cores), 1 exploration path, Metric HD, sta on
+if [ "$2" = "" ] || [ "$2" = "c2670" ] ; then
+    python3 ../testbench.py -i c2670.v -o c2670_tb.v
+    # Script
+    echo "read_liberty "${1} > c2670_script
+    echo "output_to c2670_script_output" >> c2670_script
+    echo "read_verilog c2670.v" >> c2670_script
+    echo "read_testbench c2670_tb.v" >> c2670_script
+    echo "parallel on -cpu 10" >> c2670_script
+    echo "metric HD" >> c2670_script
+    echo "sta on" >> c2670_script
+    echo "partition 30" >> c2670_script
+    echo "blasys -ts 0.005,0.01,0.02 -tr 1" >> c2670_script
+    if ! python3 ../blasys.py -f c2670_script; then
+        echo "Encounter an error for testbench c2670 (script mode). Exit."
+        exit
+    fi
+    rm c2670_script
+    if ! python3 ../blasys.py -i c2670.v -tb c2670_tb.v -lib ${1} -o c2670_command_output -ts 0.005,0.01,0.02 -n 30 --parallel -cpu 10 --track 1 --metric HD --sta ; then
+        echo "Encounter an error  for testbench c2670 (command-line). Exit."
+        exit
+    fi
+    rm c2670_tb.v
+fi
+
+
+
+# c5315.v: Partition in 35, Threshold on 0.01 0.02, Parallel mode, 3 exploration path, Metric HD, NO liberty
+if [ "$2" = "" ] || [ "$2" = "c5315" ] ; then
+    python3 ../testbench.py -i c5315.v -o c5315_tb.v
+    # Script
+    echo "output_to c5315_script_output" > c5315_script
+    echo "read_verilog c5315.v" >> c5315_script
+    echo "read_testbench c5315_tb.v" >> c5315_script
+    echo "parallel on" >> c5315_script
+    echo "metric HD" >> c5315_script
+    echo "sta on" >> c5315_script
+    echo "partition 35" >> c5315_script
+    echo "blasys -ts 0.01,0.02 -tr 3" >> c5315_script
+    if ! python3 ../blasys.py -f c5315_script; then
+        echo "Encounter an error for testbench c5315 (script mode). Exit."
+        exit
+    fi
+    rm c5315_script
+    if ! python3 ../blasys.py -i c5315.v -tb c5315_tb.v -o c5315_command_output -ts 0.01,0.02 -n 35 --parallel --track 3 --metric HD ; then
+        echo "Encounter an error  for testbench c5315 (command-line). Exit."
+        exit
+    fi
+    rm c5315_tb.v
+fi
+
+# c6288.v: 2000 test vectors, Partition (auto), Threshold on 0.015 0.025, Parallel mode, 2 exploration path, Metric HD, STA on
+if [ "$2" = "" ] || [ "$2" = "c6288" ] ; then
+    python3 ../testbench.py -i c6288.v -o c6288_tb.v -n 2000
+    # Script
+    echo "read_liberty "${1} > c6288_script
+    echo "output_to c6288_script_output" >> c6288_script
+    echo "read_verilog c6288.v" >> c6288_script
+    echo "read_testbench c6288_tb.v" >> c6288_script
+    echo "parallel on" >> c6288_script
+    echo "metric HD" >> c6288_script
+    echo "sta on" >> c6288_script
+    echo "partition" >> c6288_script
+    echo "blasys -ts 0.015,0.025 -tr 2" >> c6288_script
+    if ! python3 ../blasys.py -f c6288_script; then
+        echo "Encounter an error for testbench c6288 (script mode). Exit."
+        exit
+    fi
+    rm c6288_script
+    if ! python3 ../blasys.py -i c6288.v -tb c6288_tb.v -lib ${1} -o c6288_command_output -ts 0.015,0.025 --parallel --track 2 --metric HD --sta ; then
+        echo "Encounter an error  for testbench c6288 (command-line). Exit."
+        exit
+    fi
+    rm c6288_tb.v
+fi
 
