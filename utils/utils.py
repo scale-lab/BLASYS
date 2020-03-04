@@ -372,7 +372,7 @@ def write_aiger(input_file, yosys, output_file, map_file):
     '''
     Convert verilog to aig file
     '''
-    yosys_command = 'read_verilog ' + input_file + '; synth -flatten; opt; opt_clean -purge; aigmap; write_aiger -vmap '\
+    yosys_command = 'read_verilog ' + input_file + '; flatten; opt; opt_clean -purge; aigmap; opt; opt_clean -purge; write_aiger -vmap '\
             + map_file + ' ' + output_file + ';'
     subprocess.call([yosys, '-p', yosys_command], stdout=subprocess.DEVNULL)
     # Parse map file and return dict
@@ -528,16 +528,21 @@ def create_wrapper(inp, out, top, vmap, worker):
                     input_dict['\\'+tokens[3] + '[' + tokens[2] + ']'] = int(tokens[1])
 
         if tokens[0] == 'output':
+            # Probe for correct number
+            port_num = int(tokens[1])
+            while port_num in list(output_dict.values()):
+                port_num -= 1
+
             if tokens[3] in isVector:
                 if isVector[tokens[3]] is False:
-                    output_dict[tokens[3]] = int(tokens[1])
+                    output_dict[tokens[3]] = port_num
                 else:
-                    output_dict[tokens[3] + '[' + tokens[2] + ']'] = int(tokens[1])
+                    output_dict[tokens[3] + '[' + tokens[2] + ']'] = port_num
             elif '\\'+tokens[3] in isVector:
                 if isVector['\\'+tokens[3]] is False:
-                    output_dict['\\'+tokens[3]] = int(tokens[1])
+                    output_dict['\\'+tokens[3]] = port_num
                 else:
-                    output_dict['\\'+tokens[3] + '[' + tokens[2] + ']'] = int(tokens[1])
+                    output_dict['\\'+tokens[3] + '[' + tokens[2] + ']'] = port_num
 
 
         line = map_file.readline()

@@ -168,8 +168,9 @@ class GreedyWorker():
         f.close()
         d.close()
 
-        os.remove(sta_script)
-        os.remove(sta_output)
+        if self.sta:
+            os.remove(sta_script)
+            os.remove(sta_output)
 
 
 
@@ -262,8 +263,8 @@ class GreedyWorker():
         create_wrapper(self.input, outfile, topfile, mapping, self)
 
         # Clear up redundant file
-        os.remove(self.aig)
-        os.remove(os.path.join(self.output, self.modulename + '.map'))
+        # os.remove(self.aig)
+        # os.remove(os.path.join(self.output, self.modulename + '.map'))
 
      
 
