@@ -95,12 +95,13 @@ python3 [path to BLASYS folder]/blasys.py
 Then, user will be able to type following commands to perform similar tasks as previous section.
 1. I/O operation
 
-| Command | Description |
-| --- | --- | 
-| ``read_liberty PATH_TO_LIBERTY`` | If no liberty file is provided, BLASYS synthesizes circuits into NAND gates and uses number of cells as chip area. **But if you want to invoke OpenSTA for power and delay estimation, you should provide a liberty file.** |
-| ``output_to OUTPUT_FOLDER`` | Optional. Default output folder is module name + time stamp. |
-| ``read_verilog PATH_TO_INPUT`` | |
-| ``read_testbench PATH_TO_TESTBENCH`` | |
+``read_liberty PATH_TO_LIBERTY`` If no liberty file is provided, BLASYS synthesizes circuits into NAND gates and uses number of cells as chip area. **But if you want to invoke OpenSTA for power and delay estimation, you should provide a liberty file.**
+
+``output_to OUTPUT_FOLDER``
+
+``read_verilog PATH_TO_INPUT``
+
+``read_testbench PATH_TO_TESTBENCH``
 
 2. Circuit Partitioning
 
@@ -108,24 +109,31 @@ Then, user will be able to type following commands to perform similar tasks as p
 
 3. Configuration
 
-| Command | Description |
-| --- | --- | 
-| ``sta on/off`` | Call (or not call) OpenSTA to estimate power and delay. |
-|  ``metric METRIC_FUNCTION_NAME`` | Same as before |
-| ``parallel on/off [-cpu NUMBER_OF_CORES_USE]`` | Turn on (or turn off) parallel execution. If parallel is on, user can limit maximum number of cores to use. |
+``sta on/off`` Call (or not call) OpenSTA to estimate power and delay.
 
-8. At this step, BLASYS is ready to do approximation. There are two optio. Use following command to do greedy design-space exploration until error threshold is met or all partitions reach factorization degree 1. All arguments are optional. You can provide a list of threshold which are separated by comma, e.g. ``-ts 0.005,0.01``.The default step size is 1. The default number of tracks is 3.
-4. Approximation
+ ``metric METRIC_FUNCTION_NAME``
+
+``parallel on/off [-cpu NUMBER_OF_CORES_USE]`` Turn on (or turn off) parallel execution. If parallel is on, user can limit maximum number of cores to use.
+
+4. Approximation. Definitions of parameters are same as previous table.
 ```
 blasys [-ts LIST_THRESHOLD] [-s STEP_SIZE] [-tr NUMBER_OF_TRACKS]
-```
-Or you may specify the number of iterations by following command. The default number of iteration number is 1.
-```
-run_iter [-i NUMBER_OF_ITERATION] [-ts THRESHOLD] [-s STEP_SIZE] [-tr NUMBER_OF_TRACKS] [-p] [-w]
-```
-8. To have a brief view of results, type command ``stat``. 
 
-9. To clear previous approximate work in this session, type command ``clear``. Be careful. It will clean everything.
+OR
+
+run_iter [-i NUMBER_OF_ITERATION] [-ts THRESHOLD] [-s STEP_SIZE] [-tr NUMBER_OF_TRACKS]
+```
+5. Display results
+
+``stat`` To show the best approximation results of each iteration.
+
+``stat DESIGN_NAME`` To show information about a specific design, which is the name of verilog file in ``tmp/`` folder.
+
+``evaluate PATH_TO_FILE`` To compare the original design with another design (not necessary to be from results of BLASYS).
+
+6. Clear results
+
+``clear``
 
 ### Test samples
 In ``test`` folder, we provide several benchmarks together with test benches to test functionality. You may run BLASYS with previous instructions. Or locate into ``test`` folder and run the shell script we prepared for you by entering
