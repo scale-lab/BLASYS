@@ -94,6 +94,7 @@ python3 [path to BLASYS folder]/blasys.py
 ````
 Then, user will be able to type following commands to perform similar tasks as previous section.
 1. I/O operation
+
 | Command | Description |
 | --- | --- | 
 | ``read_liberty PATH_TO_LIBERTY`` | If no liberty file is provided, BLASYS synthesizes circuits into NAND gates and uses number of cells as chip area. **But if you want to invoke OpenSTA for power and delay estimation, you should provide a liberty file.** |
@@ -106,6 +107,7 @@ Then, user will be able to type following commands to perform similar tasks as p
  ``partition [-n NUMBER_OF_PARTITIONS]``
 
 3. Configuration
+
 | Command | Description |
 | --- | --- | 
 | ``sta on/off`` | Call (or not call) OpenSTA to estimate power and delay. |
