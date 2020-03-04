@@ -1,29 +1,24 @@
 # BLASYS: Approximate Logic Synthesis Using Boolean Matrix Factorization
 
-## Introduction
-BLASYS toolchain reads in an input circuit in Verilog format and approximates with boolean matrix factorization (BMF). The logistic is to generate truthtable for input circuit, perform BMF on truthtable, and synthesize it back to output circuit. Due to the exponential growth of truthtable, we follow a greedy design-space exploration scheme based on each subcircuit. To make the optimization process efficient on even larger circuit, we also develop an additional script to first partition into subcircuits in proper size (based on number of cells), and then do greedy exploration within each part respectively.
+## Abstraction
+Approximate computing is an emerging paradigm where design accuracy can be traded for improvements in design metrics such as design area and power consumption. In our BLASYS tool-chain, the truth table of a given circuit is approximated using BMF to a controllable approximation degree, and the results of the factorization are used to synthesize the approximate circuit output. BLASYS scales up the computations to large circuits through the use of partition techniques, where an input circuit is partitioned into a number of interconnected subcircuits and then a design-space exploration technique identifies the best order for subcircuit approximations.
 
-Version 0.5-beta
-
-## System Requirement
-**Operating systems**: Mac OS, Linux, Unix
-
-**Environment**: GCC compiler. Python intepreter (version 3.6+). Please install package ``numpy`` , ``matplotlib`` and ``regex`` with command 
+## Setup
+BLASYS requires ``GCC 7.4+`` and ``Python 3.6+``. Please install Python packages ``numpy`` , ``matplotlib`` and ``regex`` with command 
 ```
 pip3 install numpy
 pip3 install matplotlib
 pip3 install regex
 ```
 
-## Software Dependency
-Be sure to install following tools before running BLASYS toolchain.
+Before running the tool-chain, make sure to download and install following tools:
 1. **Yosys**: Estimating chip area. (https://github.com/YosysHQ/yosys)
 2. **ABC**: Logic synthesis. (https://github.com/berkeley-abc/abc)
 3. **Icarus Verilog**: Simulation and HD error estimation. (http://iverilog.icarus.com)
 4. **LSOracle**: Partitioning. (https://github.com/LNIS-Projects/LSOracle)
 5. [Optional] **OpenSTA**: Power and delay estimation. (https://github.com/The-OpenROAD-Project/OpenSTA)
 
-**IMPORTANT NOTE:** After installing tools above, you should either **add them into environment path of your system**, or **put the path to excutable into** ``params.yml``.
+**IMPORTANT NOTE:** After installing tools above, you should either **add them into environment path of your system**, or **put the path of excutable into** ``params.yml``.
 
 ![Flow](https://github.com/scale-lab/BLASYS/blob/master/doc/flow.png?raw=true)
 
@@ -35,30 +30,26 @@ git clone https://github.com/scale-lab/BLASYS
 cd BLASYS
 make
 ```
-**IMPORTANT NOTE:** Before running BLASYS for first time, please open ``config/params.yml`` and enter path to executable files for all tools in previous section. If you have added them into your system environment, you may just enter the name of command.
 
-### Testbench Generation
-BLASYS provides the script ``testbench.py`` to generate testbench for an input verilog. Please use following command
+### QoR: Testbench and Metric
+BLASYS requires a testbench and metric function to evaluate QoR of designs. We provides the script ``testbench.py`` to generate testbench for an input verilog. Please use following command
 ```
 python3 [path to BLASYS folder]/testbench.py \
                  -i PATH_TO_INPUT_VERILOG \
                  -o PATH_TO_OUTPUT_TESTBENCH \
                  [-n NUMBER_OF_TEST_VECTORS]
 ```
-You should specify input verilog file with flag ``-i``, and path to output testbench with flag ``-o``. 
+The number of test vectors is optional. Default number is 10,000. However, if total number of input bits is less than 17, it will **enumerate** all possible combinations of test vectors. The generated testbench will output all simulation results for each primary output (which is binary). To match this pattern, we provide 4 metric function in ``utils/metric.py``: ``HD`` (Hamming Distance), ``MAE`` (Mean Absolute Error), ``ER`` (Error Rate), ``MRE`` (Mean Relative Error).
 
-The number of test vectors is optional. Default number is 10,000. However, if total number of input bits is less than 17, it will **enumerate** all possible combinations of test vectors.
-
-### Testbench Customization
-Our testbench generation script will create a testbench, where all outputs are in binary bits. BLASYS also supports customized testbench. However, if you bring your own testbench file, make sure to define your own **error metric function**. Please write your own **error metric function** in ``utils/metric.py``, and follow the function signature below:
+BLASYS also supports customized testbench. However, since metric function must match the pattern of testbench, users should provide metric function with their own testbench. In this case, please write your own **error metric function** in ``utils/metric.py``, and follow the function signature below:
 ```
 def func_name (original_simulation_output_path, approximate_simulation_output_path):
     // The first input is path to the simulation result of original circuit.
     // The first input is path to the simulation result of approximated circuit.
     // Compute error metric here
-    return error_metric
+    
+    return error_metric(in float-point number)
 ```
-After that, you can provide the self-defined function name in command-line. For more detail, please refer to following section.
 
 ### Script for Greedy Design-Space Exploration
 ``blasys.py`` performs greedy design-space exploration with proper command-line arguments, which are
@@ -78,11 +69,30 @@ python3 [path to BLASYS folder]/blasys.py \
                  [--sta] \
                  [--no_partition]
 ```
-First two arguments (input / testbench) are mandatory.
+| Parameter | Flag | Default | Description |
+| --- | --- | --- | --- |
+| Input Design | ``-i`` |  |  |
+| Testbench | ``-tb`` |  |  |
+| Liberty | ``-lib`` | None  | If no liberty file is provided, BLASYS will synthesize circuits into ``NAND`` gates and count the number of ``NAND`` as chip area. |
+| Number of Partitions | ``-n`` | Depend on AIG nodes | If no liberty file is provided, BLASYS will synthesize circuits into ``NAND`` gates and count the number of ``NAND`` as chip area. |
+| Output Folder | ``-o`` | Module name + Time Stamp |  |
+| Step Size | ``-ss`` | Module name + Time Stamp |  |
+| Metric Function | ``-m`` | HD | Name of metric function. HD (Hamming Distance), MAE (Mean Absolute Error), ER (Error Rate), MRE (Mean Relative Error), or self-defined function. |
+| Error Threshold | ``-ts`` | Inf | List of error threshold separated by comma, e.g. ``0.05,0.1,0.15`` |
+| Exploration Track | ``-tr`` | 3 | At each iteration, pick ``n`` best designs as starting point of next iteration. |
+| Parallel Mode | ``--parallel`` | False | If specified, BLASYS runs in parallel with all available cores of machine. |
+| CPU Utilization | ``-cpu`` | All available CPUs | Limit maximum number of cores used in BLASYS.  |
+| OpenSTA | ``--sta`` | False | If specified, BLASYS will call OpenSTA to estimate power and delay.  |
+| Approx. Without Partition | ``-no_partition`` | False | If specified, BLASYS will directly factorize truthtable without partitioning.  |
 
-The third argument ``-lib`` is liberty file. If you do not provide a liberty file, BLASYS will synthesize circuits into NAND gates and count the number as chip area.
 
-The fourth argument ``-n`` is number of partitions. BLASYS takes a recursive partitioning scheme based on number of standard cells. Thus, number of partitions is optional.
+
+
+First two arguments (input / testbench) are mandatory. The rest are optional.
+
+The third argument ``-lib`` is liberty file. If no liberty file is provided, BLASYS will synthesize circuits into ``NAND`` gates and count the number of ``NAND`` as chip area.
+
+The fourth argument ``-n`` is number of partitions. BLASYS takes a recursive partitioning scheme based on number of nodes in AIG. Thus, number of partitions is optional.
 
 Default output ``-o`` is ``output``. Default step-size ``-ss`` is 1. 
 
