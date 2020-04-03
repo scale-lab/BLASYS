@@ -432,7 +432,6 @@ class GreedyWorker():
         
         
         self.plot(self.error_list, self.area_list)
-
         return 0
 
 
@@ -518,28 +517,29 @@ class GreedyWorker():
             
         return result, k_lists, err_list, area_list, delay_list, power_list, name_list, rank
 
+
     def plot(self, error_list, area_list):
+
 
         error_np = np.array(error_list) * 100
         area_np = np.array( area_list ) / area_list[0] * 100
         c = np.random.rand(len(error_list))
 
         fig, ax = plt.subplots(1, 1)
-        ax.scatter(error_np, area_np, c='r', s=6)
+        ax.scatter(error_np, area_np, c='b', s=3)
         # plt.plot(error_np, area_np, c='b', linewidth=3)
         #plt.xlim(0,1.0)
         #plt.ylim(0,1.1)
         ax.set_ylabel('Area ratio (%)')
         ax.set_xlabel('HD Approximation Error (%)')
-        ax.set(xlim=(1e-3, 1e2), ylim=(.0, 1.2))
+        #ax.set(xlim=(1e-5, 1e2), ylim=(.0, 120.0))
         #plt.xticks(np.arange(0,1,0.1))
         #plt.yticks(np.arange(0,1.1,0.1))
         ax.set_title('Greedy search on ' + self.modulename)
         ax.set_xscale('log')
-        fig.savefig(os.path.join(self.output, 'visualization.png'))
+        fig.savefig(os.path.join(self.output, 'metric-error.png'))
         
         fig.clf()
-
 
 
 

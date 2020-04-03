@@ -5,7 +5,7 @@ import numpy as np
 import shutil
 import subprocess
 import time
-from .asso import asso
+from .ASSO.BMF import BMF
 
 class CombinationalLoop(Exception):
     pass
@@ -310,7 +310,7 @@ def create_h(m, k, H, f1, modulename):
             if H[j,i] == 1:
                 constant=0
                 if (not_first):
-                    f1.write(' | k'+str(k - j -1))
+                    f1.write(' ^ k'+str(k - j -1))
                 else:
                     f1.write('k'+str(k - j - 1))
                 not_first=1
@@ -339,7 +339,7 @@ def approximate(inputfile, k, worker, i):
 
     modulename = worker.modulenames[i]
 
-    asso( inputfile+'.truth', k )
+    BMF( inputfile+'.truth', k, True)
     W = np.loadtxt(inputfile + '.truth_w_' + str(k), dtype=int)
     H = np.loadtxt(inputfile + '.truth_h_' + str(k), dtype=int)
     formula_file = os.path.join(worker.output, 'bmf_partition', modulename, modulename+'_formula.v')
@@ -372,7 +372,7 @@ def write_aiger(input_file, yosys, output_file, map_file):
     '''
     Convert verilog to aig file
     '''
-    yosys_command = 'read_verilog ' + input_file + '; flatten; opt; opt_clean -purge; aigmap; opt; opt_clean -purge; write_aiger -vmap '\
+    yosys_command = 'read_verilog ' + input_file + '; synth -flatten; opt; opt_clean -purge; aigmap; opt; opt_clean -purge; write_aiger -vmap '\
             + map_file + ' ' + output_file + ';'
     subprocess.call([yosys, '-p', yosys_command], stdout=subprocess.DEVNULL)
     # Parse map file and return dict
