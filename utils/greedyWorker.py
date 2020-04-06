@@ -360,8 +360,7 @@ class GreedyWorker():
             if idx == 0:
                 source_file = os.path.join(self.output, self.modulename + '_syn.v')
             else:
-                idx = idx - 1
-                source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx]))
+                source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx - 1]))
             target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 'REST'))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
@@ -418,10 +417,9 @@ class GreedyWorker():
             if idx == 0:
                 source_file = os.path.join(self.output, self.modulename + '_syn.v')
             else:
-                idx = idx - 1
-                source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx]))
+                source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx - 1]))
        
-            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, int(ts*100)))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, str(ts)))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
                 f.write('{:<10.6f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(self.error_list[idx], self.area_list[idx], self.power_list[idx], self.delay_list[idx]) )
