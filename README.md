@@ -20,7 +20,7 @@ Before running the tool-chain, make sure to download and install following tools
 4. **LSOracle**: Partitioning. (https://github.com/LNIS-Projects/LSOracle)
 5. [Optional] **OpenSTA**: Power and delay estimation. (https://github.com/The-OpenROAD-Project/OpenSTA)
 
-**IMPORTANT NOTE:** After installing tools above, you should either **add them into environment path of your system**, or **put the path of excutable into** ``params.yml``.
+**IMPORTANT NOTE:** After installing tools above, please **include them into environment path of your system**.
 
 ![Flow](https://github.com/scale-lab/BLASYS/blob/master/doc/flow.png?raw=true)
 
