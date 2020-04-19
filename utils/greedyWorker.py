@@ -9,7 +9,7 @@ import multiprocessing as mp
 import shutil
 import time
 import ctypes
-from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell, write_aiger, get_delay, get_power, approximate, create_wrapper, module_info, NoValidDesign
+from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell, write_aiger, get_delay, get_power, approximate, create_wrapper, module_info, NoValidDesign, create_wrapper_single
 from .optimizer import optimization, least_error_opt
 from .create_tb import create_testbench
 from . import metric
@@ -138,17 +138,21 @@ class GreedyWorker():
         d.write('{},{},{},{},{}\n'.format('Name','Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
         d.write('{},{:.6f},{:.2f},{:.6f},{:.6f}\n'.format('Org', 0, self.initial_area, power, self.delay) )
 
+        # Create wrapper
+        wrapper = os.path.join(self.output, 'wrapper.v')
+        create_wrapper_single(self.input, wrapper, self)
+
 
         err_list = []
         area_list = []
         for k in range(out-1, 0,-1):
             # Approximate
-            approximate(truth_dir, k, self, 0)
+            approximate(truth_dir, k, self, 0, 'top')
             in_file = os.path.join(out_dir, self.modulename+'_approx_k='+str(k)+'.v')
             filename = self.modulename+'_k='+str(k)
-            out_file = os.path.join(self.output, 'tmp', filename)
+            out_file = os.path.join(self.output, 'result', filename)
             gen_truth = os.path.join(out_dir, self.modulename+'.truth_wh_'+str(k))
-            area = synth_design(in_file, out_file, self.library, self.script, self.path['yosys'])
+            area = synth_design(in_file+' '+wrapper, out_file, self.library, self.script, self.path['yosys'])
             err = self.metric(truth_dir+'.truth', gen_truth)
             err_list.append(err)
             area_list.append(area/self.initial_area)

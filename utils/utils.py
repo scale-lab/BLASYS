@@ -335,9 +335,11 @@ def create_wh(n, m, k, W, H, fname, modulename, output_dir, abc, formula_file):
     create_h(m, k, H, f1, modulename)
     f1.close
 
-def approximate(inputfile, k, worker, i):
+def approximate(inputfile, k, worker, i, output_name=None):
 
     modulename = worker.modulenames[i]
+    if output_name is None:
+        output_name = modulename
 
     BMF( inputfile+'.truth', k, True)
     W = np.loadtxt(inputfile + '.truth_w_' + str(k), dtype=int)
@@ -347,7 +349,7 @@ def approximate(inputfile, k, worker, i):
         W = W.reshape((W.size, 1))
         H = H.reshape((1, H.size))
 
-    create_wh(worker.input_list[i], worker.output_list[i], k, W, H, inputfile, modulename, worker.output, worker.path['abc'], formula_file)
+    create_wh(worker.input_list[i], worker.output_list[i], k, W, H, inputfile, output_name, worker.output, worker.path['abc'], formula_file)
 
 
 
@@ -593,6 +595,65 @@ def create_wrapper(inp, out, top, vmap, worker):
     shutil.move(out, top)
 
     os.remove(os.path.join(worker.output, 'tmp.v'))
+
+
+def create_wrapper_single(inp, out, worker):
+
+    tmp = os.path.join(worker.output, 'tmp.v')
+    yosys_command = 'read_verilog ' + inp + '; synth -flatten; opt; opt_clean; techmap; write_verilog ' + tmp + ';\n'
+    subprocess.call([worker.path['yosys'], '-p', yosys_command], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+
+    out_file = open(out, 'w')
+
+    # Write module signature from tmp file
+    tmp_file = open(tmp)
+    isVector = {}
+    line = tmp_file.readline()
+    while line:
+        tokens = line.strip().strip(';').strip().split()
+
+        if len(tokens) > 0 and tokens[0] == 'module':
+            out_file.write(line)
+
+        if len(tokens) > 0 and ( tokens[0] == 'input' or tokens[0] == 'output' ):
+            out_file.write(line)
+
+        line = tmp_file.readline()
+    tmp_file.close()
+
+    modulename, port_list, i_map, i_count, o_map, o_count = module_info(inp, worker.path['yosys'])
+    i_list = ['in{}'.format(k) for k in range(i_count-1, -1, -1)]
+    o_list = ['out{}'.format(k) for k in range(o_count-1, -1, -1)]
+
+    out_file.write('  wire ' + ', '.join(i_list) + ', ' + ', '.join(o_list) + ';\n')
+
+    out_file.write('  assign { ')
+    i = 0
+    o = 0
+    first = 1
+    for p in port_list:
+        if not first:
+            out_file.write(', ')
+        first = 0
+        if p in i_map:
+            out_file.write(', '.join( ['in{}'.format(k) for k in range(i+i_map[p]-1, i - 1, -1)] ))
+            i += i_map[p]
+        if p in o_map:
+            out_file.write(', '.join( ['out{}'.format(k) for k in range(o+o_map[p]-1, o - 1, -1)] ))
+            o += o_map[p]
+
+    out_file.write('} = {' + ', '.join(port_list)  + '};\n')
+
+
+    out_file.write('  top U0 (' + ', '.join(i_list) + ', ' + ', '.join(o_list)  + ');\n')
+    out_file.write('endmodule\n')
+
+    out_file.close()
+
+
+
+
+
 
 
 
