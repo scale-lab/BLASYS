@@ -1,5 +1,7 @@
 # BLASYS: Approximate Logic Synthesis Using Boolean Matrix Factorization
 
+A breif video demonstration of command-line tool:  https://www.youtube.com/watch?v=pdkNo5Sulfc.
+
 ## Abstraction
 Approximate computing is an emerging paradigm where design accuracy can be traded for improvements in design metrics such as design area and power consumption. In our BLASYS tool-chain, the truth table of a given circuit is approximated using BMF to a controllable approximation degree, and the results of the factorization are used to synthesize the approximate circuit output. BLASYS scales up the computations to large circuits through the use of partition techniques, where an input circuit is partitioned into a number of interconnected subcircuits and then a design-space exploration technique identifies the best order for subcircuit approximations.
 
@@ -18,7 +20,7 @@ Before running the tool-chain, make sure to download and install following tools
 4. **LSOracle**: Partitioning. (https://github.com/LNIS-Projects/LSOracle)
 5. [Optional] **OpenSTA**: Power and delay estimation. (https://github.com/The-OpenROAD-Project/OpenSTA)
 
-**IMPORTANT NOTE:** After installing tools above, you should either **add them into environment path of your system**, or **put the path of excutable into** ``params.yml``.
+**IMPORTANT NOTE:** After installing tools above, please **include them into environment path of your system**.
 
 ![Flow](https://github.com/scale-lab/BLASYS/blob/master/doc/flow.png?raw=true)
 

@@ -9,7 +9,7 @@ import multiprocessing as mp
 import shutil
 import time
 import ctypes
-from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell, write_aiger, get_delay, get_power, approximate, create_wrapper, module_info, NoValidDesign
+from .utils import gen_truth, evaluate_design, synth_design, inpout, number_of_cell, write_aiger, get_delay, get_power, approximate, create_wrapper, module_info, NoValidDesign, create_wrapper_single
 from .optimizer import optimization, least_error_opt
 from .create_tb import create_testbench
 from . import metric
@@ -88,10 +88,12 @@ class GreedyWorker():
         bmf_part = 'bmf_partition'
         os.mkdir(os.path.join(self.output, bmf_part))
         # Write script
-        self.script = os.path.join(self.output, 'abc.script')
-        with open(self.script, 'w') as file:
-            file.write('strash;ifraig;dc2;fraig;rewrite;refactor;resub;rewrite;refactor;resub;rewrite;rewrite -z;rewrite -z;rewrite -z;')
-            file.write('balance;refactor -z;refactor -N 11;resub -K 10;resub -K 12;resub -K 14;resub -K 16;refactor;balance;map -a')
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        self.script = os.path.join(dir_path, '..', 'config', 'abc.script')
+        # self.script = os.path.join(self.output, 'abc.script')
+        # with open(self.script, 'w') as file:
+            # file.write('strash;ifraig;dc2;fraig;rewrite;refactor;resub;rewrite;refactor;resub;rewrite;rewrite -z;rewrite -z;rewrite -z;')
+            # file.write('balance;refactor -z;refactor -N 11;resub -K 10;resub -K 12;resub -K 14;resub -K 16;refactor;balance;map -a')
 
 
 
@@ -138,17 +140,21 @@ class GreedyWorker():
         d.write('{},{},{},{},{}\n'.format('Name','Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
         d.write('{},{:.6f},{:.2f},{:.6f},{:.6f}\n'.format('Org', 0, self.initial_area, power, self.delay) )
 
+        # Create wrapper
+        wrapper = os.path.join(self.output, 'wrapper.v')
+        create_wrapper_single(self.input, wrapper, self)
+
 
         err_list = []
         area_list = []
         for k in range(out-1, 0,-1):
             # Approximate
-            approximate(truth_dir, k, self, 0)
+            approximate(truth_dir, k, self, 0, 'top')
             in_file = os.path.join(out_dir, self.modulename+'_approx_k='+str(k)+'.v')
             filename = self.modulename+'_k='+str(k)
-            out_file = os.path.join(self.output, 'tmp', filename)
+            out_file = os.path.join(self.output, 'result', filename)
             gen_truth = os.path.join(out_dir, self.modulename+'.truth_wh_'+str(k))
-            area = synth_design(in_file, out_file, self.library, self.script, self.path['yosys'])
+            area = synth_design(in_file+' '+wrapper, out_file, self.library, self.script, self.path['yosys'])
             err = self.metric(truth_dir+'.truth', gen_truth)
             err_list.append(err)
             area_list.append(area/self.initial_area)
@@ -168,9 +174,15 @@ class GreedyWorker():
         f.close()
         d.close()
 
+        # Clear up directory
         if self.sta:
             os.remove(sta_script)
             os.remove(sta_output)
+
+        os.remove(wrapper)
+        shutil.rmtree(os.path.join(self.output, 'tmp'))
+        shutil.rmtree(os.path.join(self.output, 'truthtable'))
+        shutil.rmtree(os.path.join(self.output, 'log'))
 
 
 
@@ -360,8 +372,7 @@ class GreedyWorker():
             if idx == 0:
                 source_file = os.path.join(self.output, self.modulename + '_syn.v')
             else:
-                idx = idx - 1
-                source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx]))
+                source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx - 1]))
             target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 'REST'))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
@@ -418,10 +429,9 @@ class GreedyWorker():
             if idx == 0:
                 source_file = os.path.join(self.output, self.modulename + '_syn.v')
             else:
-                idx = idx - 1
-                source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx]))
+                source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx - 1]))
        
-            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, int(ts*100)))
+            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, str(ts)))
             shutil.copyfile(source_file, target_file)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
                 f.write('{:<10.6f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(self.error_list[idx], self.area_list[idx], self.power_list[idx], self.delay_list[idx]) )
@@ -432,7 +442,6 @@ class GreedyWorker():
         
         
         self.plot(self.error_list, self.area_list)
-
         return 0
 
 
@@ -518,28 +527,29 @@ class GreedyWorker():
             
         return result, k_lists, err_list, area_list, delay_list, power_list, name_list, rank
 
+
     def plot(self, error_list, area_list):
+
 
         error_np = np.array(error_list) * 100
         area_np = np.array( area_list ) / area_list[0] * 100
         c = np.random.rand(len(error_list))
 
         fig, ax = plt.subplots(1, 1)
-        ax.scatter(error_np, area_np, c='r', s=6)
+        ax.scatter(error_np, area_np, c='b', s=3)
         # plt.plot(error_np, area_np, c='b', linewidth=3)
         #plt.xlim(0,1.0)
         #plt.ylim(0,1.1)
         ax.set_ylabel('Area ratio (%)')
         ax.set_xlabel('HD Approximation Error (%)')
-        ax.set(xlim=(1e-3, 1e2), ylim=(.0, 1.2))
+        #ax.set(xlim=(1e-5, 1e2), ylim=(.0, 120.0))
         #plt.xticks(np.arange(0,1,0.1))
         #plt.yticks(np.arange(0,1.1,0.1))
         ax.set_title('Greedy search on ' + self.modulename)
         ax.set_xscale('log')
-        fig.savefig(os.path.join(self.output, 'visualization.png'))
+        fig.savefig(os.path.join(self.output, 'metric-error.png'))
         
         fig.clf()
-
 
 
 
