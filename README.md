@@ -6,7 +6,7 @@ A breif video demonstration of command-line tool:  https://www.youtube.com/watch
 Approximate computing is an emerging paradigm where design accuracy can be traded for improvements in design metrics such as design area and power consumption. In our BLASYS tool-chain, the truth table of a given circuit is approximated using BMF to a controllable approximation degree, and the results of the factorization are used to synthesize the approximate circuit output. BLASYS scales up the computations to large circuits through the use of partition techniques, where an input circuit is partitioned into a number of interconnected subcircuits and then a design-space exploration technique identifies the best order for subcircuit approximations.
 
 ## Setup
-BLASYS requires ``GCC 7.4+`` and ``Python 3.6+``. Please install Python packages ``numpy`` , ``matplotlib`` and ``regex`` with command 
+BLASYS requires ``Python 3.6+``. Please install Python packages ``numpy`` , ``matplotlib`` and ``regex`` with command 
 ```
 pip3 install numpy
 pip3 install matplotlib
@@ -26,11 +26,9 @@ Before running the tool-chain, make sure to download and install following tools
 
 ## Usage
 ### Installation
-Enter following command in terminal to clone and build BLASYS tool-chain.
+Enter following command in terminal to clone BLASYS tool-chain.
 ```
 git clone https://github.com/scale-lab/BLASYS
-cd BLASYS
-make
 ```
 
 ### QoR: Testbench and Metric
