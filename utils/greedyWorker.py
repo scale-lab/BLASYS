@@ -88,10 +88,12 @@ class GreedyWorker():
         bmf_part = 'bmf_partition'
         os.mkdir(os.path.join(self.output, bmf_part))
         # Write script
-        self.script = os.path.join(self.output, 'abc.script')
-        with open(self.script, 'w') as file:
-            file.write('strash;ifraig;dc2;fraig;rewrite;refactor;resub;rewrite;refactor;resub;rewrite;rewrite -z;rewrite -z;rewrite -z;')
-            file.write('balance;refactor -z;refactor -N 11;resub -K 10;resub -K 12;resub -K 14;resub -K 16;refactor;balance;map -a')
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        self.script = os.path.join(dir_path, '..', 'config', 'abc.script')
+        # self.script = os.path.join(self.output, 'abc.script')
+        # with open(self.script, 'w') as file:
+            # file.write('strash;ifraig;dc2;fraig;rewrite;refactor;resub;rewrite;refactor;resub;rewrite;rewrite -z;rewrite -z;rewrite -z;')
+            # file.write('balance;refactor -z;refactor -N 11;resub -K 10;resub -K 12;resub -K 14;resub -K 16;refactor;balance;map -a')
 
 
 
@@ -172,9 +174,15 @@ class GreedyWorker():
         f.close()
         d.close()
 
+        # Clear up directory
         if self.sta:
             os.remove(sta_script)
             os.remove(sta_output)
+
+        os.remove(wrapper)
+        shutil.rmtree(os.path.join(self.output, 'tmp'))
+        shutil.rmtree(os.path.join(self.output, 'truthtable'))
+        shutil.rmtree(os.path.join(self.output, 'log'))
 
 
 

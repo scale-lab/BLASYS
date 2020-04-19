@@ -649,6 +649,7 @@ def create_wrapper_single(inp, out, worker):
     out_file.write('endmodule\n')
 
     out_file.close()
+    os.remove(tmp)
 
 
 
