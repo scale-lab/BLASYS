@@ -369,12 +369,19 @@ class GreedyWorker():
             e = np.array(self.error_list)
             a[e > threshold[0]] = np.inf
             idx = np.argmin(a)
+
             if idx == 0:
-                source_file = os.path.join(self.output, self.modulename + '_syn.v')
+                source_file = os.path.join(self.output, self.modulename + '.v')
+                source_file_syn = os.path.join(self.output, self.modulename + '_syn.v')
             else:
-                source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx - 1]))
-            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, 'REST'))
+                source_file = os.path.join(self.output, 'tmp', '{}.v'.format(self.design_list[idx - 1]))
+                source_file_syn = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx - 1]))
+
+            target_file = os.path.join(self.output, 'result', '{}_{}.v'.format(self.modulename, 'REST'))
+            target_file_syn = os.path.join(self.output, 'result', '{}_{}_syn.v'.format(self.modulename, 'REST'))
             shutil.copyfile(source_file, target_file)
+            shutil.copyfile(source_file_syn, target_file_syn)
+
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
                 f.write('{:<10.6f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(self.error_list[idx], self.area_list[idx], self.power_list[idx], self.delay_list[idx]) )
 
@@ -427,12 +434,16 @@ class GreedyWorker():
             idx = np.argmin(a)
             
             if idx == 0:
-                source_file = os.path.join(self.output, self.modulename + '_syn.v')
+                source_file = os.path.join(self.output, self.modulename + '.v')
+                source_file_syn = os.path.join(self.output, self.modulename + '_syn.v')
             else:
-                source_file = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx - 1]))
-       
-            target_file = os.path.join(self.output, 'result', '{}_{}metric.v'.format(self.modulename, str(ts)))
+                source_file = os.path.join(self.output, 'tmp', '{}.v'.format(self.design_list[idx - 1]))
+                source_file_syn = os.path.join(self.output, 'tmp', '{}_syn.v'.format(self.design_list[idx - 1]))
+
+            target_file = os.path.join(self.output, 'result', '{}_{:%}.v'.format(self.modulename, ts))
+            target_file_syn = os.path.join(self.output, 'result', '{}_{:%}_syn.v'.format(self.modulename, ts))
             shutil.copyfile(source_file, target_file)
+            shutil.copyfile(source_file_syn, target_file_syn)
             with open(os.path.join(self.output, 'result', 'result.txt'), 'a') as f:
                 f.write('{:<10.6f}{:<15.2f}{:<15.6f}{:<15.6f}\n'.format(self.error_list[idx], self.area_list[idx], self.power_list[idx], self.delay_list[idx]) )
 
