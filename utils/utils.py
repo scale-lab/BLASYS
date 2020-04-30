@@ -79,7 +79,7 @@ def evaluate_design(k_stream, worker, filename, display=True):
 def synth_design(input_file, output_file, lib_file, script, yosys):
 
     if lib_file is not None:
-        yosys_command = 'read_verilog ' + input_file + '; ' + 'synth -flatten; opt; opt_clean -purge; techmap; opt; opt_clean -purge; write_verilog -noattr ' +output_file + '.v; abc -liberty '+lib_file + ' -script ' + script + '; stat -liberty '+lib_file + '; write_verilog -noattr ' +output_file + '_syn.v;\n '
+        yosys_command = 'read_verilog ' + input_file + '; ' + 'synth -flatten; opt; opt_clean -purge;  opt; opt_clean -purge; write_verilog -noattr ' +output_file + '.v; abc -liberty '+lib_file + ' -script ' + script + '; stat -liberty '+lib_file + '; write_verilog -noattr ' +output_file + '_syn.v;\n '
         area = 0
         #line=subprocess.call(yosys+" -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True)
         with open(output_file+'.log', 'w') as f:
@@ -97,7 +97,7 @@ def synth_design(input_file, output_file, lib_file, script, yosys):
                     break
 
     else:
-        yosys_command = 'read_verilog ' + input_file + '; ' + 'synth -flatten; opt; opt_clean -purge; techmap; opt; opt_clean -purge; write_verilog -noattr ' +output_file + '.v; abc -g NAND -script ' + script + '; write_verilog -noattr ' +output_file + '_syn.v;\n '
+        yosys_command = 'read_verilog ' + input_file + '; ' + 'synth -flatten; opt; opt_clean -purge; opt; opt_clean -purge; write_verilog -noattr ' +output_file + '.v; abc -g NAND -script ' + script + '; write_verilog -noattr ' +output_file + '_syn.v;\n '
         area = 0
         #line=subprocess.call(yosys+" -p \'"+ yosys_command+"\' > "+ output_file+".log", shell=True)
         with open(output_file+'.log', 'w') as f:
@@ -358,7 +358,7 @@ def number_of_cell(input_file, yosys):
     Get number of yosys standard cells of input circuit
     '''
     yosys_command = 'read_verilog ' + input_file + '; ' \
-            + 'synth -flatten; opt; opt_clean -purge; techmap; opt; opt_clean -purge; stat;\n'
+            + 'synth -flatten; opt; opt_clean -purge; opt; opt_clean -purge; stat;\n'
     num_cell = 0
     output_file = input_file[:-2] + '_syn.log'
     line=subprocess.call(yosys+" -p \'"+ yosys_command+"\' > "+ output_file, shell=True)
@@ -374,7 +374,7 @@ def write_aiger(input_file, yosys, output_file, map_file):
     '''
     Convert verilog to aig file
     '''
-    yosys_command = 'read_verilog ' + input_file + '; synth -flatten; opt; opt_clean -purge; aigmap; opt; opt_clean -purge; write_aiger -vmap '\
+    yosys_command = 'read_verilog ' + input_file + '; synth -flatten; opt; opt_clean -purge; abc -g AND; aigmap; opt; opt_clean -purge; write_aiger -vmap '\
             + map_file + ' ' + output_file + ';'
     subprocess.call([yosys, '-p', yosys_command], stdout=subprocess.DEVNULL)
     # Parse map file and return dict
@@ -482,7 +482,7 @@ def get_power(sta, script, liberty, input_file, modulename, output_file, delay):
 
 def create_wrapper(inp, out, top, vmap, worker):
     tmp = os.path.join(worker.output, 'tmp.v')
-    yosys_command = 'read_verilog ' + inp + '; synth -flatten; opt; opt_clean; techmap; write_verilog ' + tmp + ';\n'
+    yosys_command = 'read_verilog ' + inp + '; synth -flatten; opt; opt_clean;  write_verilog ' + tmp + ';\n'
     subprocess.call([worker.path['yosys'], '-p', yosys_command], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
     out_file = open(out, 'w')
@@ -600,7 +600,7 @@ def create_wrapper(inp, out, top, vmap, worker):
 def create_wrapper_single(inp, out, worker):
 
     tmp = os.path.join(worker.output, 'tmp.v')
-    yosys_command = 'read_verilog ' + inp + '; synth -flatten; opt; opt_clean; techmap; write_verilog ' + tmp + ';\n'
+    yosys_command = 'read_verilog ' + inp + '; synth -flatten; opt; opt_clean; write_verilog ' + tmp + ';\n'
     subprocess.call([worker.path['yosys'], '-p', yosys_command], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
     out_file = open(out, 'w')
@@ -662,7 +662,7 @@ def create_wrapper_single(inp, out, worker):
 def module_info(fname, yosys_path):
 
     tmp = time.strftime('%Y_%m_%d-%H_%m_%s') + '.v'
-    yosys_command = 'read_verilog ' + fname + '; synth -flatten; opt; opt_clean; techmap; write_verilog ' + tmp + ';\n'
+    yosys_command = 'read_verilog ' + fname + '; synth -flatten; opt; opt_clean; write_verilog ' + tmp + ';\n'
     subprocess.call([yosys_path, '-p', yosys_command], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
     tmp_file = open(tmp)
