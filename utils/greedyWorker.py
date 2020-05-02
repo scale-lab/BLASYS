@@ -45,6 +45,8 @@ class GreedyWorker():
         self.design_list = []
         self.iter = 0
 
+        self.first_iter_err = {}
+
         self.iter_rank = [0]
 
         # Get metric function
@@ -465,8 +467,8 @@ class GreedyWorker():
         delay_list = []
         power_list = []
         name_list = []
-        count = 0
-        changed = {}
+        
+        changed = []
 
         for num_track, curr_k_stream in enumerate(curr_k_streams):
             print('==========TRACK {} =========='.format(num_track))
@@ -474,6 +476,9 @@ class GreedyWorker():
             k_lists_tmp = []
             for i in range(len(curr_k_stream)):
                 if curr_k_stream[i] == 1:
+                    continue
+                
+                if num_iter > 0 and accel == 2 and self.first_iter_err[i] > threshold:
                     continue
 
                 new_k_stream = list(curr_k_stream)
@@ -484,11 +489,10 @@ class GreedyWorker():
                 k_lists_tmp.append(new_k_stream)
                 self.explored_streams.append(new_k_stream)
                 
-                changed[count] = i
-                count += 1
+                changed.append(i)
 
-            # Normal mode
-            if accel == 0: 
+            # Full mode
+            if accel == 0 or accel == 2: 
                 # Parallel mode
                 if parallel:
                     pool = mp.Pool(cpu_count)
@@ -521,6 +525,9 @@ class GreedyWorker():
 
                         k_lists.append(k_stream)
                         name_list.append('{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i) )
+
+                if num_iter == 0:
+                    self.first_iter_err = {part_num:err_num for part_num, err_num in zip(changed, err_list)}
             
             # Random Accelerate mode
             elif accel == 1:
