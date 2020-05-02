@@ -1,6 +1,7 @@
 import regex as re
 import sys
 import random
+import math
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -316,14 +317,14 @@ class GreedyWorker():
         self.explored_streams = [self.output_list.copy()]
 
 
-    def greedy_opt(self, parallel, cpu_count, step_size = 1, threshold=[1000000.], track=3):
+    def greedy_opt(self, parallel, cpu_count, step_size = 1, threshold=[1000000.], track=3, accel=0):
         threshold.sort()
         while True:
-            if self.next_iter(parallel, cpu_count, step_size, threshold, track=track) == -1:
+            if self.next_iter(parallel, cpu_count, step_size, threshold, track=track, accel=accel) == -1:
                 break
 
 
-    def next_iter(self, parallel, cpu_count, step_size, threshold=[1000000.], least_error=False, track=3):
+    def next_iter(self, parallel, cpu_count, step_size, threshold=[1000000.], least_error=False, track=3, accel=0):
 
         if self.iter == 0:
             print('==================== Starting Approximation by Greedy Search  ====================')
@@ -362,7 +363,7 @@ class GreedyWorker():
         before = time.time()
 
         try:
-            next_stream, streams, err, area, delay, power, name_list, rank = self.evaluate_iter(self.curr_streams, self.iter, step_size, parallel, threshold[0], least_error, cpu_count)
+            next_stream, streams, err, area, delay, power, name_list, rank = self.evaluate_iter(self.curr_streams, self.iter, step_size, parallel, threshold[0], least_error, cpu_count, accel)
         except NoValidDesign:
             # If no more valid design
             a = np.array(self.area_list)
@@ -456,7 +457,7 @@ class GreedyWorker():
         return 0
 
 
-    def evaluate_iter(self, curr_k_streams, num_iter, step_size, parallel, threshold, least_error, cpu_count):
+    def evaluate_iter(self, curr_k_streams, num_iter, step_size, parallel, threshold, least_error, cpu_count, accel):
     
         k_lists = []
         err_list = []
@@ -486,42 +487,83 @@ class GreedyWorker():
                 changed[count] = i
                 count += 1
 
-            # name_list += ['{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i) for i in range((len(k_lists_tmp)))]
-        
-            # Parallel mode
-            if parallel:
-                pool = mp.Pool(cpu_count)
-                results = [pool.apply_async(evaluate_design,args=(k_lists_tmp[i], self, '{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i), False )) for i in range(len(k_lists_tmp))]
-                pool.close()
-                pool.join()
-                for idx, result in enumerate(results):
-                    res = result.get()
-                    if res is None:
-                        continue
-                    err_list.append(res[0])
-                    area_list.append(res[1])
-                    delay_list.append(res[2])
-                    power_list.append(res[3])
-                    k_lists.append(k_lists_tmp[idx])
-                    name_list.append('{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, idx) )
-            else:
-            # Sequential mode
-                for i in range(len(k_lists_tmp)):
-                    # Evaluate each list
-                    print('======== Design number ' + str(i))
-                    k_stream = k_lists_tmp[i]
-                    res = evaluate_design(k_stream, self, '{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i))
-                    if res is None:
-                        continue
-                    err_list.append(res[0])
-                    area_list.append(res[1])
-                    delay_list.append(res[2])
-                    power_list.append(res[3])
+            # Normal mode
+            if accel == 0: 
+                # Parallel mode
+                if parallel:
+                    pool = mp.Pool(cpu_count)
+                    results = [pool.apply_async(evaluate_design,args=(k_lists_tmp[i], self, '{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i), False )) for i in range(len(k_lists_tmp))]
+                    pool.close()
+                    pool.join()
+                    for idx, result in enumerate(results):
+                        res = result.get()
+                        if res is None:
+                            continue
+                        err_list.append(res[0])
+                        area_list.append(res[1])
+                        delay_list.append(res[2])
+                        power_list.append(res[3])
+                        k_lists.append(k_lists_tmp[idx])
+                        name_list.append('{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, idx) )
+                else:
+                # Sequential mode
+                    for i in range(len(k_lists_tmp)):
+                        # Evaluate each list
+                        print('======== Design number ' + str(i))
+                        k_stream = k_lists_tmp[i]
+                        res = evaluate_design(k_stream, self, '{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i))
+                        if res is None:
+                            continue
+                        err_list.append(res[0])
+                        area_list.append(res[1])
+                        delay_list.append(res[2])
+                        power_list.append(res[3])
 
-                    k_lists.append(k_stream)
-                    name_list.append('{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i) )
+                        k_lists.append(k_stream)
+                        name_list.append('{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i) )
+            
+            # Random Accelerate mode
+            elif accel == 1:
+                random.shuffle(k_lists_tmp)
+                batch = math.ceil(len(k_lists_tmp) / 20)
+                for batch_num in range(batch):
+                    k_lists_choice = k_lists_tmp[batch_num*20 : (batch_num+1)*20]
+                    # Parallel mode
+                    if parallel:
+                        pool = mp.Pool(cpu_count)
+                        results = [pool.apply_async(evaluate_design,args=(k_lists_choice[i], self, '{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i), False )) for i in range(len(k_lists_choice))]
+                        pool.close()
+                        pool.join()
+                        for idx, result in enumerate(results):
+                            res = result.get()
+                            if res is None:
+                                continue
+                            err_list.append(res[0])
+                            area_list.append(res[1])
+                            delay_list.append(res[2])
+                            power_list.append(res[3])
+                            k_lists.append(k_lists_choice[idx])
+                            name_list.append('{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, idx) )
+                    else:
+                    # Sequential mode
+                        for i in range(len(k_lists_choice)):
+                            # Evaluate each list
+                            print('======== Design number ' + str(i))
+                            k_stream = k_lists_choice[i]
+                            res = evaluate_design(k_stream, self, '{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i))
+                            if res is None:
+                                continue
+                            err_list.append(res[0])
+                            area_list.append(res[1])
+                            delay_list.append(res[2])
+                            power_list.append(res[3])
 
-            # k_lists += k_lists_tmp
+                            k_lists.append(k_stream)
+                            name_list.append('{}_{}-{}-{}'.format(self.modulename, num_iter, num_track, i) )
+
+                    if min(err_list) <= threshold:
+                        break
+
         
         if len(name_list) == 0:
             raise NoValidDesign()

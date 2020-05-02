@@ -38,6 +38,8 @@ def main():
     parser.add_argument('--parallel', help='Run the flow in parallel mode if specified', dest='parallel', action='store_true')
     parser.add_argument('--no_partition', help='Factorize without partition', dest='single', action='store_true')
     parser.add_argument('--sta', help='Use OpenSTA to estimate power and delay', dest='sta', action='store_true')
+    parser.add_argument('--fast_random', help='Accelerate by randomly picking subcircuits to approximate', dest='rand', action='store_true')
+    parser.add_argument('--fast_deter', help='Accelerate by picking certain subcircuits to approximate', dest='deter', action='store_true')
 
     args = parser.parse_args()
 
@@ -46,6 +48,13 @@ def main():
 
     if args.cpu != -1:
         args.parallel = True
+
+    # Accelerate mode
+    accelerate = 0
+    if args.rand == True:
+        accelerate = 1
+    elif args.deter == True:
+        accelerate = 2
 
     print_banner()
 
@@ -76,7 +85,7 @@ def main():
         else:
             worker.recursive_partitioning(args.npart)
 
-        worker.greedy_opt(args.parallel, args.cpu, args.stepsize, threshold_list, track=args.track)
+        worker.greedy_opt(args.parallel, args.cpu, args.stepsize, threshold_list, track=args.track, accel=accelerate)
     else:
         worker.blasys()
 
