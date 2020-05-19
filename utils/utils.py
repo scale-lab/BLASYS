@@ -374,7 +374,7 @@ def write_aiger(input_file, yosys, output_file, map_file):
     '''
     Convert verilog to aig file
     '''
-    yosys_command = 'read_verilog ' + input_file + '; synth -flatten; opt; opt_clean -purge; abc -g AND; aigmap; opt; opt_clean -purge; write_aiger -vmap '\
+    yosys_command = 'read_verilog ' + input_file + '; synth -flatten; opt; opt_clean -purge; abc -g NAND; aigmap; opt; opt_clean -purge; write_aiger -vmap '\
             + map_file + ' ' + output_file + ';'
     subprocess.call([yosys, '-p', yosys_command], stdout=subprocess.DEVNULL)
     # Parse map file and return dict

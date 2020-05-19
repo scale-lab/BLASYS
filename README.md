@@ -67,7 +67,8 @@ python3 [path to BLASYS folder]/blasys.py \
                  [--parallel] \ 
                  [-cpu CPU_USED] \
                  [--sta] \
-                 [--no_partition]
+                 [--no_partition] \
+                 [--fast_random]
 ```
 Explanation of parameters show in the table below.
 | Parameter | Flag | Default | Description |
@@ -84,7 +85,8 @@ Explanation of parameters show in the table below.
 | Parallel Mode | ``--parallel`` | False | If specified, BLASYS runs in parallel with all available cores of machine. |
 | CPU Utilization | ``-cpu`` | All available CPUs | Limit maximum number of cores used in BLASYS.  |
 | OpenSTA | ``--sta`` | False | If specified, BLASYS will call OpenSTA to estimate power and delay. **It requires a liberty file.** |
-| Approx. Without Partition | ``-no_partition`` | False | If specified, BLASYS will directly factorize truthtable without partitioning.  |
+| Approx. Without Partition | ``--no_partition`` | False | If specified, BLASYS will directly factorize truthtable without partitioning.  |
+| Random Acceleration | ``--fast_random`` | False | If specified, BLASYS will accelerate design space exploration by random choosing subcircuits in each iteration.  |
 
 
 ### Command-Line Interface
@@ -174,3 +176,6 @@ Since OS X 10.15 has problem with ``multiprocessing`` module in Python 3, parall
 4. Amarú, Luca, Pierre-Emmanuel Gaillardon, and Giovanni De Micheli. "The EPFL combinational benchmark suite." Proceedings of the 24th International Workshop on Logic & Synthesis (IWLS). No. CONF. 2015.
 5. Hansen, Mark C., Hakan Yalcin, and John P. Hayes. "Unveiling the ISCAS-85 benchmarks: A case study in reverse engineering." IEEE Design & Test of Computers 16.3 (1999): 72-80.
 6. Mrazek, Vojtech, Zdenek Vasicek, and Lukas Sekanina. "EvoApproxLib: Extended Library of Approximate Arithmetic Circuits.", Article No.10, Workshop on Open-Source EDA Technology (WOSET), 2019.
+
+## License
+BSD 3-Clause License. See [LICENSE](LICENSE) file

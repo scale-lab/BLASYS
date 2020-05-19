@@ -32,14 +32,29 @@ def main():
     parser.add_argument('-ss', '--stepsize', help='Step size of optimization process', default=1, type=int, dest='stepsize')   
     parser.add_argument('-m', '--metric', help='Choose error metric', dest='metric', default='HD')
     parser.add_argument('-tr', '--track', help='Number of tracks in greedy search', dest='track', type=int, default=3)
-    parser.add_argument('-cpu', '--cpu_count', help='Specify number of CPU in parallel mode', dest='cpu', type=int, default=max_cpu)
+    parser.add_argument('-cpu', '--cpu_count', help='Specify number of CPU in parallel mode', dest='cpu', type=int, default=-1)
     
     # Flags 
     parser.add_argument('--parallel', help='Run the flow in parallel mode if specified', dest='parallel', action='store_true')
     parser.add_argument('--no_partition', help='Factorize without partition', dest='single', action='store_true')
     parser.add_argument('--sta', help='Use OpenSTA to estimate power and delay', dest='sta', action='store_true')
+    parser.add_argument('--fast_random', help='Accelerate by randomly picking subcircuits to approximate', dest='rand', action='store_true')
+    parser.add_argument('--fast_deter', help='Accelerate by picking certain subcircuits to approximate', dest='deter', action='store_true')
 
     args = parser.parse_args()
+
+    if args.parallel == True and args.cpu == -1:
+        args.cpu = max_cpu
+
+    if args.cpu != -1:
+        args.parallel = True
+
+    # Accelerate mode
+    accelerate = 0
+    if args.rand == True:
+        accelerate = 1
+    elif args.deter == True:
+        accelerate = 2
 
     print_banner()
 
@@ -70,7 +85,7 @@ def main():
         else:
             worker.recursive_partitioning(args.npart)
 
-        worker.greedy_opt(args.parallel, args.cpu, args.stepsize, threshold_list, track=args.track)
+        worker.greedy_opt(args.parallel, args.cpu, args.stepsize, threshold_list, track=args.track, accel=accelerate)
     else:
         worker.blasys()
 
