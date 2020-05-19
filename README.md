@@ -67,7 +67,8 @@ python3 [path to BLASYS folder]/blasys.py \
                  [--parallel] \ 
                  [-cpu CPU_USED] \
                  [--sta] \
-                 [--no_partition]
+                 [--no_partition] \
+                 [--fast_random]
 ```
 Explanation of parameters show in the table below.
 | Parameter | Flag | Default | Description |
@@ -84,7 +85,7 @@ Explanation of parameters show in the table below.
 | Parallel Mode | ``--parallel`` | False | If specified, BLASYS runs in parallel with all available cores of machine. |
 | CPU Utilization | ``-cpu`` | All available CPUs | Limit maximum number of cores used in BLASYS.  |
 | OpenSTA | ``--sta`` | False | If specified, BLASYS will call OpenSTA to estimate power and delay. **It requires a liberty file.** |
-| Approx. Without Partition | ``-no_partition`` | False | If specified, BLASYS will directly factorize truthtable without partitioning.  |
+| Approx. Without Partition | ``--no_partition`` | False | If specified, BLASYS will directly factorize truthtable without partitioning.  |
 | Random Acceleration | ``--fast_random`` | False | If specified, BLASYS will accelerate design space exploration by random choosing subcircuits in each iteration.  |
 
 
