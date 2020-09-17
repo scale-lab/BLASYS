@@ -43,7 +43,8 @@ def BMF(truthtable, k, binary = False):
         column = np.array(list(binary_str)).astype(np.uint8)
         column_list.append(column)
         prod = np.matmul(best_S, column)
-        prod = prod % 2
+        # prod = prod % 2
+        prod[prod > 0] = 1
         multi_list.append(prod)
     
     # Brute force best column in B
@@ -62,5 +63,6 @@ def BMF(truthtable, k, binary = False):
     write_matrix(best_B, B_path)
     write_matrix(best_S, S_path)
     new_best_result = np.matmul(best_S, best_B)
-    new_best_result = new_best_result % 2
+    # new_best_result = new_best_result % 2
+    new_best_result[new_best_result > 0] = 1
     write_matrix(new_best_result, mult_path)

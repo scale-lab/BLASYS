@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import time
 from .ASSO.BMF import BMF
+from .ASSO.utils import get_matrix
 
 class CombinationalLoop(Exception):
     pass
@@ -28,14 +29,17 @@ def evaluate_design(k_stream, worker, filename, display=True):
             part_verilog = os.path.join(worker.output, 'partition', modulename + '.v')
             verilog_list.append(part_verilog)
             continue
-        
+ 
+
         part_verilog = os.path.join(worker.output, 'bmf_partition', modulename, modulename + '_approx_k=' + str(approx_degree) + '.v')
         # If has not been approximated before
         if not os.path.exists(part_verilog):
             print('----- Approximating part ' + str(i) + ' to degree ' + str(approx_degree))
-
             directory = os.path.join(worker.output, 'bmf_partition', modulename, modulename)
-            approximate(directory, approx_degree, worker, i)
+            if approx_degree == 0:
+                create_empty_subcircuit(worker.modulenames[i], worker.input_list[i], worker.output_list[i], directory )
+            else:
+                approximate(directory, approx_degree, worker, i)
         
         verilog_list.append(part_verilog)
     
@@ -709,3 +713,23 @@ def module_info(fname, yosys_path):
     os.remove(tmp)
 
     return modulename, port_list, inp, inp_count, out, out_count
+
+
+def create_empty_subcircuit(modulename, n, m, input_file):
+    mat = get_matrix(input_file + '.truth')
+    avg = np.mean(mat, axis=0)
+    print(avg)
+    with open(input_file+'_approx_k=0.v', 'w') as f1:
+
+        out_digit = len(str(m))
+        f1.write('module ' +modulename+'(' + v2w_top('pi', n)+', '+ v2w_top('po', m)+');\n')
+        f1.write('input '+v2w_top('pi', n)+';\n')
+        f1.write('output '+v2w_top('po', m)+';\n')
+        for i in range(m):
+            if avg[i] >= 0.5:
+                digit = 1
+            else:
+                digit = 0
+            f1.write('assign {} = {};\n'.format( 'po{0:0{1}}'.format(i, out_digit), digit ))
+
+        f1.write('endmodule')

@@ -329,6 +329,13 @@ class GreedyWorker():
     def next_iter(self, parallel, cpu_count, step_size, threshold=[1000000.], least_error=False, track=3, accel=0):
 
         if self.iter == 0:
+
+
+
+
+
+
+
             print('==================== Starting Approximation by Greedy Search  ====================')
             with open(os.path.join(self.output, 'result', 'result.txt'), 'w') as f:
 
@@ -357,6 +364,48 @@ class GreedyWorker():
                 f.write('{},{},{},{},{}\n'.format('Name','Metric', 'Area(um^2)', 'Power(uW)', 'Delay(ns)') )
                 f.write('{},{:.6f},{:.2f},{:.6f},{:.6f}\n'.format('Org', 0, self.initial_area, power, self.delay) )
 
+            # COmpute weights for subcircuit in fast mode
+            if accel == 2:
+                print('==================== Computing weights for each subcircuit ====================')
+                evaluate_list = []
+                evaluate_err = []
+                evaluate_area = []
+                for i in range(len(self.output_list)):
+                    candidate = self.output_list.copy()
+                    candidate[i] = 0
+                    evaluate_list.append(candidate)
+
+                # Parallel mode
+                if parallel:
+                    pool = mp.Pool(cpu_count)
+                    results = [pool.apply_async(evaluate_design,args=(evaluate_list[i], self, 'removal-{}'.format(i), False )) for i in range(len(evaluate_list))]
+                    pool.close()
+                    pool.join()
+                    for idx, result in enumerate(results):
+                        res = result.get()
+                        if res is None:
+                            continue
+                        evaluate_err.append(res[0])
+                        evaluate_area.append(res[1])
+                else:
+                # Sequential mode
+                    for i in range(len(evaluate_list)):
+                        # Evaluate each list
+                        print('======== Design number ' + str(i))
+                        k_stream = evaluate_list[i]
+                        res = evaluate_design(k_stream, self, 'removal-{}'.format(i))
+                        if res is None:
+                            continue
+                        evaluate_err.append(res[0])
+                        evaluate_area.append(res[1])
+
+                # Compute W
+                area_reduction = self.initial_area - np.array(evaluate_area)
+                qor_reduction = np.array(evaluate_err)
+                subcircuit_weight = area_reduction / qor_reduction
+                self.subcircuit_order = np.argsort(subcircuit_weight)[::-1]
+                print(self.subcircuit_order)
+               
 
 
         print('Current stream of factorization degree:\n','\n'.join(map(str, self.curr_streams)))
@@ -474,15 +523,25 @@ class GreedyWorker():
             print('==========TRACK {} =========='.format(num_track))
             # Create a set of candidate k_streams
             k_lists_tmp = []
+
+            if accel == 2:
+                zero_idx = [idx for idx, x in enumerate(curr_k_stream) if x == 0]
+                o_sub = self.subcircuit_order.copy()
+                for idx in zero_idx:
+                    o_sub = o_sub[o_sub != idx]
+
             for i in range(len(curr_k_stream)):
-                if curr_k_stream[i] == 1:
+                if curr_k_stream[i] == 0:
                     continue
                 
-                if num_iter > 0 and accel == 2 and self.first_iter_err[i] > threshold:
+                # if num_iter > 0 and accel == 2 and self.first_iter_err[i] > threshold:
+                    # continue
+
+                if accel == 2 and (i not in o_sub[:1] ):
                     continue
 
                 new_k_stream = list(curr_k_stream)
-                new_k_stream[i] = max(new_k_stream[i] - step_size, 1)
+                new_k_stream[i] = max(new_k_stream[i] - step_size, 0)
                 
                 if new_k_stream in self.explored_streams:
                     continue
