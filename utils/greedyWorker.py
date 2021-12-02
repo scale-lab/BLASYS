@@ -456,6 +456,7 @@ class GreedyWorker():
         
         
         self.plot(self.error_list, self.area_list)
+        self.store_pareto()
         return 0
 
 
@@ -595,8 +596,14 @@ class GreedyWorker():
         area_np = np.array( area_list ) / area_list[0] * 100
         c = np.random.rand(len(error_list))
 
+        pareto_point, pareto_rank = self.pareto_front(error_np, area_np)
+        pareto_x = [pair[0] for pair in pareto_point]
+        pareto_y = [pair[1] for pair in pareto_point]
+
         fig, ax = plt.subplots(1, 1)
         ax.scatter(error_np, area_np, c='b', s=3)
+        ax.scatter(pareto_x, pareto_y, c='r', s=3)
+        ax.plot(pareto_x, pareto_y, c='r', linewidth=1)
         # plt.plot(error_np, area_np, c='b', linewidth=3)
         #plt.xlim(0,1.0)
         #plt.ylim(0,1.1)
@@ -610,6 +617,68 @@ class GreedyWorker():
         fig.savefig(os.path.join(self.output, 'metric-error.png'))
         
         fig.clf()
+
+
+    def pareto_front(self, xs, ys):
+        sorted_list = sorted([[xs[i], ys[i]] for i in range(len(xs))], reverse = False)
+        pareto = [sorted_list[0]]
+
+        ranking_list = np.argsort(xs)
+        rank = [ranking_list[0]]
+
+        for i, pair in enumerate(sorted_list[1:]):
+            if pair[1] <= pareto[-1][1]:
+                pareto.append(pair)
+                rank.append(ranking_list[i+1])
+
+
+        return pareto, rank
+
+
+    def store_pareto(self):
+
+        area_pareto_dir = os.path.join(self.output, 'result', 'area_pareto_front')
+        power_pareto_dir = os.path.join(self.output, 'result', 'power_pareto_front')
+
+        area_pareto_data = os.path.join(area_pareto_dir, 'data.csv')
+        power_pareto_data = os.path.join(power_pareto_dir, 'data.csv')
+
+        if os.path.isdir(area_pareto_dir):
+            shutil.rmtree(area_pareto_dir)
+
+        if os.path.isdir(power_pareto_dir):
+            shutil.rmtree(power_pareto_dir)
+
+        os.mkdir(area_pareto_dir)
+        os.mkdir(power_pareto_dir)
+
+        p, area_pareto_rank = self.pareto_front(self.error_list, self.area_list)
+
+        fa = open(area_pareto_data, 'a')
+        fa.write('{},{},{},{},{}\n'.format('Ranking','Metric','Area(um^2)','Power(uW)', 'Delay(ns)'))
+
+        for n, i in enumerate(area_pareto_rank[1:]):
+            source_file = os.path.join(self.output, 'tmp', '{}.v'.format(self.design_list[i-1]))
+            target_file = os.path.join(area_pareto_dir, 'area_pareto_{}.v'.format(n+1))
+            shutil.copyfile(source_file, target_file)
+
+            fa.write('{},{:.6f},{:.2f},{:.6f},{:.6f}\n'.format(n+1, self.error_list[i], self.area_list[i], self.power_list[i], self.delay_list[i]))
+
+        fa.close()
+
+        p, power_pareto_rank = self.pareto_front(self.error_list, self.power_list)
+
+        fp = open(power_pareto_data, 'a')
+        fp.write('{},{},{},{},{}\n'.format('Ranking','Metric','Area(um^2)','Power(uW)', 'Delay(ns)'))
+
+        for n, i in enumerate(power_pareto_rank[1:]):
+            source_file = os.path.join(self.output, 'tmp', '{}.v'.format(self.design_list[i-1]))
+            target_file = os.path.join(power_pareto_dir, 'power_pareto_{}.v'.format(n+1))
+            shutil.copyfile(source_file, target_file)
+
+            fp.write('{},{:.6f},{:.2f},{:.6f},{:.6f}\n'.format(n+1, self.error_list[i], self.area_list[i], self.power_list[i], self.delay_list[i]))
+
+        fp.close()
 
 
 
