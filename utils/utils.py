@@ -511,6 +511,12 @@ def create_wrapper(inp, out, top, vmap, worker):
     arg_list = []
     input_dict = {}
     output_dict = {}
+    num_out = module_info(inp, worker.path['yosys'])[4]
+    pair_out = []
+    for n in num_out:
+        for i in range(num_out[n]):
+            pair_out.append((n,i))
+
     map_file = open(vmap)
     line = map_file.readline()
     while line:
@@ -532,6 +538,10 @@ def create_wrapper(inp, out, top, vmap, worker):
         if tokens[0] == 'output':
             # Probe for correct number
             port_num = int(tokens[1])
+            curr_pair = (tokens[3], int(tokens[2]))
+            if curr_pair in pair_out:
+                pair_out.remove(curr_pair)
+                
             while port_num in list(output_dict.values()):
                 port_num -= 1
 
@@ -572,8 +582,12 @@ def create_wrapper(inp, out, top, vmap, worker):
         out_file.write(' .po{0:0{1}}( {2} ) '.format(output_dict[i], out_digit, i))
         # out_file.write(' '+i+ ' ')
 
-
     out_file.write(');\n')
+
+    for i in pair_out:
+        out_file.write("  assign {0}[{1}] = 0;\n".format(i[0], i[1]))
+
+    
     out_file.write('endmodule\n\n')
 
     # Copy old top-level and change module name
