@@ -539,8 +539,11 @@ def create_wrapper(inp, out, top, vmap, worker):
             # Probe for correct number
             port_num = int(tokens[1])
             curr_pair = (tokens[3], int(tokens[2]))
+            curr_pair_2 = ('\\'+tokens[3], int(tokens[2]))
             if curr_pair in pair_out:
                 pair_out.remove(curr_pair)
+            if curr_pair_2 in pair_out:
+                pair_out.remove(curr_pair_2)
                 
             while port_num in list(output_dict.values()):
                 port_num -= 1
@@ -585,7 +588,10 @@ def create_wrapper(inp, out, top, vmap, worker):
     out_file.write(');\n')
 
     for i in pair_out:
-        out_file.write("  assign {0}[{1}] = 0;\n".format(i[0], i[1]))
+        if not isVector[i[0]]:
+            out_file.write("  assign {} = 0;\n".format(i[0]))
+        else:
+            out_file.write("  assign {0}[{1}] = 0;\n".format(i[0], i[1]))
 
     
     out_file.write('endmodule\n\n')
