@@ -169,13 +169,14 @@ If an error threshold is specified, BLASYS will output the smallest circuit unde
 Since OS X 10.15 has problem with ``multiprocessing`` module in Python 3, parallel mode is not runnable in OS X 10.15 Catalina.
 
 ## References
-1. Ma, J., Hashemi, S. and Reda S., "Approximate Logic Synthesis Using BLASYS", Article No.5, Workshop on Open-Source EDA Technology (WOSET), 2019.
-2. Hashemi, S., Tann, H. and Reda, S., 2019. Approximate Logic Synthesis Using Boolean Matrix Factorization. In Approximate Circuits (pp. 141-154). Springer, Cham.
-3. Hashemi, S., Tann, H. and Reda, S., 2018, June. BLASYS: approximate logic synthesis using boolean matrix factorization. In Proceedings of the 55th Annual Design Automation Conference (p. 55). ACM.
+1. Ma, J., Hashemi, S. and Reda S., "Approximate logic synthesis using boolean matrix factorization." IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems 41.1 (2021): 15-28.
+2. Ma, J., Hashemi, S. and Reda S., "Approximate Logic Synthesis Using BLASYS", Article No.5, Workshop on Open-Source EDA Technology (WOSET), 2019.
+3. Hashemi, S., Tann, H. and Reda, S., 2019. Approximate Logic Synthesis Using Boolean Matrix Factorization. In Approximate Circuits (pp. 141-154). Springer, Cham.
+4. Hashemi, S., Tann, H. and Reda, S., 2018, June. BLASYS: approximate logic synthesis using boolean matrix factorization. In Proceedings of the 55th Annual Design Automation Conference (p. 55). ACM.
 
-4. Amarú, Luca, Pierre-Emmanuel Gaillardon, and Giovanni De Micheli. "The EPFL combinational benchmark suite." Proceedings of the 24th International Workshop on Logic & Synthesis (IWLS). No. CONF. 2015.
-5. Hansen, Mark C., Hakan Yalcin, and John P. Hayes. "Unveiling the ISCAS-85 benchmarks: A case study in reverse engineering." IEEE Design & Test of Computers 16.3 (1999): 72-80.
-6. Mrazek, Vojtech, Zdenek Vasicek, and Lukas Sekanina. "EvoApproxLib: Extended Library of Approximate Arithmetic Circuits.", Article No.10, Workshop on Open-Source EDA Technology (WOSET), 2019.
+5. Amarú, Luca, Pierre-Emmanuel Gaillardon, and Giovanni De Micheli. "The EPFL combinational benchmark suite." Proceedings of the 24th International Workshop on Logic & Synthesis (IWLS). No. CONF. 2015.
+6. Hansen, Mark C., Hakan Yalcin, and John P. Hayes. "Unveiling the ISCAS-85 benchmarks: A case study in reverse engineering." IEEE Design & Test of Computers 16.3 (1999): 72-80.
+7. Mrazek, Vojtech, Zdenek Vasicek, and Lukas Sekanina. "EvoApproxLib: Extended Library of Approximate Arithmetic Circuits.", Article No.10, Workshop on Open-Source EDA Technology (WOSET), 2019.
 
 ## License
 BSD 3-Clause License. See [LICENSE](LICENSE) file
